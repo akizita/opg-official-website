@@ -1,0 +1,40 @@
+{
+  "name": "opg-official-website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Official website and content administration foundation for Outsourced Pro Global.",
+  "engines": {
+    "node": ">=22.19.0 <25"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.116.0",
+    "geist": "1.7.2",
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.5",
+    "prettier": "3.9.6",
+    "supabase": "2.117.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.0"
+  }
+}

@@ -1,0 +1,2 @@
+-- Add representative, non-personal seed content only after the first content
+-- migration exists. Never copy production inquiries or account data here.
