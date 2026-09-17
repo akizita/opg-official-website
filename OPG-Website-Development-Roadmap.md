@@ -233,7 +233,7 @@ Design, content preparation, privacy review, and infrastructure access run in pa
 - [x] Define the content model, publishing states, roles/permissions, validation baseline, slug rules, media rules, and deletion/archive behavior.
 - [x] Define the recommended privacy, cookie, analytics, inquiry-retention, and spam-prevention baseline.
 - [x] Obtain authorized legal/privacy approval for final wording, jurisdiction, retention, vendors, and processing details. — Developer will draft standard notices; no external legal review required per Aki 2026-09-18.
-- [ ] Confirm repository, branching, code review, environments, hosting, domain/DNS, email sender domain, secrets, and recurring costs. — Pending: no Vercel access, no company Git repository yet. Runs alongside Phase 1.
+- [x] Confirm repository, branching, code review, environments, hosting, domain/DNS, email sender domain, secrets, and recurring costs. — Repository: `https://github.com/akizita/opg-official-website.git` (confirmed 2026-09-18). Hosting: Vercel (access pending). Domain: Crazy Domains (access pending). Email sender: Resend (to configure). Initial commit pushed to `main`.
 - [x] Record the screenshot evidence for OPGlobal and that the unrelated Time Tracker project must not be reused.
 - [x] Reconnected the Supabase integration to OPGlobal and verified the dedicated staging project before applying website migrations.
 - [x] Define browser support and measurable quality targets.
@@ -717,6 +717,7 @@ Use: `Not started`, `In progress`, `In review`, `Blocked`, `Accepted`, or `Defer
 | ADR-011 | 2026-09-12 | `https://opglobal.com.hk` is the provisional canonical and `www` will redirect to apex | Armi Escamilla | DNS ownership and redirect verification remain |
 | ADR-012 | 2026-09-12 | Create separate website Supabase projects under OPGlobal; do not reuse Time Tracker; propose Singapore primary region for global CDN delivery | Aki Zita | Connected integration currently shows HackHub; reconnect it and confirm traffic/residency before creation |
 | ADR-013 | 2026-09-15 | Draft/previews stay non-indexable; only approved public URLs enter the sitemap | Aki Zita | Indexing requires the production release checklist |
+| ADR-014 | 2026-09-18 | GitHub (`akizita/opg-official-website`), Vercel (hosting), Resend (email), Crazy Domains (domain); Vercel and domain access pending | Aki Zita | Initial commit pushed; deployment and domain configuration deferred until access granted |
 
 ---
 
