@@ -16,7 +16,8 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "security:check": "npm audit --audit-level=high"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

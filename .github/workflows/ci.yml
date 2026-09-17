@@ -37,5 +37,8 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Security audit
+        run: npm run security:check
+
       - name: Build
         run: npm run build

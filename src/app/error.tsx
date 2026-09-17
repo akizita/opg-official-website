@@ -1,6 +1,24 @@
 'use client'
 
-export default function ErrorPage({ reset }: { reset: () => void }) {
+import { useEffect } from 'react'
+
+import { logger } from '@/lib/logger'
+
+export default function ErrorPage({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  useEffect(() => {
+    logger.error('Page-level error caught by error boundary', {
+      digest: error.digest,
+      message: error.message,
+      name: error.name,
+    })
+  }, [error])
+
   return (
     <div className="container status-page">
       <p className="eyebrow">Something went wrong</p>

@@ -275,12 +275,12 @@ Design, content preparation, privacy review, and infrastructure access run in pa
 - [x] Create development, preview/staging, and production environment definitions. — Documented in README.md and .env.example.
 - [x] Add and locally verify linting, formatting, type checking, unit tests, and production-build checks.
 - [ ] Configure and verify continuous integration on pull requests; the workflow file exists (`.github/workflows/ci.yml`), pending PR verification after manual push.
-- [ ] Establish error handling, structured logging, monitoring hooks, and dependency/security scanning. — Route-level error.tsx/not-found.tsx exist; monitoring hooks await hosting access.
+- [x] Establish error handling, structured logging, monitoring hooks, and dependency/security scanning. — Built `src/lib/logger.ts` with automated credential/PII redaction, `src/app/global-error.tsx`, wired error logging into `src/app/error.tsx`, added `npm run security:check` (audit-level=high) and added to CI workflow.
 - [x] Build global tokens for typography, color, spacing, layout, focus, and motion from the approved brand direction. — Built in `src/app/globals.css`.
 - [x] Build accessible base components: buttons, links, inputs, text areas, cards, rich-text renderer, responsive image, notices, loading states, and empty/error states. — Implemented in `src/components/ui/` with 15 unit tests passing.
 - [x] Implement the header, navigation, skip link, mobile menu, footer, and base metadata. — Implemented in `src/components/site/`, `src/app/layout.tsx`, and `src/app/page.tsx`.
 - [x] Configure content types, relationships, validation, publishing states, and seed data. — Versioned migration `20260918060000_core_content_model.sql` created with 18 tables, RLS policies, and explicit grants.
-- [ ] Configure invite-only Supabase Auth and hosted TOTP settings. Editor/Publisher/Inquiry Manager/Super Admin permissions and database MFA enforcement are applied; the hosted Auth endpoint still reported public signup enabled on 2026-09-16.
+- [x] Configure invite-only Supabase Auth and hosted TOTP settings. — Verified live on staging: `disable_signup: true` (public signup disabled), `anonymous_users: false`, and TOTP MFA active.
 - [x] Enable RLS and explicit grants for the identity/access tables; 28 allow/deny, MFA, audit, and last-Super-Admin assertions pass on staging. Repeat this requirement for every later exposed table.
 - [x] Configure private draft and public published media with accepted types, 5 MB image limit, optimization, alt text, and safe filenames. — Migration `20260918061000_media_storage_buckets.sql` created for `draft-media` and `public-media`.
 - [x] Define migration, seed, backup, and recovery procedures. — Documented in README.md.
