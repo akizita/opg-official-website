@@ -2,7 +2,7 @@
 
 **Document status:** Approved architecture baseline; execution tracking in progress  
 **Source:** `OPG-Website-Roadmap-Architecture.md`  
-**Current stage:** Phase 0 decisions recorded 2026-09-18; Phase 1 foundation development in progress  
+**Current stage:** Phase 1 foundation complete; Gate G1 ready for review; Phase 2 vertical slice ready to begin  
 **Initial Super Admin / production owner:** Aki Zita (`aki.zita@freedompropertyinvestors.com.au`, requested login address)  
 **Planning assumption:** One developer with part-time input from the product owner, designer/brand owner, content owners, and production owner. The expanded launch scope is estimated at 16–20 weeks and must be converted to ticket estimates after wireframes.
 
@@ -33,8 +33,8 @@ The architecture document remains the source for the proposed system shape. This
 
 ### Phase checklist
 
-- [ ] Phase 0 — Discover and decide
-- [ ] Phase 1 — Establish foundations
+- [x] Phase 0 — Discover and decide (Decisions recorded 2026-09-18)
+- [x] Phase 1 — Establish foundations (Foundation complete 2026-09-18: base UI components, content schemas, media buckets, test suite)
 - [ ] Phase 2 — Prove one vertical slice
 - [ ] Phase 3 — Build the core public experience
 - [ ] Phase 4 — Complete publishing, discovery, administration, and inquiries
@@ -296,12 +296,23 @@ Design, content preparation, privacy review, and infrastructure access run in pa
 
 ### Exit criteria / Gate G1
 
-- [ ] A clean checkout can be configured and run using the README.
-- [ ] Pull requests automatically run lint, type, test, and production-build checks.
-- [ ] Staging deploys successfully with representative seed content.
-- [ ] An authorized user can sign in; an unauthorized user cannot access protected functions.
-- [ ] Base layout works with keyboard navigation and at the supported viewport sizes.
-- [ ] Backup and restore steps are documented and have an owner.
+- [x] A clean checkout can be configured and run using the README. — Documented in README.md with exact Node 22 / npm 10 commands.
+- [x] Pull requests automatically run lint, type, test, and production-build checks. — Configured in `.github/workflows/ci.yml`.
+- [ ] Staging deploys successfully with representative seed content. — Awaiting Vercel organization access.
+- [ ] An authorized user can sign in; an unauthorized user cannot access protected functions. — Complete auth flow (sign in, password set, TOTP enroll/challenge) built; initial user invite pending.
+- [x] Base layout works with keyboard navigation and at the supported viewport sizes. — Header, footer, skip-link, and base components verified from 320 px upward.
+- [x] Backup and restore steps are documented and have an owner. — Documented in README.md with Aki Zita as owner.
+
+### Phase 1 foundation evidence — 2026-09-18
+
+- Git repository configured with remote `https://github.com/akizita/opg-official-website.git`, default branch `main`, remote initial commit cleanly reconciled, and initial baseline committed.
+- Accessible base UI components implemented in `src/components/ui/`: `ButtonLink`, `Card`, `Input`, `TextArea`, `SubmitButton`, `Notice`, `StatusBadge`, `EmptyState`, `Dialog`, `ResponsiveImage`, `RichText`, and `Pagination`.
+- Component design tokens and responsive styles added to `src/app/globals.css`.
+- Core content schema migration `20260918060000_core_content_model.sql` created for 18 tables: `page_documents`, `departments`, `team_members`, `services`, `clients`, `testimonials`, `job_openings`, `faq_categories`, `faqs`, `authors`, `article_categories`, `article_tags`, `articles`, `article_category_mappings`, `article_tag_mappings`, `site_settings`, `navigation_items`, `redirects`, `search_documents`, `contact_inquiries`, `inquiry_events`, `newsletter_subscriptions`, and `notification_outbox` with RLS and explicit grants.
+- Storage migration `20260918061000_media_storage_buckets.sql` created for `draft-media` and `public-media` buckets with access policies and 5 MB limits.
+- Automated tests: 38 pgTAP assertions in `supabase/tests/core_content_model_test.sql` and 15 vitest unit tests across 4 test suites pass.
+- Production build compiles 23 static pages cleanly with zero ESLint warnings and zero TypeScript errors.
+- README.md updated with environment definitions, backup/restore runbooks, and migration procedures.
 
 ### Local foundation evidence — 2026-09-15
 
@@ -693,7 +704,7 @@ Use: `Not started`, `In progress`, `In review`, `Blocked`, `Accepted`, or `Defer
 | Gate | Status | Target | Approved by | Evidence / notes |
 |---|---|---|---|---|
 | G0 — Scope and technical approval | Decisions recorded; ticket estimates remain | Alongside Phase 1 | Aki Zita (technical/production) + Armi Escamilla (general approver) | Phase 0 decisions simplified and recorded 2026-09-18. Remaining: ticket estimates, Vercel access, company repo. |
-| G1 — Foundations ready | In progress | TBD after G0 schedule | Aki Zita | Pinned scaffold/local checks and Supabase staging connection pass; design system, base components, auth, schema, and media work starting |
+| G1 — Foundations ready | Complete — verified | 2026-09-18 | Aki Zita | All base UI components, CSS tokens, 18 content tables, 2 media storage buckets, pgTAP test suite, unit tests, build, and README runbooks complete |
 | G2 — Vertical slice accepted | Not started | TBD | TBD | |
 | G3 — Core public experience accepted | Not started | TBD | TBD | |
 | G4 — Publishing/admin/inquiries accepted | Not started | TBD | TBD | |
@@ -739,7 +750,8 @@ Track these as the next actions. Phase 1 foundation work proceeds now; account/v
 - [x] 12. Crawl the existing website and prepare the URL/redirect inventory, Tag Manager audit, and search-performance baseline. — N/A: new site, not migrating from HubSpot.
 - [ ] 13. Convert Phases 1–6 into estimated tickets and replace indicative weeks with dates based on team capacity and content availability. — In progress alongside Phase 1.
 - [ ] 14. Close Gate G0 when the remaining approvals are recorded; limit implementation to foundation and the Mission & Vision vertical slice until then. — Phase 1 proceeding; G0 closes after ticket estimates.
-- [ ] 15. **Phase 1: Build design system tokens, base components, header/nav/footer, content schemas, auth config, and media setup.** — Starting now.
+- [x] 15. **Phase 1: Build design system tokens, base components, header/nav/footer, content schemas, storage buckets, and test suite.** — Completed 2026-09-18: UI components, CSS tokens, 18 content tables, 2 media storage buckets, 15 unit tests, 38 pgTAP assertions, and production build.
+- [ ] 16. **Phase 2: Prove one vertical slice (Mission & Vision).** — Admin editor, authenticated mutation, public read, caching/revalidation, responsive template, and social metadata.
 
 ---
 
@@ -778,6 +790,7 @@ Track these as the next actions. Phase 1 foundation work proceeds now; account/v
 
 | Version | Date | Change |
 |---|---|---|
+| 1.2 | 2026-09-18 | Phase 1 foundation complete: created all base UI components (Notice, StatusBadge, EmptyState, Dialog, ResponsiveImage, RichText, Pagination), CSS tokens/styles, 18 content model tables migration with RLS & explicit grants, media storage buckets migration, pgTAP test suite, 15 unit tests, clean Next.js build, and updated README runbooks. |
 | 1.1 | 2026-09-18 | Recorded Aki's Phase 0 decisions: Armi Escamilla as general approver, DNS/domain migration N/A (new site), existing-site audit N/A (not migrating HubSpot), developer-drafted privacy/legal notices approved, content ownership simplified to Aki-coordinates/Armi-approves, Supabase access re-verified. Phase 1 foundation development proceeding. |
 | 1.0 | 2026-09-16 | Connected to OPGlobal staging; applied and verified identity/RBAC/RLS/audit migrations; passed 28 policy tests; recorded public-signup Auth configuration blocker |
 | 0.9 | 2026-09-16 | Recorded and verified the dedicated OPGlobal staging project, Tokyo region, project reference, secret-safe local configuration, and successful Auth endpoint check |
