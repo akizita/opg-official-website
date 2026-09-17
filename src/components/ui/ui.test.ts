@@ -30,4 +30,3 @@ describe('UI Base Components contracts', () => {
     expect(blocks[0].type).toBe('paragraph')
   })
 })
-

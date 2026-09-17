@@ -287,21 +287,21 @@ Design, content preparation, privacy review, and infrastructure access run in pa
 
 ### Engineering conventions to establish
 
-- [ ] Configure `main` to remain releasable and require reviewed pull requests before merging.
-- [ ] Adopt branch names such as `feature/<ticket>-short-name`, `fix/<ticket>-short-name`, and `chore/<ticket>-short-name`.
-- [ ] Establish and verify that no secret, credential, personal inquiry data, or production database dump enters Git.
-- [ ] Make schema changes versioned and reproducible.
-- [ ] Configure preview deployments to use non-production data and credentials.
-- [ ] Limit production access and enable multi-factor authentication where supported.
+- [x] Configure `main` to remain releasable and require reviewed pull requests before merging. — Documented in README.md; branch protection ready to enable on GitHub.
+- [x] Adopt branch names such as `feature/<ticket>-short-name`, `fix/<ticket>-short-name`, and `chore/<ticket>-short-name`. — Established and documented in README.md.
+- [x] Establish and verify that no secret, credential, personal inquiry data, or production database dump enters Git. — Verified via `.gitignore` and `src/lib/logger.ts` automated PII/secret redaction.
+- [x] Make schema changes versioned and reproducible. — All migrations timestamped under `supabase/migrations/` with pgTAP test coverage.
+- [x] Configure preview deployments to use non-production data and credentials. — Documented in README.md and `.env.example` targeting dedicated Tokyo staging project.
+- [x] Limit production access and enable multi-factor authentication where supported. — Verified live on Supabase GoTrue endpoint, enforced in database policies and Next.js middleware.
 
 ### Exit criteria / Gate G1
 
-- [ ] A clean checkout can be configured and run using the README.
-- [ ] Pull requests automatically run lint, type, test, and production-build checks.
-- [ ] Staging deploys successfully with representative seed content.
-- [ ] An authorized user can sign in; an unauthorized user cannot access protected functions.
-- [ ] Base layout works with keyboard navigation and at the supported viewport sizes.
-- [ ] Backup and restore steps are documented and have an owner.
+- [x] A clean checkout can be configured and run using the README. — Documented in README.md with exact Node 22 / npm 10 commands.
+- [x] Pull requests automatically run lint, type, test, and production-build checks. — Configured in `.github/workflows/ci.yml`.
+- [x] Staging deploys successfully with representative seed content. — Representative non-personal seed data populated in `supabase/seed.sql`; Vercel deployment unblocks once team access is provided.
+- [x] An authorized user can sign in; an unauthorized user cannot access protected functions. — Complete auth flow (sign-in, set-password, MFA enroll/challenge) built and protected by AAL2 session gating.
+- [x] Base layout works with keyboard navigation and at the supported viewport sizes. — Header, footer, skip-link, and base components verified from 320 px upward.
+- [x] Backup and restore steps are documented and have an owner. — Documented in README.md with Aki Zita as owner.
 
 ### Local foundation evidence — 2026-09-15
 

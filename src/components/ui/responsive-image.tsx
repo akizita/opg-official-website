@@ -39,12 +39,7 @@ export function ResponsiveImage({
       aria-hidden={isDecorative ? 'true' : undefined}
       className={`responsive-image-wrapper ${aspectClass} ${className}`.trim()}
     >
-      <Image
-        {...props}
-        alt={altText}
-        className="responsive-image"
-      />
+      <Image {...props} alt={altText} className="responsive-image" />
     </div>
   )
 }
-

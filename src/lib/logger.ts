@@ -48,7 +48,9 @@ export function redactSensitiveData(data: unknown): unknown {
     }
 
     const clean: Record<string, unknown> = {}
-    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(
+      data as Record<string, unknown>,
+    )) {
       if (isSensitiveKey(key)) {
         clean[key] = '[REDACTED]'
       } else {

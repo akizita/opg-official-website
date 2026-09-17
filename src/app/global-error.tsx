@@ -59,7 +59,9 @@ export default function GlobalError({
           <h1 style={{ margin: '0 0 1rem', fontSize: '1.75rem' }}>
             Something went wrong
           </h1>
-          <p style={{ color: '#334e68', lineHeight: 1.5, margin: '0 0 1.5rem' }}>
+          <p
+            style={{ color: '#334e68', lineHeight: 1.5, margin: '0 0 1.5rem' }}
+          >
             A critical application error occurred. You may try reloading the
             application.
           </p>

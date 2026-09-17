@@ -31,8 +31,20 @@ npm.cmd run lint
 npm.cmd run format:check
 npm.cmd run typecheck
 npm.cmd test
+npm.cmd run security:check
 npm.cmd run build
 ```
+
+## Engineering & Git Conventions
+
+- **Default branch:** `main` must remain releasable at all times.
+- **Branch naming convention:**
+  - `feature/<ticket-or-description>` — New capabilities or components
+  - `fix/<ticket-or-description>` — Bug fixes
+  - `chore/<ticket-or-description>` — Upgrades, configs, documentation
+- **Quality gate:** All PRs must pass the CI workflow (`lint`, `format:check`, `typecheck`, `test`, `security:check`, `build`) before merge.
+- **Secret security:** Never commit `.env*` files or credentials. All logs automatically redact PII and credentials using `src/lib/logger.ts`.
+- **Database reproducibility:** All schema modifications are versioned under `supabase/migrations/` and accompanied by pgTAP tests.
 
 ## Environment and Infrastructure Policy
 
