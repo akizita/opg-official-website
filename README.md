@@ -1,6 +1,6 @@
 # OPG Official Website
 
-Phase 1 foundation for the Outsourced Pro Global public website and its future custom administration interface.
+Phase 1 foundation for the Outsourced Pro Global public website and its custom administration interface.
 
 ## Requirements
 
@@ -15,12 +15,12 @@ On this Windows workstation, use `npm.cmd` in PowerShell because the current exe
 
 1. Copy `.env.example` to `.env.local` and keep all real values out of Git.
 2. Install the locked dependencies with `npm.cmd ci`.
-3. Start the site with `npm.cmd run dev`.
+3. Start the development server with `npm.cmd run dev`.
 4. Open `http://localhost:3000`.
 
-The UI-only foundation runs without Supabase credentials. Authentication, content, forms, and media require a dedicated OPG website project; do not connect this repository to the existing Time Tracker project or the unrelated Supabase organization currently exposed by the integration.
+The UI-only foundation runs without Supabase credentials. Authentication, content, forms, and media connect to the dedicated `opg-website-staging` project in Tokyo (`ap-northeast-1`). Do not connect this repository to the existing Time Tracker project.
 
-The visible Home page is a draft layout. Its navigation destinations are clearly marked, non-indexable placeholders for wireframe review, not approved public pages or working contact/career/search/legal flows. `SITE_INDEXABLE` defaults to false: do not enable it until the production content, legal, SEO, and conversion-flow acceptance checks are complete.
+The visible Home page is a draft layout with dual audience paths. Navigation destinations are clearly marked, non-indexable placeholders for wireframe review. `SITE_INDEXABLE` defaults to `false`: do not enable it until the production content, legal, SEO, and conversion-flow acceptance checks are complete.
 
 ## Quality checks
 
@@ -34,23 +34,57 @@ npm.cmd test
 npm.cmd run build
 ```
 
-## Environment policy
+## Environment and Infrastructure Policy
 
-- Development uses local values and a local Supabase stack when Docker is available.
-- Local `supabase/config.toml` disables public signup and automatic Data API table exposure and enables TOTP. These settings have **not** been applied to a cloud project; roles, RLS policies, and MFA enforcement still need implementation and tests.
-- Preview/staging must use the dedicated `opg-website-staging` project.
-- Production must use a separate project and secrets.
-- Never prefix a secret or Supabase secret/service key with `NEXT_PUBLIC_`.
-- Consent-gated analytics stays disabled until the legal text and behavior are approved.
+| Environment     | Purpose                   | Infrastructure                                                                       |
+| --------------- | ------------------------- | ------------------------------------------------------------------------------------ |
+| **Development** | Local iteration           | Local Next.js server + staging Supabase or local Supabase (when Docker is available) |
+| **Staging**     | Demos, UAT & verification | Vercel preview deployment + `opg-website-staging` (Tokyo, Micro)                     |
+| **Production**  | Live official website     | Vercel production deployment + dedicated production Supabase project                 |
 
-## Current blockers for connected development
+### Connected Services
 
-- Reconnect the Supabase integration to the `OPGlobal` organization.
-- Sign in to the open Supabase dashboard in Chrome with the company account, then verify the OPGlobal organization; do not share passwords or recovery codes in this repository or chat.
-- Confirm Aki Zita's exact OPG-managed login email.
-- Confirm the company GitHub organization and authenticate the GitHub CLI.
-- Confirm the company Vercel team and billing owner.
-- Install Docker Desktop before running Supabase locally, or use the staging project once created.
-- The local Supabase CLI is pinned as a dev dependency; use `npx.cmd supabase --help` to discover commands. Docker is not presently installed on this workstation.
+- **Repository:** GitHub (`https://github.com/akizita/opg-official-website.git`)
+- **Backend / Database:** Supabase (`opg-website-staging` in Tokyo)
+- **Frontend Hosting:** Vercel
+- **Domain & DNS:** Crazy Domains
+- **Transactional Email:** Resend
+- **Bot Protection:** Cloudflare Turnstile
 
-See `OPG-Website-Development-Roadmap.md` for delivery status and `OPG-Wireframe-Approval-Guide.md` for the approval session.
+## Database Migrations & Testing
+
+Versioned migrations are located in `supabase/migrations/`:
+
+- `20260916041231_identity_and_access_control.sql` — RBAC, permissions, admin profiles, and audit log.
+- `20260916041717_consolidate_admin_profile_select_policy.sql` — Refined profile read policy.
+- `20260918060000_core_content_model.sql` — Core content schemas, publishing states, inquiries, and search.
+- `20260918061000_media_storage_buckets.sql` — `draft-media` (private) and `public-media` (public) buckets and RLS policies.
+
+To verify migrations locally or against staging using pgTAP:
+
+```powershell
+# Run identity & RBAC test
+# Run core content model test in supabase/tests/
+```
+
+## Backup & Recovery Procedures
+
+### Staging
+
+- Automated daily backups are maintained in Supabase Dashboard.
+- Manual snapshots can be triggered in the Supabase Dashboard under Database → Backups.
+
+### Production
+
+- Point-in-time recovery (PITR) is required for the production Supabase instance.
+- Before running any schema migration in production:
+  1. Verify current automated backup status in the Supabase Dashboard.
+  2. Perform a pre-migration export via `pg_dump` or Supabase CLI.
+  3. Apply migration in a staging transaction first.
+  4. Run smoke test checklist.
+
+## Handover & Documentation Links
+
+- `OPG-Website-Development-Roadmap.md` — Complete phase-by-phase execution plan and gate exit criteria.
+- `OPG-Website-Roadmap-Architecture.md` — Approved system architecture and data model specification.
+- `OPG-Wireframe-Approval-Guide.md` — Task-based design review and UAT checklist.

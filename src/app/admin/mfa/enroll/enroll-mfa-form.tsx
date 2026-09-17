@@ -55,11 +55,10 @@ export function EnrollMfaForm() {
 
     setIsVerifying(true)
     const supabase = createClient()
-    const { error: verifyError } =
-      await supabase.auth.mfa.challengeAndVerify({
-        factorId: enrollment.factorId,
-        code,
-      })
+    const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
+      factorId: enrollment.factorId,
+      code,
+    })
     setIsVerifying(false)
 
     if (verifyError) {

@@ -21,9 +21,7 @@ export async function GET(request: NextRequest) {
   const tokenHash = request.nextUrl.searchParams.get('token_hash')
   const type = request.nextUrl.searchParams.get('type')
   const defaultNext =
-    type === 'invite' || type === 'recovery'
-      ? '/admin/set-password'
-      : '/admin'
+    type === 'invite' || type === 'recovery' ? '/admin/set-password' : '/admin'
   const next = getSafeAdminPath(
     request.nextUrl.searchParams.get('next'),
     defaultNext,

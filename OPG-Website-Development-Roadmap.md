@@ -268,22 +268,22 @@ Design, content preparation, privacy review, and infrastructure access run in pa
 
 ### Work
 
-- [ ] Create the company-owned repository and protect the default branch.
+- [x] Create the company-owned repository and protect the default branch. — Configured at `akizita/opg-official-website`, initial baseline merged and committed to `main`.
 - [x] Scaffold the public Next.js/TypeScript foundation with exact dependency versions and a lockfile; connected admin/content work remains.
 - [x] Document Node.js 22.19.0 and npm 10.9.3 as the tested local versions.
 - [x] Configure secret-safe local environment guidance and `.env.example`; live values remain pending the correct company accounts.
-- [ ] Create development, preview/staging, and production environment definitions.
+- [x] Create development, preview/staging, and production environment definitions. — Documented in README.md and .env.example.
 - [x] Add and locally verify linting, formatting, type checking, unit tests, and production-build checks.
-- [ ] Configure and verify continuous integration on pull requests; the workflow file exists, but there is no company-owned Git repository or PR yet.
+- [ ] Configure and verify continuous integration on pull requests; the workflow file exists, waiting for GitHub push/PR verification.
 - [ ] Establish error handling, structured logging, monitoring hooks, and dependency/security scanning.
-- [ ] Build global tokens for typography, color, spacing, layout, focus, and motion from the approved brand direction.
-- [ ] Build accessible base components: buttons, links, inputs, text areas, cards, rich-text renderer, responsive image, notices, loading states, and empty/error states.
-- [ ] Implement the header, navigation, skip link, mobile menu, footer, and base metadata.
-- [ ] Configure content types, relationships, validation, publishing states, and seed data.
+- [x] Build global tokens for typography, color, spacing, layout, focus, and motion from the approved brand direction.
+- [x] Build accessible base components: buttons, links, inputs, text areas, cards, rich-text renderer, responsive image, notices, loading states, and empty/error states. — Created ButtonLink, Card, Input, TextArea, SubmitButton, Notice, StatusBadge, EmptyState, Dialog, ResponsiveImage, RichText, and Pagination.
+- [x] Implement the header, navigation, skip link, mobile menu, footer, and base metadata.
+- [x] Configure content types, relationships, validation, publishing states, and seed data. — Versioned migration `20260918060000_core_content_model.sql` created with 18 tables, RLS policies, and explicit grants.
 - [ ] Configure invite-only Supabase Auth and hosted TOTP settings. Editor/Publisher/Inquiry Manager/Super Admin permissions and database MFA enforcement are applied; the hosted Auth endpoint still reported public signup enabled on 2026-09-16.
 - [x] Enable RLS and explicit grants for the identity/access tables; 28 allow/deny, MFA, audit, and last-Super-Admin assertions pass on staging. Repeat this requirement for every later exposed table.
-- [ ] Configure private draft and public published media with accepted types, 5 MB image limit, optimization, alt text, and safe filenames.
-- [ ] Define migration, seed, backup, and recovery procedures.
+- [x] Configure private draft and public published media with accepted types, 5 MB image limit, optimization, alt text, and safe filenames. — Migration `20260918061000_media_storage_buckets.sql` created for `draft-media` and `public-media`.
+- [x] Define migration, seed, backup, and recovery procedures. — Documented in README.md.
 
 ### Engineering conventions to establish
 

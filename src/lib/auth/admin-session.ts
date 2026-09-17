@@ -46,8 +46,8 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   if (roleError || !role?.is_active || aalError) return null
 
   return {
-    currentLevel: aal.currentLevel,
-    nextLevel: aal.nextLevel,
+    currentLevel: aal.currentLevel as 'aal1' | 'aal2' | null,
+    nextLevel: aal.nextLevel as 'aal1' | 'aal2' | null,
     profile: {
       displayName: profile.display_name,
       email:
