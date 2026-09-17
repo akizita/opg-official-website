@@ -105,3 +105,4 @@ create policy draft_media_delete on storage.objects
     bucket_id = 'draft-media'
     and (select private.has_permission('media.draft.write'))
   );
+

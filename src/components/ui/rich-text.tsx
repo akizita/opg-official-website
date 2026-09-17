@@ -1,3 +1,4 @@
+
 export type RichTextBlock =
   | { type: 'paragraph'; content: string }
   | { type: 'heading'; level: 2 | 3 | 4; content: string }

@@ -20,7 +20,7 @@ export function Pagination({
     (p) =>
       p === 1 ||
       p === totalPages ||
-      (p >= currentPage - 2 && p <= currentPage + 2),
+      (p >= currentPage - 2 && p <= currentPage + 2)
   )
 
   const pagesWithGaps: (number | 'ellipsis')[] = []
@@ -32,7 +32,10 @@ export function Pagination({
   })
 
   return (
-    <nav aria-label="Pagination" className={`pagination ${className}`.trim()}>
+    <nav
+      aria-label="Pagination"
+      className={`pagination ${className}`.trim()}
+    >
       <ul className="pagination__list">
         {currentPage > 1 ? (
           <li>
@@ -49,11 +52,7 @@ export function Pagination({
         {pagesWithGaps.map((item, index) => {
           if (item === 'ellipsis') {
             return (
-              <li
-                key={`gap-${index}`}
-                aria-hidden="true"
-                className="pagination__gap"
-              >
+              <li key={`gap-${index}`} aria-hidden="true" className="pagination__gap">
                 …
               </li>
             )
@@ -88,3 +87,4 @@ export function Pagination({
     </nav>
   )
 }
+

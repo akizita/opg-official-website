@@ -84,3 +84,4 @@ select has_column('public', 'newsletter_subscriptions', 'email_normalized', 'new
 
 select * from finish();
 rollback;
+

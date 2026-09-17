@@ -687,3 +687,4 @@ create policy newsletter_subscriptions_select on public.newsletter_subscriptions
 create policy notification_outbox_select on public.notification_outbox
   for select to authenticated
   using (private.has_permission('settings.manage'));
+
