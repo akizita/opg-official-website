@@ -3,17 +3,29 @@ import Link from 'next/link'
 type PaginationProps = {
   className?: string
   currentPage: number
-  getPageUrl: (page: number) => string
+  getPageUrl?: (page: number) => string
+  basePath?: string
   totalPages: number
+  totalResults?: number
+  pageSize?: number
 }
 
 export function Pagination({
   className = '',
   currentPage,
   getPageUrl,
+  basePath,
   totalPages,
 }: PaginationProps) {
   if (totalPages <= 1) return null
+
+  const resolveUrl =
+    getPageUrl ??
+    ((page: number) => {
+      const base = basePath || ''
+      const separator = base.includes('?') ? '&' : '?'
+      return `${base}${separator}page=${page}`
+    })
 
   // Calculate pages to show: current, up to 2 before, up to 2 after, first, last
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
@@ -39,7 +51,7 @@ export function Pagination({
             <Link
               aria-label="Go to previous page"
               className="pagination__link pagination__link--prev"
-              href={getPageUrl(currentPage - 1)}
+              href={resolveUrl(currentPage - 1)}
             >
               ← Previous
             </Link>
@@ -65,7 +77,7 @@ export function Pagination({
               <Link
                 aria-current={isCurrent ? 'page' : undefined}
                 className={`pagination__link ${isCurrent ? 'pagination__link--current' : ''}`}
-                href={getPageUrl(item)}
+                href={resolveUrl(item)}
               >
                 {item}
               </Link>
@@ -78,7 +90,7 @@ export function Pagination({
             <Link
               aria-label="Go to next page"
               className="pagination__link pagination__link--next"
-              href={getPageUrl(currentPage + 1)}
+              href={resolveUrl(currentPage + 1)}
             >
               Next →
             </Link>

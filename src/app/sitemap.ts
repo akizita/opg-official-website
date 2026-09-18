@@ -29,10 +29,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
       url: new URL('/mission-and-vision', siteUrl).toString(),
     },
+    {
+      changeFrequency: 'weekly',
+      priority: 0.9,
+      url: new URL('/articles', siteUrl).toString(),
+    },
+    {
+      changeFrequency: 'weekly',
+      priority: 0.9,
+      url: new URL('/careers', siteUrl).toString(),
+    },
+    {
+      changeFrequency: 'monthly',
+      priority: 0.8,
+      url: new URL('/faqs', siteUrl).toString(),
+    },
+    {
+      changeFrequency: 'monthly',
+      priority: 0.8,
+      url: new URL('/contact', siteUrl).toString(),
+    },
   ]
 
   try {
     const supabase = createStaticClient()
+
+    // Additional published page documents
     const { data: publishedDocs } = await supabase
       .from('page_documents')
       .select('slug, updated_at')
@@ -42,9 +64,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       for (const doc of publishedDocs) {
         if (
           doc.slug === 'home' ||
-          ['about', 'services', 'clients', 'mission-and-vision'].includes(
-            doc.slug,
-          )
+          [
+            'about',
+            'services',
+            'clients',
+            'mission-and-vision',
+            'articles',
+            'careers',
+            'faqs',
+            'contact',
+            'search',
+          ].includes(doc.slug)
         ) {
           continue
         }
@@ -57,6 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
 
+    // Published services
     const { data: services } = await supabase
       .from('services')
       .select('slug, updated_at')
@@ -74,8 +105,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         })
       }
     }
+
+    // Published articles
+    const { data: articles } = await supabase
+      .from('articles')
+      .select('slug, updated_at')
+      .eq('status', 'published')
+
+    if (articles) {
+      for (const article of articles) {
+        entries.push({
+          url: new URL(`/articles/${article.slug}`, siteUrl).toString(),
+          lastModified: article.updated_at
+            ? new Date(article.updated_at)
+            : undefined,
+          changeFrequency: 'weekly',
+          priority: 0.8,
+        })
+      }
+    }
+
+    // Published job openings
+    const { data: jobs } = await supabase
+      .from('job_openings')
+      .select('slug, updated_at')
+      .eq('status', 'published')
+
+    if (jobs) {
+      for (const job of jobs) {
+        entries.push({
+          url: new URL(`/careers/${job.slug}`, siteUrl).toString(),
+          lastModified: job.updated_at ? new Date(job.updated_at) : undefined,
+          changeFrequency: 'weekly',
+          priority: 0.8,
+        })
+      }
+    }
   } catch {
-    // If DB is unreachable during static generation, return base entries safely
+    // Fallback safely if DB is unreachable during build
   }
 
   return entries

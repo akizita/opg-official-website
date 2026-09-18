@@ -87,3 +87,23 @@ export function canPublish(roleKey: string): boolean {
 export function canArchive(roleKey: string): boolean {
   return hasRolePermission(roleKey, 'content.archive')
 }
+
+export function canViewInquiries(roleKey: string): boolean {
+  return hasRolePermission(roleKey, 'inquiries.view')
+}
+
+export function canManageInquiries(roleKey: string): boolean {
+  return hasRolePermission(roleKey, 'inquiries.manage')
+}
+
+export function canViewSubscribers(roleKey: string): boolean {
+  return hasRolePermission(roleKey, 'subscribers.view')
+}
+
+export function canManageSettings(roleKey: string): boolean {
+  return hasRolePermission(roleKey, 'settings.manage')
+}
+
+export function canViewAudit(roleKey: string): boolean {
+  return hasRolePermission(roleKey, 'audit.view')
+}

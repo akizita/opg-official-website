@@ -1,5 +1,7 @@
 import type { RichTextBlock } from '@/components/ui/rich-text'
 
+export type { RichTextBlock }
+
 export type DocumentStatus =
   | 'draft'
   | 'in_review'

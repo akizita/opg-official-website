@@ -284,4 +284,314 @@ values
   ('footer', 'Privacy Notice', '/privacy', 1, true),
   ('footer', 'Cookie Notice', '/cookies', 2, true),
   ('footer', 'Terms of Use', '/terms', 3, true)
+-- =============================================================================
+-- 6. Articles, Authors, Categories & Tags
+-- =============================================================================
+
+insert into public.authors (slug, full_name, bio, avatar_url, is_active)
+values
+  ('elena-rostova', 'Elena Rostova', 'VP of Global People & Talent Solutions at OPG, specializing in international workforce scaling.', '/images/authors/elena.jpg', true),
+  ('marcus-chen', 'Marcus Chen', 'Head of Technology Delivery at OPG, advising Fortune 500 enterprises on distributed engineering architectures.', '/images/authors/marcus.jpg', true)
+on conflict (slug) do update
+set full_name = excluded.full_name,
+    bio = excluded.bio,
+    avatar_url = excluded.avatar_url;
+
+insert into public.article_categories (slug, name, description, is_active)
+values
+  ('talent-strategy', 'Talent Strategy', 'Insights and playbooks for scaling remote and cross-border teams.', true),
+  ('engineering-delivery', 'Engineering Delivery', 'Best practices in software architecture, velocity, and technical team pods.', true),
+  ('global-operations', 'Global Operations', 'Regulatory compliance, operational excellence, and enterprise risk management.', true)
+on conflict (slug) do update
+set name = excluded.name,
+    description = excluded.description;
+
+insert into public.article_tags (slug, name, is_active)
+values
+  ('remote-work', 'Remote Work', true),
+  ('leadership', 'Leadership', true),
+  ('cloud', 'Cloud Architecture', true),
+  ('scaling', 'Scaling Teams', true)
+on conflict (slug) do update
+set name = excluded.name;
+
+insert into public.articles (slug, title, author_id, excerpt, content, cover_image_url, reading_time_minutes, status, published_at)
+select
+  'building-high-performing-distributed-teams',
+  'Building High-Performing Distributed Teams: Principles for Enterprise Leaders',
+  a.id,
+  'How global enterprises bridge cultural, timezone, and communication gaps to build remote talent hubs that outperform local co-located teams.',
+  '[
+    {"type": "paragraph", "content": "Modern distributed teams are no longer just a cost-saving measure; they have become the primary strategic advantage for agile enterprises. When executed with intentional communication cadences and clear ownership boundaries, cross-border talent pods consistently exceed local delivery targets."},
+    {"type": "heading", "content": "The Three Pillars of Distributed Velocity"},
+    {"type": "paragraph", "content": "1. Asynchronous-First Documentation: Reducing reliance on live sync meetings preserves deep work time across timezones.\n2. Transparent Performance Metrics: Focusing strictly on business deliverables rather than logged hours creates mutual trust.\n3. Integrated Team Culture: Treating remote team members as core colleagues rather than transactional third-party contractors."}
+  ]'::jsonb,
+  '/images/articles/distributed-teams.jpg',
+  5,
+  'published',
+  now() - interval '2 days'
+from public.authors a
+where a.slug = 'elena-rostova'
+and not exists (select 1 from public.articles where slug = 'building-high-performing-distributed-teams');
+
+insert into public.articles (slug, title, author_id, excerpt, content, cover_image_url, reading_time_minutes, status, published_at)
+select
+  'engineering-velocity-through-dedicated-pods',
+  'Accelerating Engineering Velocity Through Dedicated Technical Pods',
+  a.id,
+  'Why dedicated offshore engineering pods outperform traditional freelance contracting, ensuring code quality, security compliance, and sprint continuity.',
+  '[
+    {"type": "paragraph", "content": "Software engineering teams face relentless pressure to deliver features faster without sacrificing security or scalability. Dedicated pods provide pre-aligned engineering talent that plugs straight into your git workflows and CI/CD pipelines."},
+    {"type": "heading", "content": "Eliminating Sprint Context Switching"},
+    {"type": "paragraph", "content": "By embedding full-stack engineers, QA analysts, and DevOps specialists into dedicated long-term squads, domain knowledge accumulates continuously, leading to dramatic reductions in cycle time and bug regressions."}
+  ]'::jsonb,
+  '/images/articles/engineering-velocity.jpg',
+  6,
+  'published',
+  now() - interval '5 days'
+from public.authors a
+where a.slug = 'marcus-chen'
+and not exists (select 1 from public.articles where slug = 'engineering-velocity-through-dedicated-pods');
+
+insert into public.articles (slug, title, author_id, excerpt, content, cover_image_url, reading_time_minutes, status, published_at)
+select
+  'navigating-global-talent-compliance-2026',
+  'Navigating Global Talent Compliance in 2026',
+  a.id,
+  'Essential guidance for managing legal, IP protection, and data governance obligations across international jurisdictions.',
+  '[
+    {"type": "paragraph", "content": "As international labor regulations evolve rapidly, enterprise organizations must protect their intellectual property, maintain strict ISO/SOC compliance, and avoid misclassification hazards."},
+    {"type": "heading", "content": "Securing IP and Work Product"},
+    {"type": "paragraph", "content": "Robust international agreements ensure immediate and irrevocable assignment of all work product and IP to the client enterprise, backed by local corporate legal entities in each delivery jurisdiction."}
+  ]'::jsonb,
+  '/images/articles/talent-compliance.jpg',
+  4,
+  'published',
+  now() - interval '10 days'
+from public.authors a
+where a.slug = 'elena-rostova'
+and not exists (select 1 from public.articles where slug = 'navigating-global-talent-compliance-2026');
+
+-- Article Mappings
+insert into public.article_category_mappings (article_id, category_id)
+select art.id, cat.id
+from public.articles art
+cross join public.article_categories cat
+where art.slug = 'building-high-performing-distributed-teams' and cat.slug = 'talent-strategy'
 on conflict do nothing;
+
+insert into public.article_category_mappings (article_id, category_id)
+select art.id, cat.id
+from public.articles art
+cross join public.article_categories cat
+where art.slug = 'engineering-velocity-through-dedicated-pods' and cat.slug = 'engineering-delivery'
+on conflict do nothing;
+
+insert into public.article_category_mappings (article_id, category_id)
+select art.id, cat.id
+from public.articles art
+cross join public.article_categories cat
+where art.slug = 'navigating-global-talent-compliance-2026' and cat.slug = 'global-operations'
+on conflict do nothing;
+
+insert into public.article_tag_mappings (article_id, tag_id)
+select art.id, tag.id
+from public.articles art
+cross join public.article_tags tag
+where art.slug = 'building-high-performing-distributed-teams' and tag.slug in ('remote-work', 'leadership')
+on conflict do nothing;
+
+insert into public.article_tag_mappings (article_id, tag_id)
+select art.id, tag.id
+from public.articles art
+cross join public.article_tags tag
+where art.slug = 'engineering-velocity-through-dedicated-pods' and tag.slug in ('scaling', 'cloud')
+on conflict do nothing;
+
+insert into public.article_tag_mappings (article_id, tag_id)
+select art.id, tag.id
+from public.articles art
+cross join public.article_tags tag
+where art.slug = 'navigating-global-talent-compliance-2026' and tag.slug in ('leadership', 'remote-work')
+on conflict do nothing;
+
+-- =============================================================================
+-- 7. Careers (Job Openings)
+-- =============================================================================
+
+insert into public.job_openings (
+  slug,
+  title,
+  department_id,
+  location,
+  work_arrangement,
+  employment_type,
+  summary,
+  description,
+  external_apply_url,
+  status,
+  published_at
+)
+select
+  'senior-full-stack-engineer',
+  'Senior Full Stack Engineer (TypeScript & Cloud)',
+  d.id,
+  'Remote (Global)',
+  'remote',
+  'full_time',
+  'Lead high-impact web application development and cloud backend services for enterprise client solutions.',
+  '[
+    {"type": "heading", "content": "The Opportunity"},
+    {"type": "paragraph", "content": "We are looking for an experienced Senior Full Stack Engineer proficient in Next.js, Node.js, TypeScript, and modern relational databases to build mission-critical enterprise platforms."},
+    {"type": "heading", "content": "Requirements"},
+    {"type": "paragraph", "content": "- 5+ years building scalable web applications with React/Next.js and TypeScript.\n- Deep understanding of SQL, PostgreSQL, REST/GraphQL APIs, and cloud architectures.\n- Strong communication skills and experience collaborating across global timezones."}
+  ]'::jsonb,
+  'https://outsourcedproglobal.applytojob.com',
+  'published',
+  now() - interval '3 days'
+from public.departments d
+where d.slug = 'engineering'
+and not exists (select 1 from public.job_openings where slug = 'senior-full-stack-engineer');
+
+insert into public.job_openings (
+  slug,
+  title,
+  department_id,
+  location,
+  work_arrangement,
+  employment_type,
+  summary,
+  description,
+  external_apply_url,
+  status,
+  published_at
+)
+select
+  'technical-recruitment-specialist',
+  'Technical Talent Acquisition Specialist',
+  d.id,
+  'Remote (Asia-Pacific)',
+  'remote',
+  'full_time',
+  'Identify, screen, and place top-tier engineering and digital talent with enterprise client teams.',
+  '[
+    {"type": "heading", "content": "The Opportunity"},
+    {"type": "paragraph", "content": "Join our fast-growing Talent Solutions team to source, evaluate, and match exceptional professionals with global technology companies."},
+    {"type": "heading", "content": "Requirements"},
+    {"type": "paragraph", "content": "- 3+ years experience in technical talent acquisition or recruitment consultancy.\n- Proven track record placing software engineers, architects, and product specialists.\n- Experience in candidate relationship management and competency assessment."}
+  ]'::jsonb,
+  'https://outsourcedproglobal.applytojob.com',
+  'published',
+  now() - interval '7 days'
+from public.departments d
+where d.slug = 'talent-solutions'
+and not exists (select 1 from public.job_openings where slug = 'technical-recruitment-specialist');
+
+insert into public.job_openings (
+  slug,
+  title,
+  department_id,
+  location,
+  work_arrangement,
+  employment_type,
+  summary,
+  description,
+  external_apply_url,
+  status,
+  published_at
+)
+select
+  'operations-delivery-manager',
+  'Client Operations Delivery Manager',
+  d.id,
+  'Tokyo / Remote',
+  'hybrid',
+  'full_time',
+  'Drive operational excellence, client satisfaction, and quality standards across cross-border talent engagements.',
+  '[
+    {"type": "heading", "content": "The Opportunity"},
+    {"type": "paragraph", "content": "As Operations Delivery Manager, you will oversee client workflows, monitor SLA delivery metrics, and foster high-trust client relationships."},
+    {"type": "heading", "content": "Requirements"},
+    {"type": "paragraph", "content": "- 4+ years managing operational client delivery or account management.\n- Strong analytical mindset, process optimization skills, and executive communication.\n- Fluency in English; Japanese proficiency is advantageous."}
+  ]'::jsonb,
+  'https://outsourcedproglobal.applytojob.com',
+  'published',
+  now() - interval '12 days'
+from public.departments d
+where d.slug = 'operations'
+and not exists (select 1 from public.job_openings where slug = 'operations-delivery-manager');
+
+-- =============================================================================
+-- 8. Search Documents Index
+-- =============================================================================
+
+insert into public.search_documents (entity_type, entity_id, title, excerpt, url_path)
+select
+  'page_document',
+  slug,
+  title,
+  summary,
+  case when slug = 'home' then '/' else '/' || slug end
+from public.page_documents
+where status = 'published'
+on conflict (entity_type, entity_id) do update
+set title = excluded.title,
+    excerpt = excluded.excerpt,
+    url_path = excluded.url_path;
+
+insert into public.search_documents (entity_type, entity_id, title, excerpt, url_path)
+select
+  'service',
+  slug,
+  title,
+  summary,
+  '/services/' || slug
+from public.services
+where status = 'published'
+on conflict (entity_type, entity_id) do update
+set title = excluded.title,
+    excerpt = excluded.excerpt,
+    url_path = excluded.url_path;
+
+insert into public.search_documents (entity_type, entity_id, title, excerpt, url_path)
+select
+  'faq',
+  id::text,
+  question,
+  answer,
+  '/faqs'
+from public.faqs
+where status = 'published'
+on conflict (entity_type, entity_id) do update
+set title = excluded.title,
+    excerpt = excluded.excerpt,
+    url_path = excluded.url_path;
+
+insert into public.search_documents (entity_type, entity_id, title, excerpt, url_path)
+select
+  'article',
+  slug,
+  title,
+  excerpt,
+  '/articles/' || slug
+from public.articles
+where status = 'published'
+on conflict (entity_type, entity_id) do update
+set title = excluded.title,
+    excerpt = excluded.excerpt,
+    url_path = excluded.url_path;
+
+insert into public.search_documents (entity_type, entity_id, title, excerpt, url_path)
+select
+  'job_opening',
+  slug,
+  title,
+  summary,
+  '/careers/' || slug
+from public.job_openings
+where status = 'published'
+on conflict (entity_type, entity_id) do update
+set title = excluded.title,
+    excerpt = excluded.excerpt,
+    url_path = excluded.url_path;
+

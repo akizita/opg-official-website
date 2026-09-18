@@ -4,6 +4,7 @@ type EmptyStateProps = {
   action?: ReactNode
   className?: string
   description?: string
+  message?: string
   icon?: ReactNode
   title: string
 }
@@ -12,9 +13,12 @@ export function EmptyState({
   action,
   className = '',
   description,
+  message,
   icon,
   title,
 }: EmptyStateProps) {
+  const displayDescription = description ?? message
+
   return (
     <div
       className={`empty-state ${className}`.trim()}
@@ -27,8 +31,8 @@ export function EmptyState({
         </div>
       ) : null}
       <h3 className="empty-state__title">{title}</h3>
-      {description ? (
-        <p className="empty-state__description">{description}</p>
+      {displayDescription ? (
+        <p className="empty-state__description">{displayDescription}</p>
       ) : null}
       {action ? <div className="empty-state__action">{action}</div> : null}
     </div>

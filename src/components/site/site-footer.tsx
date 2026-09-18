@@ -27,6 +27,8 @@ const footerGroups = [
   },
 ] as const
 
+import { NewsletterForm } from '@/components/site/newsletter-form'
+
 export function SiteFooter() {
   return (
     <footer className="site-footer">
@@ -47,6 +49,9 @@ export function SiteFooter() {
             ))}
           </nav>
         ))}
+      </div>
+      <div className="container site-footer__newsletter">
+        <NewsletterForm />
       </div>
       <div className="container site-footer__bottom">
         <small>© {new Date().getFullYear()} Outsourced Pro Global.</small>
