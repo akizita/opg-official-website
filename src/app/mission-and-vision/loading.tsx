@@ -1,10 +1,6 @@
 export default function MissionAndVisionLoading() {
   return (
-    <div
-      className="container mission-page"
-      aria-busy="true"
-      aria-label="Loading content"
-    >
+    <div className="container mission-page" aria-busy="true" aria-label="Loading content">
       <div className="skeleton-breadcrumbs" />
       <div className="skeleton-hero">
         <div className="skeleton-eyebrow" />
@@ -21,3 +17,4 @@ export default function MissionAndVisionLoading() {
     </div>
   )
 }
+

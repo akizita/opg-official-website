@@ -26,8 +26,7 @@ describe('page-documents schema & validation', () => {
         { type: 'callout', variant: 'info', content: 'Core values.' },
       ],
       seo_title: 'Mission & Vision | OPG',
-      seo_description:
-        'Discover the mission and vision of Outsourced Pro Global.',
+      seo_description: 'Discover the mission and vision of Outsourced Pro Global.',
       status: 'draft',
     }
 
@@ -35,9 +34,7 @@ describe('page-documents schema & validation', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.title).toBe('Mission & Vision')
-      expect(result.data.summary).toBe(
-        'Empowering global organizations with exceptional talent.',
-      )
+      expect(result.data.summary).toBe('Empowering global organizations with exceptional talent.')
       expect(result.data.content).toHaveLength(3)
       expect(result.data.status).toBe('draft')
     }
@@ -71,9 +68,7 @@ describe('page-documents schema & validation', () => {
   it('rejects malformed rich text block', () => {
     const malformed = {
       title: 'Valid Title',
-      content: [
-        { type: 'heading', level: 5, content: 'Invalid heading level' },
-      ],
+      content: [{ type: 'heading', level: 5, content: 'Invalid heading level' }],
     }
     const result = validatePageDocumentInput(malformed)
     expect(result.success).toBe(false)
@@ -107,28 +102,11 @@ describe('page-documents schema & validation', () => {
 
     const blocks = buildMissionVisionBlocks(original)
     expect(blocks).toHaveLength(6)
-    expect(blocks[0]).toEqual({
-      type: 'heading',
-      level: 2,
-      content: 'Custom Mission',
-    })
-    expect(blocks[1]).toEqual({
-      type: 'paragraph',
-      content: 'First paragraph.',
-    })
-    expect(blocks[2]).toEqual({
-      type: 'paragraph',
-      content: 'Second paragraph.',
-    })
-    expect(blocks[3]).toEqual({
-      type: 'heading',
-      level: 2,
-      content: 'Custom Vision',
-    })
-    expect(blocks[4]).toEqual({
-      type: 'paragraph',
-      content: 'Vision paragraph.',
-    })
+    expect(blocks[0]).toEqual({ type: 'heading', level: 2, content: 'Custom Mission' })
+    expect(blocks[1]).toEqual({ type: 'paragraph', content: 'First paragraph.' })
+    expect(blocks[2]).toEqual({ type: 'paragraph', content: 'Second paragraph.' })
+    expect(blocks[3]).toEqual({ type: 'heading', level: 2, content: 'Custom Vision' })
+    expect(blocks[4]).toEqual({ type: 'paragraph', content: 'Vision paragraph.' })
 
     const extracted = extractMissionVisionContent([
       ...blocks,

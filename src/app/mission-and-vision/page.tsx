@@ -17,9 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const { data: doc } = await supabase
     .from('page_documents')
-    .select(
-      'title, summary, seo_title, seo_description, canonical_url, og_image_url, status',
-    )
+    .select('title, summary, seo_title, seo_description, canonical_url, og_image_url, status')
     .eq('slug', 'mission-and-vision')
     .maybeSingle<PageDocument>()
 
@@ -77,9 +75,7 @@ export default async function MissionAndVisionPage() {
     .eq('slug', 'mission-and-vision')
     .maybeSingle<PageDocument>()
 
-  const hasStaffAccess = session
-    ? canViewContent(session.profile.roleKey)
-    : false
+  const hasStaffAccess = session ? canViewContent(session.profile.roleKey) : false
   const isPublished = doc?.status === 'published'
 
   // If no document exists, or if document is unpublished and viewer is not admin
@@ -105,9 +101,8 @@ export default async function MissionAndVisionPage() {
             title="Internal Preview Mode"
             variant="warning"
           >
-            You are viewing this document in staff preview mode. The current
-            status is <strong>{doc.status}</strong> (v{doc.version}). It is not
-            visible to the public.
+            You are viewing this document in staff preview mode. The current status is{' '}
+            <strong>{doc.status}</strong> (v{doc.version}). It is not visible to the public.
           </Notice>
         )}
 
@@ -130,10 +125,7 @@ export default async function MissionAndVisionPage() {
         </header>
 
         {/* Main Content Body */}
-        <section
-          aria-label="Statements and Principles"
-          className="mission-content"
-        >
+        <section aria-label="Statements and Principles" className="mission-content">
           <RichText content={doc.content} />
         </section>
 
@@ -144,9 +136,8 @@ export default async function MissionAndVisionPage() {
               <p className="eyebrow">For Enterprise Partners</p>
               <h2>Build Your Global Team</h2>
               <p>
-                Learn how Outsourced Pro Global helps ambitious companies scale
-                with dedicated talent, transparent operations, and measurable
-                outcomes.
+                Learn how Outsourced Pro Global helps ambitious companies scale with
+                dedicated talent, transparent operations, and measurable outcomes.
               </p>
               <div className="button-row">
                 <ButtonLink href="/contact" variant="primary">
@@ -162,8 +153,8 @@ export default async function MissionAndVisionPage() {
               <p className="eyebrow">For Professionals</p>
               <h2>Grow Your Career Globally</h2>
               <p>
-                Connect with world-class international companies offering
-                high-trust, rewarding roles and long-term career progression.
+                Connect with world-class international companies offering high-trust,
+                rewarding roles and long-term career progression.
               </p>
               <div className="button-row">
                 <ButtonLink href="/careers" variant="primary">
@@ -180,3 +171,4 @@ export default async function MissionAndVisionPage() {
     </main>
   )
 }
+

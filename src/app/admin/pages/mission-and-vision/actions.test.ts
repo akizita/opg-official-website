@@ -65,9 +65,7 @@ describe('saveMissionVisionAction server action', () => {
 
     const result = await saveMissionVisionAction({}, formData)
     expect(result.success).toBe(false)
-    expect(result.message).toContain(
-      'Two-factor authentication (MFA) verification required',
-    )
+    expect(result.message).toContain('Two-factor authentication (MFA) verification required')
   })
 
   it('rejects editor role attempting to publish', async () => {
@@ -93,9 +91,7 @@ describe('saveMissionVisionAction server action', () => {
 
     const result = await saveMissionVisionAction({}, formData)
     expect(result.success).toBe(false)
-    expect(result.message).toContain(
-      'Forbidden: You do not have permission to publish',
-    )
+    expect(result.message).toContain('Forbidden: You do not have permission to publish')
   })
 
   it('rejects save draft with empty title', async () => {
@@ -177,12 +173,10 @@ describe('saveMissionVisionAction server action', () => {
         status: 'draft',
         version: 4,
         updated_by: 'user-editor',
-      }),
+      })
     )
     expect(revalidatePath).toHaveBeenCalledWith('/mission-and-vision')
-    expect(revalidatePath).toHaveBeenCalledWith(
-      '/admin/pages/mission-and-vision',
-    )
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/pages/mission-and-vision')
   })
 
   it('allows publisher to publish and sets published_at and published_by', async () => {
@@ -233,8 +227,9 @@ describe('saveMissionVisionAction server action', () => {
       expect.objectContaining({
         status: 'published',
         published_by: 'user-pub',
-      }),
+      })
     )
     expect(revalidatePath).toHaveBeenCalledWith('/mission-and-vision')
   })
 })
+

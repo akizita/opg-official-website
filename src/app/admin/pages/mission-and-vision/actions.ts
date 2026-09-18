@@ -28,7 +28,7 @@ export type MissionVisionActionState = {
 
 export async function saveMissionVisionAction(
   prevState: MissionVisionActionState,
-  formData: FormData,
+  formData: FormData
 ): Promise<MissionVisionActionState> {
   const session = await getAdminSession()
 
@@ -69,21 +69,18 @@ export async function saveMissionVisionAction(
       if (!canPublish(roleKey)) {
         return {
           success: false,
-          message:
-            'Forbidden: You do not have permission to unpublish content.',
+          message: 'Forbidden: You do not have permission to unpublish content.',
         }
       }
       targetStatus = 'unpublished'
-      successMessage =
-        'Page unpublished. It is no longer visible to the public.'
+      successMessage = 'Page unpublished. It is no longer visible to the public.'
       break
 
     case 'submit_review':
       if (!canSubmitReview(roleKey)) {
         return {
           success: false,
-          message:
-            'Forbidden: You do not have permission to submit content for review.',
+          message: 'Forbidden: You do not have permission to submit content for review.',
         }
       }
       targetStatus = 'in_review'
@@ -117,8 +114,7 @@ export async function saveMissionVisionAction(
   // Extract raw form data
   const rawTitle = formData.get('title')
   const rawSummary = formData.get('summary')
-  const rawMissionTitle =
-    (formData.get('missionTitle') as string) || 'Our Mission'
+  const rawMissionTitle = (formData.get('missionTitle') as string) || 'Our Mission'
   const rawMissionBody = (formData.get('missionBody') as string) || ''
   const rawVisionTitle = (formData.get('visionTitle') as string) || 'Our Vision'
   const rawVisionBody = (formData.get('visionBody') as string) || ''
@@ -211,11 +207,13 @@ export async function saveMissionVisionAction(
       .eq('id', existingDoc.id)
     mutationError = error
   } else {
-    const { error } = await supabase.from('page_documents').insert({
-      ...documentData,
-      created_by: session.profile.id,
-      created_at: now,
-    })
+    const { error } = await supabase
+      .from('page_documents')
+      .insert({
+        ...documentData,
+        created_by: session.profile.id,
+        created_at: now,
+      })
     mutationError = error
   }
 

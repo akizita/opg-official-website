@@ -88,8 +88,8 @@ export default async function AdminMissionVisionPage() {
             <p className="eyebrow">Content Workspace · Vertical Slice</p>
             <h1>Edit Mission & Vision</h1>
             <p>
-              Manage official company purpose statements, values highlights, and
-              search preview metadata.
+              Manage official company purpose statements, values highlights,
+              and search preview metadata.
             </p>
           </div>
           <div>
@@ -110,3 +110,4 @@ export default async function AdminMissionVisionPage() {
     </section>
   )
 }
+
