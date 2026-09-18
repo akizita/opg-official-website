@@ -22,6 +22,32 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
     setResult(null)
 
     if (file) {
+      // Client-side guard: give instant feedback before hitting the server
+      if (file.size > 5 * 1024 * 1024) {
+        setResult({
+          success: false,
+          error: `This file is ${(file.size / 1024 / 1024).toFixed(1)} MB. Please select an image under 5 MB.`,
+        })
+        setPreviewUrl(null)
+        return
+      }
+
+      const allowed = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/avif',
+        'image/svg+xml',
+      ]
+      if (!allowed.includes(file.type)) {
+        setResult({
+          success: false,
+          error: `Unsupported format (${file.type || 'unknown'}). Please use JPEG, PNG, WebP, AVIF, or SVG.`,
+        })
+        setPreviewUrl(null)
+        return
+      }
+
       const objUrl = URL.createObjectURL(file)
       setPreviewUrl(objUrl)
     } else {
