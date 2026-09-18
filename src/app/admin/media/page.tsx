@@ -26,8 +26,7 @@ export default async function AdminMediaPage({ searchParams }: MediaPageProps) {
       <section className="admin-page">
         <div className="container">
           <p className="form-help">
-            Your current role ({profile.roleDisplayName}) does not have
-            permission to manage media assets.
+            Your current role ({profile.roleDisplayName}) does not have permission to manage media assets.
           </p>
           <Link className="button button--secondary" href="/admin">
             ← Return to Dashboard
@@ -40,9 +39,7 @@ export default async function AdminMediaPage({ searchParams }: MediaPageProps) {
   const { category } = await searchParams
   const activeCategory = category || 'all'
 
-  const assets = await getMediaAssets(
-    activeCategory === 'all' ? undefined : activeCategory,
-  )
+  const assets = await getMediaAssets(activeCategory === 'all' ? undefined : activeCategory)
 
   const categories = [
     { label: 'All Media', value: 'all' },
@@ -71,8 +68,7 @@ export default async function AdminMediaPage({ searchParams }: MediaPageProps) {
             <p className="eyebrow">Asset Management</p>
             <h1>Media Storage & Assets</h1>
             <p>
-              Upload and manage photographic assets, corporate logos, and
-              article illustrations.
+              Upload and manage photographic assets, corporate logos, and article illustrations.
             </p>
           </div>
           <div>
@@ -128,3 +124,4 @@ export default async function AdminMediaPage({ searchParams }: MediaPageProps) {
     </section>
   )
 }
+

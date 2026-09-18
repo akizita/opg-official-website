@@ -2,10 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react'
 
-import {
-  uploadMediaAction,
-  type UploadMediaResult,
-} from '@/app/admin/media/actions'
+import { uploadMediaAction, type UploadMediaResult } from '@/app/admin/media/actions'
 
 export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
   const [isPending, startTransition] = useTransition()
@@ -64,18 +61,10 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
   return (
     <div className="card" style={{ marginBottom: '2.5rem' }}>
       <p className="eyebrow">Asset Storage</p>
-      <h2 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>
-        Upload New Image
-      </h2>
-      <p
-        style={{
-          color: 'var(--color-ink-soft)',
-          fontSize: '0.95rem',
-          marginBottom: '1.5rem',
-        }}
-      >
-        Store image assets for articles, team profiles, client logos, and site
-        hero sections. Supported formats: JPEG, PNG, WebP, AVIF, SVG (max 5 MB).
+      <h2 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>Upload New Image</h2>
+      <p style={{ color: 'var(--color-ink-soft)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+        Store image assets for articles, team profiles, client logos, and site hero sections. Supported
+        formats: JPEG, PNG, WebP, AVIF, SVG (max 5 MB).
       </p>
 
       {result?.error && (
@@ -85,11 +74,7 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
       )}
 
       {result?.success && result.url && (
-        <div
-          className="notice notice--success"
-          role="status"
-          style={{ marginBottom: '1.5rem' }}
-        >
+        <div className="notice notice--success" role="status" style={{ marginBottom: '1.5rem' }}>
           <div className="notice__icon">✓</div>
           <div className="notice__content">
             <p className="notice__title">Image uploaded successfully!</p>
@@ -100,11 +85,7 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
               <button
                 className="button button--secondary"
                 onClick={() => handleCopy(result.url!)}
-                style={{
-                  minHeight: '2.25rem',
-                  padding: '0.25rem 0.75rem',
-                  fontSize: '0.85rem',
-                }}
+                style={{ minHeight: '2.25rem', padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}
                 type="button"
               >
                 {copied ? '✓ Copied URL!' : '📋 Copy Image URL'}
@@ -114,19 +95,8 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
         </div>
       )}
 
-      <form
-        className="contact-form"
-        noValidate
-        onSubmit={handleSubmit}
-        ref={formRef}
-      >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '1.5rem',
-          }}
-        >
+      <form className="contact-form" noValidate onSubmit={handleSubmit} ref={formRef}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
           <div className="form-field">
             <label htmlFor="media-category">
               Target Category <span className="field-required">*</span>
@@ -153,8 +123,7 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
 
           <div className="form-field">
             <label htmlFor="media-alt">
-              Alternative Text (Alt text){' '}
-              <span className="field-required">*</span>
+              Alternative Text (Alt text) <span className="field-required">*</span>
             </label>
             <input
               disabled={isPending}
@@ -165,9 +134,7 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
               required
               type="text"
             />
-            <span className="field-hint">
-              Accurate descriptive text for accessibility & SEO.
-            </span>
+            <span className="field-hint">Accurate descriptive text for accessibility & SEO.</span>
           </div>
         </div>
 
@@ -188,13 +155,7 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
 
         {previewUrl && (
           <div style={{ marginBlock: '1rem' }}>
-            <p
-              style={{
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-              }}
-            >
+            <p style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>
               Preview:
             </p>
             <div
@@ -211,12 +172,7 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
               <img
                 alt="Selected preview"
                 src={previewUrl}
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  display: 'block',
-                  borderRadius: '4px',
-                }}
+                style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '4px' }}
               />
             </div>
           </div>
@@ -235,3 +191,4 @@ export function MediaUploader({ onUploaded }: { onUploaded?: () => void }) {
     </div>
   )
 }
+

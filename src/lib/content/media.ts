@@ -57,10 +57,7 @@ export async function uploadMediaAsset(
 
   // Validate size
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    return {
-      success: false,
-      error: 'File exceeds the 5 MB maximum size limit.',
-    }
+    return { success: false, error: 'File exceeds the 5 MB maximum size limit.' }
   }
 
   // Validate MIME type
@@ -116,19 +113,20 @@ export async function uploadMediaAsset(
 
       return {
         success: true,
-        asset: assetRow || {
-          id: uploadData.path,
-          bucket_id: 'public-media',
-          file_path: uploadData.path,
-          public_url: publicUrl,
-          file_name: fileName,
-          mime_type: file.type,
-          size_bytes: file.size,
-          alt_text: altText,
-          caption: meta.caption || null,
-          category,
-          created_at: new Date().toISOString(),
-        },
+        asset:
+          assetRow || {
+            id: uploadData.path,
+            bucket_id: 'public-media',
+            file_path: uploadData.path,
+            public_url: publicUrl,
+            file_name: fileName,
+            mime_type: file.type,
+            size_bytes: file.size,
+            alt_text: altText,
+            caption: meta.caption || null,
+            category,
+            created_at: new Date().toISOString(),
+          },
       }
     }
 
@@ -164,8 +162,7 @@ export async function uploadMediaAsset(
   } catch (err) {
     return {
       success: false,
-      error:
-        err instanceof Error ? err.message : 'Unknown storage error occurred',
+      error: err instanceof Error ? err.message : 'Unknown storage error occurred',
     }
   }
 }
@@ -208,8 +205,7 @@ export async function getMediaAssets(
     if (files && files.length > 0) {
       for (const f of files) {
         if (!f.name || f.name === '.emptyFolderPlaceholder') continue
-        const fullPath =
-          category && category !== 'all' ? `${category}/${f.name}` : f.name
+        const fullPath = category && category !== 'all' ? `${category}/${f.name}` : f.name
         const { data: urlData } = supabase.storage
           .from('public-media')
           .getPublicUrl(fullPath)
@@ -237,10 +233,7 @@ export async function getMediaAssets(
   try {
     const uploadsBase = path.join(process.cwd(), 'public', 'uploads')
     if (fs.existsSync(uploadsBase)) {
-      const categories =
-        category && category !== 'all'
-          ? [category]
-          : fs.readdirSync(uploadsBase)
+      const categories = category && category !== 'all' ? [category] : fs.readdirSync(uploadsBase)
       for (const cat of categories) {
         const catDir = path.join(uploadsBase, cat)
         if (fs.statSync(catDir).isDirectory()) {
