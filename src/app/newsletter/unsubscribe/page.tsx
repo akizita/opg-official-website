@@ -42,7 +42,9 @@ export default async function NewsletterUnsubscribePage({
           eyebrow={result.success ? 'Unsubscribed' : 'Unsubscribe Issue'}
           title={result.success ? 'Subscription Updated' : 'Request Incomplete'}
         >
-          <p style={{ marginTop: '1rem', lineHeight: '1.6' }}>{result.message}</p>
+          <p style={{ marginTop: '1rem', lineHeight: '1.6' }}>
+            {result.message}
+          </p>
 
           <div
             style={{
@@ -61,4 +63,3 @@ export default async function NewsletterUnsubscribePage({
     </main>
   )
 }
-

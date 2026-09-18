@@ -73,7 +73,9 @@ describe('inquiries schema & validation', () => {
 
     const { data, errors } = validateInquiryInput(noConsent)
     expect(data).toBeNull()
-    expect(errors.privacyConsent).toBe('You must acknowledge the Privacy Notice to submit')
+    expect(errors.privacyConsent).toBe(
+      'You must acknowledge the Privacy Notice to submit',
+    )
   })
 })
 
@@ -120,7 +122,9 @@ describe('inquiry submission database transaction', () => {
           return {
             insert: vi.fn().mockReturnValue({
               select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: mockInquiry, error: null }),
+                single: vi
+                  .fn()
+                  .mockResolvedValue({ data: mockInquiry, error: null }),
               }),
             }),
           }
@@ -154,4 +158,3 @@ describe('inquiry submission database transaction', () => {
     expect(result.referenceId).toBe('OPG-INQ-1234')
   })
 })
-

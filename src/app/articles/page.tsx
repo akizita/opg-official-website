@@ -44,7 +44,9 @@ export function generateMetadata(): Metadata {
   }
 }
 
-export default async function ArticlesPage({ searchParams }: ArticlesPageProps) {
+export default async function ArticlesPage({
+  searchParams,
+}: ArticlesPageProps) {
   const params = await searchParams
   const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1)
   const categorySlug = params.category || undefined
@@ -112,11 +114,14 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
                       dateTime={article.published_at}
                       className="article-card__date"
                     >
-                      {new Date(article.published_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
+                      {new Date(article.published_at).toLocaleDateString(
+                        'en-US',
+                        {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        },
+                      )}
                     </time>
                   )}
                 </div>
@@ -152,7 +157,11 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
                 totalPages={totalPages}
                 totalResults={total}
                 pageSize={6}
-                basePath={categorySlug ? `/articles?category=${encodeURIComponent(categorySlug)}` : '/articles'}
+                basePath={
+                  categorySlug
+                    ? `/articles?category=${encodeURIComponent(categorySlug)}`
+                    : '/articles'
+                }
               />
             </div>
           )}
@@ -161,4 +170,3 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
     </main>
   )
 }
-

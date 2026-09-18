@@ -30,7 +30,8 @@ export default async function AdminInquiryDetailPage({
       <section className="admin-page">
         <div className="container">
           <p className="form-help">
-            Your current role ({profile.roleDisplayName}) does not have permission to view inquiries.
+            Your current role ({profile.roleDisplayName}) does not have
+            permission to view inquiries.
           </p>
           <Link className="button button--secondary" href="/admin">
             ← Return to Dashboard
@@ -54,14 +55,17 @@ export default async function AdminInquiryDetailPage({
   }
 
   const refId = `OPG-${inquiry.id.slice(0, 8).toUpperCase()}`
-  const submittedDate = new Date(inquiry.submitted_at).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const submittedDate = new Date(inquiry.submitted_at).toLocaleDateString(
+    'en-US',
+    {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    },
+  )
 
   return (
     <section className="admin-page">
@@ -108,13 +112,23 @@ export default async function AdminInquiryDetailPage({
               }}
             >
               <div>
-                <strong style={{ fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>
+                <strong
+                  style={{
+                    fontSize: '0.85rem',
+                    color: 'var(--color-text-subtle)',
+                  }}
+                >
                   Sender Name
                 </strong>
                 <p>{inquiry.full_name}</p>
               </div>
               <div>
-                <strong style={{ fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>
+                <strong
+                  style={{
+                    fontSize: '0.85rem',
+                    color: 'var(--color-text-subtle)',
+                  }}
+                >
                   Email Address
                 </strong>
                 <p>
@@ -122,7 +136,12 @@ export default async function AdminInquiryDetailPage({
                 </p>
               </div>
               <div>
-                <strong style={{ fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>
+                <strong
+                  style={{
+                    fontSize: '0.85rem',
+                    color: 'var(--color-text-subtle)',
+                  }}
+                >
                   Current Status
                 </strong>
                 <div style={{ marginTop: '0.25rem' }}>
@@ -142,7 +161,12 @@ export default async function AdminInquiryDetailPage({
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <strong style={{ fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>
+              <strong
+                style={{
+                  fontSize: '0.85rem',
+                  color: 'var(--color-text-subtle)',
+                }}
+              >
                 Message Body
               </strong>
               <div
@@ -168,13 +192,20 @@ export default async function AdminInquiryDetailPage({
               }}
             >
               <p>
-                <strong>Security Audit & Retention:</strong> Client IP Hash: <code>{inquiry.ip_hash}</code> ·
-                Data Retention Expiry: <code>{new Date(inquiry.retention_expires_at).toLocaleDateString()}</code>
+                <strong>Security Audit & Retention:</strong> Client IP Hash:{' '}
+                <code>{inquiry.ip_hash}</code> · Data Retention Expiry:{' '}
+                <code>
+                  {new Date(inquiry.retention_expires_at).toLocaleDateString()}
+                </code>
               </p>
             </div>
 
             <InquiryStatusControl
-              currentStatus={inquiry.status === 'spam_suspected' ? 'archived' : inquiry.status}
+              currentStatus={
+                inquiry.status === 'spam_suspected'
+                  ? 'archived'
+                  : inquiry.status
+              }
               inquiryId={inquiry.id}
             />
           </Card>

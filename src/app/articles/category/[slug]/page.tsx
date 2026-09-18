@@ -39,7 +39,8 @@ export async function generateMetadata({
 
   return {
     title: `${category.name} Articles | ${siteConfig.shortName}`,
-    description: category.description || `Articles and insights about ${category.name}.`,
+    description:
+      category.description || `Articles and insights about ${category.name}.`,
     alternates: {
       canonical: pageUrl,
     },
@@ -50,7 +51,9 @@ export async function generateMetadata({
   }
 }
 
-export default async function ArticleCategoryPage({ params }: CategoryPageProps) {
+export default async function ArticleCategoryPage({
+  params,
+}: CategoryPageProps) {
   const { slug } = await params
   const categories = await getArticleCategories()
   const category = categories.find((c) => c.slug === slug)
@@ -95,12 +98,18 @@ export default async function ArticleCategoryPage({ params }: CategoryPageProps)
                   {article.reading_time_minutes} min read
                 </span>
                 {article.published_at && (
-                  <time dateTime={article.published_at} className="article-card__date">
-                    {new Date(article.published_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
+                  <time
+                    dateTime={article.published_at}
+                    className="article-card__date"
+                  >
+                    {new Date(article.published_at).toLocaleDateString(
+                      'en-US',
+                      {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      },
+                    )}
                   </time>
                 )}
               </div>
@@ -116,4 +125,3 @@ export default async function ArticleCategoryPage({ params }: CategoryPageProps)
     </main>
   )
 }
-

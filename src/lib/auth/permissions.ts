@@ -104,6 +104,10 @@ export function canManageSettings(roleKey: string): boolean {
   return hasRolePermission(roleKey, 'settings.manage')
 }
 
+export function canManageMedia(roleKey: string): boolean {
+  return hasRolePermission(roleKey, 'media.draft.write')
+}
+
 export function canViewAudit(roleKey: string): boolean {
   return hasRolePermission(roleKey, 'audit.view')
 }

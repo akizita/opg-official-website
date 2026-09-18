@@ -32,7 +32,8 @@ export default async function AdminArticlesPage() {
       <section className="admin-page">
         <div className="container">
           <p className="form-help">
-            Your current role ({profile.roleDisplayName}) does not have permission to view articles.
+            Your current role ({profile.roleDisplayName}) does not have
+            permission to view articles.
           </p>
           <Link className="button button--secondary" href="/admin">
             ← Return to Dashboard
@@ -45,7 +46,8 @@ export default async function AdminArticlesPage() {
   const supabase = await createClient()
   const { data: articles } = await supabase
     .from('articles')
-    .select(`
+    .select(
+      `
       id,
       slug,
       title,
@@ -55,7 +57,8 @@ export default async function AdminArticlesPage() {
       reading_time_minutes,
       author:authors(display_name),
       category:article_categories(name)
-    `)
+    `,
+    )
     .order('published_at', { ascending: false, nullsFirst: false })
 
   const articleList = (articles as unknown as ArticleRow[]) || []
@@ -78,7 +81,8 @@ export default async function AdminArticlesPage() {
             <p className="eyebrow">Publishing & Editorial</p>
             <h1>Articles & Insights</h1>
             <p>
-              Manage thought leadership publications, editorial reviews, and article taxonomy.
+              Manage thought leadership publications, editorial reviews, and
+              article taxonomy.
             </p>
           </div>
           <div>
@@ -110,9 +114,18 @@ export default async function AdminArticlesPage() {
                     }}
                   >
                     <div>
-                      <StatusBadge status={art.status === 'review' ? 'in_review' : art.status} />
+                      <StatusBadge
+                        status={
+                          art.status === 'review' ? 'in_review' : art.status
+                        }
+                      />
                       {art.author && (
-                        <span style={{ marginLeft: '0.75rem', color: 'var(--color-text-subtle)' }}>
+                        <span
+                          style={{
+                            marginLeft: '0.75rem',
+                            color: 'var(--color-text-subtle)',
+                          }}
+                        >
                           By {art.author.display_name}
                         </span>
                       )}

@@ -20,7 +20,9 @@ describe('articles schema & validation', () => {
       title: 'Building Distributed Engineering Pods',
       slug: 'building-distributed-engineering-pods',
       excerpt: 'How leading tech firms scale engineering across timezones.',
-      content: [{ type: 'paragraph', content: 'Distributed velocity requires trust.' }],
+      content: [
+        { type: 'paragraph', content: 'Distributed velocity requires trust.' },
+      ],
       author_id: 'a1',
       reading_time_minutes: 5,
       status: 'published',
@@ -75,7 +77,9 @@ describe('articles data queries', () => {
         status: 'published',
         published_at: new Date().toISOString(),
         author: { full_name: 'Elena Rostova' },
-        category_mappings: [{ category: { name: 'Engineering', slug: 'engineering' } }],
+        category_mappings: [
+          { category: { name: 'Engineering', slug: 'engineering' } },
+        ],
         tag_mappings: [{ tag: { name: 'Cloud', slug: 'cloud' } }],
       },
     ]
@@ -83,7 +87,9 @@ describe('articles data queries', () => {
     const mockQuery = {
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
-      range: vi.fn().mockResolvedValue({ data: mockArticles, count: 1, error: null }),
+      range: vi
+        .fn()
+        .mockResolvedValue({ data: mockArticles, count: 1, error: null }),
     }
 
     const mockClient = {
@@ -119,7 +125,9 @@ describe('articles data queries', () => {
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: mockArticle, error: null }),
+            single: vi
+              .fn()
+              .mockResolvedValue({ data: mockArticle, error: null }),
           }),
         }),
       }),
@@ -161,4 +169,3 @@ describe('articles data queries', () => {
     expect(tags[0].name).toBe('Remote')
   })
 })
-

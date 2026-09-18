@@ -16,7 +16,8 @@ describe('faqs schema & validation', () => {
     const valid = {
       faq_category_id: 1,
       question: 'How does OPG ensure talent quality?',
-      answer: 'We rigorously vet talent across technical and communication competencies.',
+      answer:
+        'We rigorously vet talent across technical and communication competencies.',
       display_order: 1,
       status: 'published',
     }
@@ -49,7 +50,14 @@ describe('faqs data queries', () => {
 
   it('fetches published faqs grouped by category', async () => {
     const mockCategories = [
-      { id: 1, name: 'Hiring', slug: 'hiring', display_order: 1, is_active: true, created_at: '' },
+      {
+        id: 1,
+        name: 'Hiring',
+        slug: 'hiring',
+        display_order: 1,
+        is_active: true,
+        created_at: '',
+      },
     ]
     const mockFaqs = [
       {
@@ -85,4 +93,3 @@ describe('faqs data queries', () => {
     expect(categoriesWithFaqs[0].faqs[0].question).toBe('How fast to onboard?')
   })
 })
-

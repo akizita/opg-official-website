@@ -21,7 +21,8 @@ export default async function AdminSubscribersPage() {
       <section className="admin-page">
         <div className="container">
           <p className="form-help">
-            Your current role ({profile.roleDisplayName}) does not have permission to view subscribers.
+            Your current role ({profile.roleDisplayName}) does not have
+            permission to view subscribers.
           </p>
           <Link className="button button--secondary" href="/admin">
             ← Return to Dashboard
@@ -57,7 +58,8 @@ export default async function AdminSubscribersPage() {
             <p className="eyebrow">Audience & Distribution</p>
             <h1>Newsletter Subscribers</h1>
             <p>
-              Audience registry for OPG Insights with verified consent provenance and double opt-in statuses.
+              Audience registry for OPG Insights with verified consent
+              provenance and double opt-in statuses.
             </p>
           </div>
           <div>
@@ -71,11 +73,14 @@ export default async function AdminSubscribersPage() {
           {subscriberList.length > 0 ? (
             <div className="card-grid">
               {subscriberList.map((sub) => {
-                const createdDate = new Date(sub.created_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })
+                const createdDate = new Date(sub.created_at).toLocaleDateString(
+                  'en-US',
+                  {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  },
+                )
 
                 return (
                   <Card
@@ -83,12 +88,18 @@ export default async function AdminSubscribersPage() {
                     key={sub.id}
                     title={sub.email_normalized}
                   >
-                    <p style={{ fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>
+                    <p
+                      style={{
+                        fontSize: '0.85rem',
+                        color: 'var(--color-text-subtle)',
+                      }}
+                    >
                       Subscribed on {createdDate}
                       {sub.confirmed_at && (
                         <span>
                           {' '}
-                          · Confirmed {new Date(sub.confirmed_at).toLocaleDateString()}
+                          · Confirmed{' '}
+                          {new Date(sub.confirmed_at).toLocaleDateString()}
                         </span>
                       )}
                     </p>
@@ -112,7 +123,13 @@ export default async function AdminSubscribersPage() {
                               : 'archived'
                         }
                       />
-                      <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
                         {sub.status.replace('_', ' ')}
                       </span>
                     </div>
@@ -131,4 +148,3 @@ export default async function AdminSubscribersPage() {
     </section>
   )
 }
-

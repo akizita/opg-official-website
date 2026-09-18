@@ -60,7 +60,9 @@ export async function generateMetadata({
       url: pageUrl,
       type: 'article',
       publishedTime: article.published_at || undefined,
-      authors: article.author?.full_name ? [article.author.full_name] : undefined,
+      authors: article.author?.full_name
+        ? [article.author.full_name]
+        : undefined,
     },
   }
 }
@@ -129,7 +131,10 @@ export default async function ArticleDetailPage({
             {article.reading_time_minutes} min read
           </span>
           {article.published_at && (
-            <time dateTime={article.published_at} className="article-detail__date">
+            <time
+              dateTime={article.published_at}
+              className="article-detail__date"
+            >
               {new Date(article.published_at).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
@@ -145,9 +150,13 @@ export default async function ArticleDetailPage({
         {article.author && (
           <div className="article-detail__author-bar">
             <div>
-              <p className="article-detail__author-name">By {article.author.full_name}</p>
+              <p className="article-detail__author-name">
+                By {article.author.full_name}
+              </p>
               {article.author.bio && (
-                <p className="article-detail__author-bio">{article.author.bio}</p>
+                <p className="article-detail__author-bio">
+                  {article.author.bio}
+                </p>
               )}
             </div>
           </div>
@@ -191,4 +200,3 @@ export default async function ArticleDetailPage({
     </article>
   )
 }
-

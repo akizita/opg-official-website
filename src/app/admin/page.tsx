@@ -182,6 +182,21 @@ export default async function AdminPage() {
                     Manage →
                   </Link>
                 </div>
+
+                <div className="admin-card__row">
+                  <div>
+                    <strong>Media & Image Storage</strong>
+                    <p className="field-hint">
+                      Upload and manage photos, logos, and banners
+                    </p>
+                  </div>
+                  <Link
+                    className="button-link button-link--secondary"
+                    href="/admin/media"
+                  >
+                    Manage →
+                  </Link>
+                </div>
               </>
             ) : (
               <p className="form-help">

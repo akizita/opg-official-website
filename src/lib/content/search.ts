@@ -3,11 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 
 export type SearchEntityType =
-  | 'article'
-  | 'service'
-  | 'faq'
-  | 'job_opening'
-  | 'page_document'
+  'article' | 'service' | 'faq' | 'job_opening' | 'page_document'
 
 export type SearchResult = {
   id: string
@@ -83,4 +79,3 @@ export async function searchPublishedDocuments(
     sanitizedQuery: sanitized,
   }
 }
-

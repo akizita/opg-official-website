@@ -52,8 +52,11 @@ export function validateJobOpeningInput(input: unknown): {
   const raw = input as Record<string, unknown>
   const title = typeof raw.title === 'string' ? raw.title.trim() : ''
   const externalApplyUrl =
-    typeof raw.external_apply_url === 'string' ? raw.external_apply_url.trim() : ''
-  const slug = typeof raw.slug === 'string' ? raw.slug.trim().toLowerCase() : undefined
+    typeof raw.external_apply_url === 'string'
+      ? raw.external_apply_url.trim()
+      : ''
+  const slug =
+    typeof raw.slug === 'string' ? raw.slug.trim().toLowerCase() : undefined
 
   if (!title) {
     errors.title = 'Title is required'
@@ -63,7 +66,8 @@ export function validateJobOpeningInput(input: unknown): {
 
   if (slug !== undefined && slug !== '') {
     if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
-      errors.slug = 'Slug must contain only lowercase letters, numbers, and single hyphens'
+      errors.slug =
+        'Slug must contain only lowercase letters, numbers, and single hyphens'
     }
   }
 
@@ -108,14 +112,19 @@ export function validateJobOpeningInput(input: unknown): {
             title,
             slug,
             department_id: departmentId,
-            location: typeof raw.location === 'string' ? raw.location.trim() : 'Remote',
+            location:
+              typeof raw.location === 'string' ? raw.location.trim() : 'Remote',
             work_arrangement: workArrangement,
             employment_type: employmentType,
-            summary: typeof raw.summary === 'string' ? raw.summary.trim() : null,
+            summary:
+              typeof raw.summary === 'string' ? raw.summary.trim() : null,
             description,
             external_apply_url: externalApplyUrl,
-            close_date: typeof raw.close_date === 'string' ? raw.close_date : null,
-            status: (typeof raw.status === 'string' ? raw.status : 'draft') as JobOpening['status'],
+            close_date:
+              typeof raw.close_date === 'string' ? raw.close_date : null,
+            status: (typeof raw.status === 'string'
+              ? raw.status
+              : 'draft') as JobOpening['status'],
           }
         : null,
     errors,
@@ -131,10 +140,12 @@ export async function getPublishedJobOpenings(options?: {
 
   let query = supabase
     .from('job_openings')
-    .select(`
+    .select(
+      `
       *,
       department:departments(*)
-    `)
+    `,
+    )
     .eq('status', 'published')
     .order('published_at', { ascending: false })
 
@@ -166,7 +177,9 @@ export async function getPublishedJobOpenings(options?: {
   }))
 
   if (options?.departmentSlug) {
-    openings = openings.filter((op) => op.department?.slug === options.departmentSlug)
+    openings = openings.filter(
+      (op) => op.department?.slug === options.departmentSlug,
+    )
   }
 
   return openings
@@ -180,10 +193,12 @@ export async function getJobOpeningBySlug(
 
   const { data, error } = await supabase
     .from('job_openings')
-    .select(`
+    .select(
+      `
       *,
       department:departments(*)
-    `)
+    `,
+    )
     .eq('slug', slug)
     .single()
 
@@ -208,4 +223,3 @@ export async function getJobOpeningBySlug(
     published_at: data.published_at,
   }
 }
-

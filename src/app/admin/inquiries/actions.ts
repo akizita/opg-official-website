@@ -30,4 +30,3 @@ export async function updateInquiryStatusAction(
   revalidatePath(`/admin/inquiries/${inquiryId}`)
   return { success: true }
 }
-

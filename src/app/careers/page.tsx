@@ -78,8 +78,8 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
           <Card className="careers-benefit-card">
             <h3>🚀 High-Impact Enterprise Projects</h3>
             <p>
-              Collaborate directly with top-tier multinational clients on
-              modern tech stacks and mission-critical workflows.
+              Collaborate directly with top-tier multinational clients on modern
+              tech stacks and mission-critical workflows.
             </p>
           </Card>
           <Card className="careers-benefit-card">
@@ -98,11 +98,15 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
           <div>
             <h2 id="open-roles-title">Open Positions ({openings.length})</h2>
             <p style={{ color: 'var(--color-ink-soft)', marginTop: '0.5rem' }}>
-              All applications are processed securely via our official talent channel.
+              All applications are processed securely via our official talent
+              channel.
             </p>
           </div>
 
-          <nav aria-label="Work arrangement filter" className="careers-filter-nav">
+          <nav
+            aria-label="Work arrangement filter"
+            className="careers-filter-nav"
+          >
             <Link
               href="/careers"
               className={`articles-filter-chip ${!arrangement ? 'articles-filter-chip--active' : ''}`}
@@ -152,9 +156,7 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
                     <Link href={`/careers/${job.slug}`}>{job.title}</Link>
                   </h3>
 
-                  <p className="job-opening-card__meta">
-                    📍 {job.location}
-                  </p>
+                  <p className="job-opening-card__meta">📍 {job.location}</p>
 
                   {job.summary && (
                     <p className="job-opening-card__summary">{job.summary}</p>
@@ -182,4 +184,3 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
     </main>
   )
 }
-

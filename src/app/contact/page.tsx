@@ -97,8 +97,8 @@ export default function ContactPage() {
           <p className="eyebrow">Get In Touch</p>
           <h1 className="contact-hero__title">Start a Conversation with OPG</h1>
           <p className="contact-hero__lead">
-            Whether you are evaluating dedicated cross-border pods or exploring your next
-            career move, our global team is ready to assist.
+            Whether you are evaluating dedicated cross-border pods or exploring
+            your next career move, our global team is ready to assist.
           </p>
         </header>
 
@@ -107,7 +107,9 @@ export default function ContactPage() {
           <div className="contact-info-column">
             <Card eyebrow="Official Channels" title="Direct Communication">
               <div className="contact-channel-item">
-                <span className="contact-channel-label">Client & Institutional Inquiries:</span>
+                <span className="contact-channel-label">
+                  Client & Institutional Inquiries:
+                </span>
                 <a
                   className="contact-channel-value"
                   href="mailto:inquiries@opglobal.com.hk"
@@ -115,12 +117,15 @@ export default function ContactPage() {
                   inquiries@opglobal.com.hk
                 </a>
                 <p className="contact-channel-desc">
-                  For staffing scopes, dedicated teams, and commercial agreements.
+                  For staffing scopes, dedicated teams, and commercial
+                  agreements.
                 </p>
               </div>
 
               <div className="contact-channel-item">
-                <span className="contact-channel-label">Talent & Recruitment:</span>
+                <span className="contact-channel-label">
+                  Talent & Recruitment:
+                </span>
                 <a
                   className="contact-channel-value"
                   href="mailto:recruitment@opglobal.com.hk"
@@ -135,7 +140,9 @@ export default function ContactPage() {
 
             <Card eyebrow="Headquarters & Presence" title="Global Operations">
               <div className="contact-channel-item">
-                <span className="contact-channel-label">Registered Office:</span>
+                <span className="contact-channel-label">
+                  Registered Office:
+                </span>
                 <address className="contact-address">
                   Outsourced Pro Global Ltd.
                   <br />
@@ -144,18 +151,23 @@ export default function ContactPage() {
               </div>
 
               <div className="contact-channel-item">
-                <span className="contact-channel-label">Operational Coverage:</span>
+                <span className="contact-channel-label">
+                  Operational Coverage:
+                </span>
                 <p className="contact-channel-desc">
-                  Active delivery centers across APAC, EMEA, and the Americas ensuring 24/5
-                  cross-time-zone synchronization.
+                  Active delivery centers across APAC, EMEA, and the Americas
+                  ensuring 24/5 cross-time-zone synchronization.
                 </p>
               </div>
 
               <div className="contact-channel-item">
-                <span className="contact-channel-label">Service Level Agreement:</span>
+                <span className="contact-channel-label">
+                  Service Level Agreement:
+                </span>
                 <p className="contact-channel-desc">
-                  All inquiries submitted through our verified portal are acknowledged and assigned
-                  within <strong>1 business day</strong>.
+                  All inquiries submitted through our verified portal are
+                  acknowledged and assigned within{' '}
+                  <strong>1 business day</strong>.
                 </p>
               </div>
             </Card>
@@ -163,8 +175,8 @@ export default function ContactPage() {
             <div className="contact-faq-teaser">
               <h3>Have a quick question?</h3>
               <p>
-                Browse our curated answers regarding remote staffing, compliance, onboarding, and
-                delivery models.
+                Browse our curated answers regarding remote staffing,
+                compliance, onboarding, and delivery models.
               </p>
               <Link className="button-link button-link--secondary" href="/faqs">
                 View Frequently Asked Questions →
@@ -180,4 +192,3 @@ export default function ContactPage() {
     </main>
   )
 }
-

@@ -73,7 +73,9 @@ describe('careers data queries', () => {
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({ data: mockOpenings, error: null }),
+            order: vi
+              .fn()
+              .mockResolvedValue({ data: mockOpenings, error: null }),
           }),
         }),
       }),
@@ -104,7 +106,9 @@ describe('careers data queries', () => {
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: mockOpening, error: null }),
+            single: vi
+              .fn()
+              .mockResolvedValue({ data: mockOpening, error: null }),
           }),
         }),
       }),
@@ -117,4 +121,3 @@ describe('careers data queries', () => {
     expect(opening?.title).toBe('Senior Engineer')
   })
 })
-
