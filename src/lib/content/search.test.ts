@@ -68,3 +68,4 @@ describe('search published documents', () => {
     expect(response.total).toBe(1)
   })
 })
+

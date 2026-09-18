@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 import { ButtonLink } from '@/components/ui/button-link'
 import { Card } from '@/components/ui/card'
@@ -108,3 +109,4 @@ export default async function FaqsPage() {
     </main>
   )
 }
+

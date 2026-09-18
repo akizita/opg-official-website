@@ -77,7 +77,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
-    url: pageUrl,
     title: job.title,
     description: job.summary || job.title,
     datePosted: job.published_at,
@@ -93,8 +92,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       name: siteConfig.name,
       sameAs: siteUrl.toString(),
     },
-    jobLocationType:
-      job.work_arrangement === 'remote' ? 'TELECOMMUTE' : undefined,
+    jobLocationType: job.work_arrangement === 'remote' ? 'TELECOMMUTE' : undefined,
     jobLocation: {
       '@type': 'Place',
       address: {
@@ -158,9 +156,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
       <Notice variant="info" title="Application Security Notice">
         Outsourced Pro Global conducts all recruitment communications through
-        verified `@opglobal.com.hk` email addresses and our official application
-        portal. We will never ask candidates for banking details or recruitment
-        fees.
+        verified `@opglobal.com.hk` email addresses and our official application portal.
+        We will never ask candidates for banking details or recruitment fees.
       </Notice>
 
       <footer className="job-detail__footer">
@@ -176,10 +173,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             <ButtonLink href="/careers" variant="secondary">
               View All Open Positions
             </ButtonLink>
-            <ButtonLink
-              href="mailto:recruitment@opglobal.com.hk"
-              variant="secondary"
-            >
+            <ButtonLink href="mailto:recruitment@opglobal.com.hk" variant="secondary">
               Email CV to Recruitment
             </ButtonLink>
           </div>
@@ -188,3 +182,4 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     </main>
   )
 }
+

@@ -4,7 +4,10 @@ import { notFound } from 'next/navigation'
 
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { getArticleTags, getPublishedArticles } from '@/lib/content/articles'
+import {
+  getArticleTags,
+  getPublishedArticles,
+} from '@/lib/content/articles'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 import { createStaticClient } from '@/lib/supabase/server'
 
@@ -92,18 +95,12 @@ export default async function ArticleTagPage({ params }: TagPageProps) {
                   {article.reading_time_minutes} min read
                 </span>
                 {article.published_at && (
-                  <time
-                    dateTime={article.published_at}
-                    className="article-card__date"
-                  >
-                    {new Date(article.published_at).toLocaleDateString(
-                      'en-US',
-                      {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      },
-                    )}
+                  <time dateTime={article.published_at} className="article-card__date">
+                    {new Date(article.published_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
                   </time>
                 )}
               </div>
@@ -119,3 +116,4 @@ export default async function ArticleTagPage({ params }: TagPageProps) {
     </main>
   )
 }
+

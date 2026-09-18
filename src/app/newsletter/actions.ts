@@ -17,3 +17,4 @@ export async function subscribeNewsletterAction(
   const result = await subscribeToNewsletter(email, { source })
   return result
 }
+

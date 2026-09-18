@@ -40,14 +40,7 @@ export function InquiryStatusControl({
       >
         Update Inquiry Status
       </label>
-      <div
-        style={{
-          display: 'flex',
-          gap: '0.5rem',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}
-      >
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         {(['new', 'read', 'replied', 'archived'] as const).map((s) => (
           <button
             className={`button ${status === s ? 'button--primary' : 'button--secondary'}`}
@@ -61,16 +54,11 @@ export function InquiryStatusControl({
         ))}
       </div>
       {message && (
-        <p
-          style={{
-            marginTop: '0.5rem',
-            fontSize: '0.85rem',
-            color: 'var(--color-text-subtle)',
-          }}
-        >
+        <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>
           {message}
         </p>
       )}
     </div>
   )
 }
+

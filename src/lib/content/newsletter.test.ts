@@ -86,10 +86,7 @@ describe('newsletter subscription flow', () => {
 
     vi.mocked(createClient).mockResolvedValue(mockClient as never)
 
-    const result = await confirmNewsletterSubscription(
-      token,
-      'reader@example.com',
-    )
+    const result = await confirmNewsletterSubscription(token, 'reader@example.com')
     expect(result.success).toBe(true)
     expect(result.message).toContain('confirmed')
   })
@@ -105,11 +102,9 @@ describe('newsletter subscription flow', () => {
 
     vi.mocked(createClient).mockResolvedValue(mockClient as never)
 
-    const result = await unsubscribeFromNewsletter(
-      'any-token',
-      'reader@example.com',
-    )
+    const result = await unsubscribeFromNewsletter('any-token', 'reader@example.com')
     expect(result.success).toBe(true)
     expect(result.message).toContain('unsubscribed')
   })
 })
+

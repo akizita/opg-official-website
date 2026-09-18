@@ -39,16 +39,10 @@ export default async function NewsletterConfirmPage({
     <main className="container status-page">
       <div style={{ maxWidth: '540px', margin: '4rem auto', width: '100%' }}>
         <Card
-          eyebrow={
-            result.success ? 'Subscription Confirmed' : 'Confirmation Issue'
-          }
-          title={
-            result.success ? 'Welcome to OPG Insights' : 'Verification Required'
-          }
+          eyebrow={result.success ? 'Subscription Confirmed' : 'Confirmation Issue'}
+          title={result.success ? 'Welcome to OPG Insights' : 'Verification Required'}
         >
-          <p style={{ marginTop: '1rem', lineHeight: '1.6' }}>
-            {result.message}
-          </p>
+          <p style={{ marginTop: '1rem', lineHeight: '1.6' }}>{result.message}</p>
 
           <div
             style={{
@@ -78,3 +72,4 @@ export default async function NewsletterConfirmPage({
     </main>
   )
 }
+

@@ -40,13 +40,7 @@ export type Article = {
   content: RichTextBlock[]
   cover_image_url: string | null
   reading_time_minutes: number
-  status:
-    | 'draft'
-    | 'in_review'
-    | 'changes_requested'
-    | 'published'
-    | 'unpublished'
-    | 'archived'
+  status: 'draft' | 'in_review' | 'changes_requested' | 'published' | 'unpublished' | 'archived'
   seo_title: string | null
   seo_description: string | null
   created_by: string | null
@@ -82,8 +76,7 @@ export function validateArticleInput(input: unknown): {
   const raw = input as Record<string, unknown>
   const title = typeof raw.title === 'string' ? raw.title.trim() : ''
   const excerpt = typeof raw.excerpt === 'string' ? raw.excerpt.trim() : ''
-  const slug =
-    typeof raw.slug === 'string' ? raw.slug.trim().toLowerCase() : undefined
+  const slug = typeof raw.slug === 'string' ? raw.slug.trim().toLowerCase() : undefined
 
   if (!title) {
     errors.title = 'Title is required'
@@ -93,8 +86,7 @@ export function validateArticleInput(input: unknown): {
 
   if (slug !== undefined && slug !== '') {
     if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
-      errors.slug =
-        'Slug must contain only lowercase letters, numbers, and single hyphens'
+      errors.slug = 'Slug must contain only lowercase letters, numbers, and single hyphens'
     }
   }
 
@@ -110,34 +102,20 @@ export function validateArticleInput(input: unknown): {
   }
 
   return {
-    data:
-      Object.keys(errors).length === 0
-        ? {
-            title,
-            slug,
-            excerpt,
-            content,
-            author_id: typeof raw.author_id === 'string' ? raw.author_id : null,
-            cover_image_url:
-              typeof raw.cover_image_url === 'string'
-                ? raw.cover_image_url
-                : null,
-            reading_time_minutes:
-              typeof raw.reading_time_minutes === 'number' &&
-              raw.reading_time_minutes > 0
-                ? raw.reading_time_minutes
-                : 3,
-            seo_title:
-              typeof raw.seo_title === 'string' ? raw.seo_title.trim() : null,
-            seo_description:
-              typeof raw.seo_description === 'string'
-                ? raw.seo_description.trim()
-                : null,
-            status: (typeof raw.status === 'string'
-              ? raw.status
-              : 'draft') as Article['status'],
-          }
-        : null,
+    data: Object.keys(errors).length === 0
+      ? {
+          title,
+          slug,
+          excerpt,
+          content,
+          author_id: typeof raw.author_id === 'string' ? raw.author_id : null,
+          cover_image_url: typeof raw.cover_image_url === 'string' ? raw.cover_image_url : null,
+          reading_time_minutes: typeof raw.reading_time_minutes === 'number' && raw.reading_time_minutes > 0 ? raw.reading_time_minutes : 3,
+          seo_title: typeof raw.seo_title === 'string' ? raw.seo_title.trim() : null,
+          seo_description: typeof raw.seo_description === 'string' ? raw.seo_description.trim() : null,
+          status: (typeof raw.status === 'string' ? raw.status : 'draft') as Article['status'],
+        }
+      : null,
     errors,
   }
 }
@@ -161,8 +139,7 @@ export async function getPublishedArticles(options?: {
 
   let query = supabase
     .from('articles')
-    .select(
-      `
+    .select(`
       *,
       author:authors(*),
       category_mappings:article_category_mappings(
@@ -171,9 +148,7 @@ export async function getPublishedArticles(options?: {
       tag_mappings:article_tag_mappings(
         tag:article_tags(*)
       )
-    `,
-      { count: 'exact' },
-    )
+    `, { count: 'exact' })
     .eq('status', 'published')
     .order('published_at', { ascending: false })
 
@@ -191,12 +166,7 @@ export async function getPublishedArticles(options?: {
         .eq('category_id', cat.id)
 
       const articleIds = mappings?.map((m) => m.article_id) ?? []
-      query = query.in(
-        'id',
-        articleIds.length > 0
-          ? articleIds
-          : ['00000000-0000-0000-0000-000000000000'],
-      )
+      query = query.in('id', articleIds.length > 0 ? articleIds : ['00000000-0000-0000-0000-000000000000'])
     }
   }
 
@@ -214,12 +184,7 @@ export async function getPublishedArticles(options?: {
         .eq('tag_id', tag.id)
 
       const articleIds = mappings?.map((m) => m.article_id) ?? []
-      query = query.in(
-        'id',
-        articleIds.length > 0
-          ? articleIds
-          : ['00000000-0000-0000-0000-000000000000'],
-      )
+      query = query.in('id', articleIds.length > 0 ? articleIds : ['00000000-0000-0000-0000-000000000000'])
     }
   }
 
@@ -232,8 +197,7 @@ export async function getPublishedArticles(options?: {
   }
 
   const articles: Article[] = data.map((row: Record<string, unknown>) => {
-    const categoryMappings =
-      (row.category_mappings as Array<{ category: ArticleCategory }>) || []
+    const categoryMappings = (row.category_mappings as Array<{ category: ArticleCategory }>) || []
     const tagMappings = (row.tag_mappings as Array<{ tag: ArticleTag }>) || []
 
     return {
@@ -277,8 +241,7 @@ export async function getArticleBySlug(
   const supabase = client ?? (await createClient())
   const { data, error } = await supabase
     .from('articles')
-    .select(
-      `
+    .select(`
       *,
       author:authors(*),
       category_mappings:article_category_mappings(
@@ -287,15 +250,13 @@ export async function getArticleBySlug(
       tag_mappings:article_tag_mappings(
         tag:article_tags(*)
       )
-    `,
-    )
+    `)
     .eq('slug', slug)
     .single()
 
   if (error || !data) return null
 
-  const categoryMappings =
-    (data.category_mappings as Array<{ category: ArticleCategory }>) || []
+  const categoryMappings = (data.category_mappings as Array<{ category: ArticleCategory }>) || []
   const tagMappings = (data.tag_mappings as Array<{ tag: ArticleTag }>) || []
 
   return {
@@ -322,9 +283,7 @@ export async function getArticleBySlug(
   }
 }
 
-export async function getArticleCategories(
-  client?: SupabaseClient,
-): Promise<ArticleCategory[]> {
+export async function getArticleCategories(client?: SupabaseClient): Promise<ArticleCategory[]> {
   const supabase = client ?? (await createClient())
   const { data } = await supabase
     .from('article_categories')
@@ -335,9 +294,7 @@ export async function getArticleCategories(
   return data || []
 }
 
-export async function getArticleTags(
-  client?: SupabaseClient,
-): Promise<ArticleTag[]> {
+export async function getArticleTags(client?: SupabaseClient): Promise<ArticleTag[]> {
   const supabase = client ?? (await createClient())
   const { data } = await supabase
     .from('article_tags')
@@ -347,3 +304,4 @@ export async function getArticleTags(
 
   return data || []
 }
+

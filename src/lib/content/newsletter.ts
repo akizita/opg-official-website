@@ -28,21 +28,12 @@ export async function subscribeToNewsletter(
     source?: string
     client?: SupabaseClient
   },
-): Promise<{
-  success: boolean
-  message: string
-  error?: string
-  token?: string
-}> {
+): Promise<{ success: boolean; message: string; error?: string; token?: string }> {
   const normalized = email.trim().toLowerCase()
   const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
 
   if (!normalized || !emailRegex.test(normalized)) {
-    return {
-      success: false,
-      message: '',
-      error: 'Please enter a valid email address.',
-    }
+    return { success: false, message: '', error: 'Please enter a valid email address.' }
   }
 
   const token = generateToken()
@@ -50,17 +41,19 @@ export async function subscribeToNewsletter(
   const source = options?.source || 'footer_form'
   const supabase = options?.client ?? (await createClient())
 
-  const { error } = await supabase.from('newsletter_subscriptions').upsert(
-    {
-      email_normalized: normalized,
-      status: 'pending_confirmation',
-      confirmation_token_hash: tokenHash,
-      confirmation_sent_at: new Date().toISOString(),
-      consent_version: '1.0',
-      consent_source: source,
-    },
-    { onConflict: 'email_normalized' },
-  )
+  const { error } = await supabase
+    .from('newsletter_subscriptions')
+    .upsert(
+      {
+        email_normalized: normalized,
+        status: 'pending_confirmation',
+        confirmation_token_hash: tokenHash,
+        confirmation_sent_at: new Date().toISOString(),
+        consent_version: '1.0',
+        consent_source: source,
+      },
+      { onConflict: 'email_normalized' },
+    )
 
   if (error) {
     return {
@@ -114,10 +107,7 @@ export async function confirmNewsletterSubscription(
   }
 
   if (sub.status === 'confirmed') {
-    return {
-      success: true,
-      message: 'Your subscription is already confirmed. Thank you!',
-    }
+    return { success: true, message: 'Your subscription is already confirmed. Thank you!' }
   }
 
   if (sub.confirmation_token_hash !== tokenHash) {
@@ -134,16 +124,10 @@ export async function confirmNewsletterSubscription(
     .eq('id', sub.id)
 
   if (updateError) {
-    return {
-      success: false,
-      message: 'Could not complete confirmation. Please try again.',
-    }
+    return { success: false, message: 'Could not complete confirmation. Please try again.' }
   }
 
-  return {
-    success: true,
-    message: 'Your subscription is confirmed! Welcome to OPG Insights.',
-  }
+  return { success: true, message: 'Your subscription is confirmed! Welcome to OPG Insights.' }
 }
 
 export async function unsubscribeFromNewsletter(
@@ -170,8 +154,6 @@ export async function unsubscribeFromNewsletter(
     return { success: false, message: 'Unable to process unsubscribe request.' }
   }
 
-  return {
-    success: true,
-    message: 'You have been successfully unsubscribed from OPG Insights.',
-  }
+  return { success: true, message: 'You have been successfully unsubscribed from OPG Insights.' }
 }
+

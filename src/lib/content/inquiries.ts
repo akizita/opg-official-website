@@ -56,10 +56,7 @@ export async function verifyTurnstileToken(
   }
 
   // Cloudflare standard test tokens
-  if (
-    token === 'XXXX.DUMMY.TOKEN.XXXX' ||
-    token === '1x0000000000000000000000000000000AA'
-  ) {
+  if (token === 'XXXX.DUMMY.TOKEN.XXXX' || token === '1x0000000000000000000000000000000AA') {
     return { success: true }
   }
 
@@ -83,15 +80,11 @@ export async function verifyTurnstileToken(
       },
     )
 
-    const outcome = (await response.json()) as {
-      success: boolean
-      'error-codes'?: string[]
-    }
+    const outcome = (await response.json()) as { success: boolean; 'error-codes'?: string[] }
     if (!outcome.success) {
       return {
         success: false,
-        error:
-          'Bot verification challenge failed. Please refresh and try again.',
+        error: 'Bot verification challenge failed. Please refresh and try again.',
       }
     }
 
@@ -116,8 +109,7 @@ export function validateInquiryInput(input: unknown): {
 
   const raw = input as Record<string, unknown>
   const fullName = typeof raw.fullName === 'string' ? raw.fullName.trim() : ''
-  const email =
-    typeof raw.email === 'string' ? raw.email.trim().toLowerCase() : ''
+  const email = typeof raw.email === 'string' ? raw.email.trim().toLowerCase() : ''
   const subject = typeof raw.subject === 'string' ? raw.subject.trim() : ''
   const message = typeof raw.message === 'string' ? raw.message.trim() : ''
   const privacyConsent = Boolean(raw.privacyConsent)
@@ -125,9 +117,7 @@ export function validateInquiryInput(input: unknown): {
   const elapsedSeconds =
     typeof raw.elapsedSeconds === 'number' ? raw.elapsedSeconds : undefined
   const turnstileToken =
-    typeof raw.turnstileToken === 'string'
-      ? raw.turnstileToken.trim()
-      : undefined
+    typeof raw.turnstileToken === 'string' ? raw.turnstileToken.trim() : undefined
   const intent: InquiryIntent = raw.intent === 'talent' ? 'talent' : 'client'
 
   // Honeypot trap check
@@ -169,8 +159,7 @@ export function validateInquiryInput(input: unknown): {
 
   // Message: 20-5,000 characters
   if (!message || message.length < 20) {
-    errors.message =
-      'Please provide details in your message (at least 20 characters)'
+    errors.message = 'Please provide details in your message (at least 20 characters)'
   } else if (message.length > 5000) {
     errors.message = 'Message must be 5,000 characters or fewer'
   }
@@ -212,8 +201,7 @@ export function checkRateLimits(
     if (ipRecord.count >= 10) {
       return {
         allowed: false,
-        error:
-          'Too many requests from your network. Please try again in 10 minutes.',
+        error: 'Too many requests from your network. Please try again in 10 minutes.',
       }
     }
     ipRecord.count += 1
@@ -227,8 +215,7 @@ export function checkRateLimits(
     if (emailRecord.count >= 3) {
       return {
         allowed: false,
-        error:
-          'You have submitted multiple inquiries recently. We will respond shortly.',
+        error: 'You have submitted multiple inquiries recently. We will respond shortly.',
       }
     }
     emailRecord.count += 1
@@ -239,10 +226,7 @@ export function checkRateLimits(
   return { allowed: true }
 }
 
-export function checkDuplicateFingerprint(
-  email: string,
-  message: string,
-): boolean {
+export function checkDuplicateFingerprint(email: string, message: string): boolean {
   const fingerprint = hashValue(`${email}:${message}`)
   if (duplicateStore.has(fingerprint)) {
     return true // duplicate
@@ -268,10 +252,7 @@ export async function submitContactInquiry(
   // Rate Limiting
   const rateLimit = checkRateLimits(clientIp, validation.data.email)
   if (!rateLimit.allowed) {
-    return {
-      success: false,
-      errors: { form: rateLimit.error || 'Rate limit exceeded' },
-    }
+    return { success: false, errors: { form: rateLimit.error || 'Rate limit exceeded' } }
   }
 
   // Duplicate Check
@@ -349,3 +330,4 @@ export async function submitContactInquiry(
     referenceId,
   }
 }
+

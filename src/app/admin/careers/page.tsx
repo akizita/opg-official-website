@@ -33,8 +33,7 @@ export default async function AdminCareersPage() {
       <section className="admin-page">
         <div className="container">
           <p className="form-help">
-            Your current role ({profile.roleDisplayName}) does not have
-            permission to view job openings.
+            Your current role ({profile.roleDisplayName}) does not have permission to view job openings.
           </p>
           <Link className="button button--secondary" href="/admin">
             ← Return to Dashboard
@@ -47,8 +46,7 @@ export default async function AdminCareersPage() {
   const supabase = await createClient()
   const { data: jobs } = await supabase
     .from('job_openings')
-    .select(
-      `
+    .select(`
       id,
       slug,
       title,
@@ -59,8 +57,7 @@ export default async function AdminCareersPage() {
       status,
       application_url,
       created_at
-    `,
-    )
+    `)
     .order('created_at', { ascending: false })
 
   const jobList = (jobs as unknown as JobRow[]) || []
@@ -83,8 +80,7 @@ export default async function AdminCareersPage() {
             <p className="eyebrow">Talent Operations</p>
             <h1>Job Openings & Careers</h1>
             <p>
-              Manage active positions, external ATS application mappings, and
-              employment profiles.
+              Manage active positions, external ATS application mappings, and employment profiles.
             </p>
           </div>
           <div>
@@ -103,12 +99,7 @@ export default async function AdminCareersPage() {
                   key={job.id}
                   title={job.title}
                 >
-                  <p
-                    style={{
-                      fontSize: '0.85rem',
-                      color: 'var(--color-text-subtle)',
-                    }}
-                  >
+                  <p style={{ fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>
                     Application ATS: {job.application_url}
                   </p>
                   <div
@@ -157,3 +148,4 @@ export default async function AdminCareersPage() {
     </section>
   )
 }
+

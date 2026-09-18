@@ -38,8 +38,7 @@ export function NewsletterForm() {
           submitted: true,
           success: false,
           message: '',
-          error:
-            'Unable to process subscription right now. Please try again later.',
+          error: 'Unable to process subscription right now. Please try again later.',
         })
       }
     })
@@ -50,8 +49,8 @@ export function NewsletterForm() {
       <div className="newsletter-box__content">
         <h3 className="newsletter-box__title">OPG Insights</h3>
         <p className="newsletter-box__desc">
-          Subscribe for quarterly analysis on global workforce dynamics,
-          cross-border engineering pods, and talent retention strategies.
+          Subscribe for quarterly analysis on global workforce dynamics, cross-border engineering
+          pods, and talent retention strategies.
         </p>
       </div>
 
@@ -117,3 +116,4 @@ export function NewsletterForm() {
     </div>
   )
 }
+

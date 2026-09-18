@@ -3,10 +3,7 @@ import Link from 'next/link'
 
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
-import {
-  searchPublishedDocuments,
-  type SearchEntityType,
-} from '@/lib/content/search'
+import { searchPublishedDocuments, type SearchEntityType } from '@/lib/content/search'
 import { siteConfig } from '@/lib/site-config'
 
 type SearchPageProps = {
@@ -56,16 +53,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <header className="search-hero">
         <h1 className="search-hero__title">Search Site Content</h1>
         <p className="search-hero__lead">
-          Find services, insights, open career positions, and answers across
-          Outsourced Pro Global.
+          Find services, insights, open career positions, and answers across Outsourced Pro Global.
         </p>
 
-        <form
-          method="GET"
-          action="/search"
-          className="search-form"
-          role="search"
-        >
+        <form method="GET" action="/search" className="search-form" role="search">
           <label htmlFor="search-input" className="sr-only">
             Search keywords
           </label>
@@ -89,16 +80,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         {query && (
           <p className="search-query-summary">
             {total === 0 ? (
-              <>
-                No results found for &ldquo;<strong>{sanitizedQuery}</strong>
-                &rdquo;
-              </>
+              <>No results found for &ldquo;<strong>{sanitizedQuery}</strong>&rdquo;</>
             ) : (
-              <>
-                Showing <strong>{total}</strong>{' '}
-                {total === 1 ? 'result' : 'results'} for &ldquo;
-                <strong>{sanitizedQuery}</strong>&rdquo;
-              </>
+              <>Showing <strong>{total}</strong> {total === 1 ? 'result' : 'results'} for &ldquo;<strong>{sanitizedQuery}</strong>&rdquo;</>
             )}
           </p>
         )}
@@ -109,10 +93,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <div>
                 <h2>Looking for something specific?</h2>
                 <p>
-                  Try searching for specialized delivery models like{' '}
-                  <em>Dedicated Teams</em>, exploring open jobs in{' '}
-                  <em>Engineering</em>, or reading insights on{' '}
-                  <em>Compliance</em>.
+                  Try searching for specialized delivery models like <em>Dedicated Teams</em>,
+                  exploring open jobs in <em>Engineering</em>, or reading insights on <em>Compliance</em>.
                 </p>
               </div>
             </Card>
@@ -127,14 +109,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {results.map((item) => (
               <Card key={item.id} className="search-result-card">
                 <div className="search-result-card__header">
-                  <span
-                    className={`search-badge search-badge--${item.entity_type}`}
-                  >
+                  <span className={`search-badge search-badge--${item.entity_type}`}>
                     {getEntityBadgeLabel(item.entity_type)}
                   </span>
-                  <span className="search-result-card__url">
-                    {item.url_path}
-                  </span>
+                  <span className="search-result-card__url">{item.url_path}</span>
                 </div>
 
                 <h2 className="search-result-card__title">
@@ -152,3 +130,4 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     </main>
   )
 }
+

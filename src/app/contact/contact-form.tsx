@@ -93,8 +93,8 @@ export function ContactForm() {
           className="contact-talent-notice"
         >
           <p>
-            <strong>Looking for open positions?</strong> Browse active roles and
-            apply directly through our official portal on the{' '}
+            <strong>Looking for open positions?</strong> Browse active roles and apply directly
+            through our official portal on the{' '}
             <Link className="inline-link" href="/careers">
               Careers Page →
             </Link>
@@ -103,7 +103,11 @@ export function ContactForm() {
       )}
 
       {result?.success ? (
-        <div aria-live="polite" className="contact-success-card" role="status">
+        <div
+          aria-live="polite"
+          className="contact-success-card"
+          role="status"
+        >
           <div className="contact-success-badge">✓ Inquiry Received</div>
           <h3>Thank you for reaching out</h3>
           <p>
@@ -115,8 +119,7 @@ export function ContactForm() {
             )}
           </p>
           <p className="contact-sla-note">
-            Our team reviews all incoming inquiries and will respond within 1
-            business day.
+            Our team reviews all incoming inquiries and will respond within 1 business day.
           </p>
           <button
             className="button button--secondary"
@@ -164,9 +167,7 @@ export function ContactForm() {
               Full Name <span className="field-required">*</span>
             </label>
             <input
-              aria-describedby={
-                result?.errors?.fullName ? 'fullName-error' : undefined
-              }
+              aria-describedby={result?.errors?.fullName ? 'fullName-error' : undefined}
               aria-invalid={Boolean(result?.errors?.fullName)}
               autoComplete="name"
               disabled={isPending}
@@ -189,9 +190,7 @@ export function ContactForm() {
               Work Email Address <span className="field-required">*</span>
             </label>
             <input
-              aria-describedby={
-                result?.errors?.email ? 'email-error' : undefined
-              }
+              aria-describedby={result?.errors?.email ? 'email-error' : undefined}
               aria-invalid={Boolean(result?.errors?.email)}
               autoComplete="email"
               disabled={isPending}
@@ -214,9 +213,7 @@ export function ContactForm() {
               Subject <span className="field-required">*</span>
             </label>
             <input
-              aria-describedby={
-                result?.errors?.subject ? 'subject-error' : undefined
-              }
+              aria-describedby={result?.errors?.subject ? 'subject-error' : undefined}
               aria-invalid={Boolean(result?.errors?.subject)}
               disabled={isPending}
               id="subject"
@@ -242,9 +239,7 @@ export function ContactForm() {
               Message <span className="field-required">*</span>
             </label>
             <textarea
-              aria-describedby={
-                result?.errors?.message ? 'message-error' : 'message-hint'
-              }
+              aria-describedby={result?.errors?.message ? 'message-error' : 'message-hint'}
               aria-invalid={Boolean(result?.errors?.message)}
               disabled={isPending}
               id="message"
@@ -255,8 +250,7 @@ export function ContactForm() {
               rows={5}
             />
             <span className="field-hint" id="message-hint">
-              Minimum 20 characters. Include organizational scope or technical
-              objectives.
+              Minimum 20 characters. Include organizational scope or technical objectives.
             </span>
             {result?.errors?.message && (
               <p className="field-error" id="message-error">
@@ -279,8 +273,8 @@ export function ContactForm() {
                 type="checkbox"
               />
               <span>
-                I agree to the processing of my contact information in
-                accordance with OPG&apos;s{' '}
+                I agree to the processing of my contact information in accordance with
+                OPG&apos;s{' '}
                 <Link className="inline-link" href="/privacy" target="_blank">
                   Privacy Notice
                 </Link>

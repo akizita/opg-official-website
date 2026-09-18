@@ -30,8 +30,7 @@ export default async function AdminFaqsPage() {
       <section className="admin-page">
         <div className="container">
           <p className="form-help">
-            Your current role ({profile.roleDisplayName}) does not have
-            permission to view FAQs.
+            Your current role ({profile.roleDisplayName}) does not have permission to view FAQs.
           </p>
           <Link className="button button--secondary" href="/admin">
             ← Return to Dashboard
@@ -44,8 +43,7 @@ export default async function AdminFaqsPage() {
   const supabase = await createClient()
   const { data: faqs } = await supabase
     .from('faqs')
-    .select(
-      `
+    .select(`
       id,
       question,
       answer,
@@ -53,8 +51,7 @@ export default async function AdminFaqsPage() {
       display_order,
       is_published,
       category:faq_categories(name)
-    `,
-    )
+    `)
     .order('display_order', { ascending: true })
 
   const faqList = (faqs as unknown as FaqRow[]) || []
@@ -77,8 +74,7 @@ export default async function AdminFaqsPage() {
             <p className="eyebrow">Knowledge Base</p>
             <h1>Frequently Asked Questions</h1>
             <p>
-              Manage public FAQ categories, client/talent audience separation,
-              and display hierarchy.
+              Manage public FAQ categories, client/talent audience separation, and display hierarchy.
             </p>
           </div>
           <div>
@@ -109,9 +105,7 @@ export default async function AdminFaqsPage() {
                       fontSize: '0.85rem',
                     }}
                   >
-                    <StatusBadge
-                      status={faq.is_published ? 'published' : 'draft'}
-                    />
+                    <StatusBadge status={faq.is_published ? 'published' : 'draft'} />
                     <Link
                       className="button-link button-link--secondary"
                       href="/faqs"
@@ -134,3 +128,4 @@ export default async function AdminFaqsPage() {
     </section>
   )
 }
+

@@ -37,8 +37,7 @@ export default async function AdminInquiriesPage({
       <section className="admin-page">
         <div className="container">
           <p className="form-help">
-            Your current role ({profile.roleDisplayName}) does not have
-            permission to view inquiries.
+            Your current role ({profile.roleDisplayName}) does not have permission to view inquiries.
           </p>
           <Link className="button button--secondary" href="/admin">
             ← Return to Dashboard
@@ -90,8 +89,7 @@ export default async function AdminInquiriesPage({
             <p className="eyebrow">Communications</p>
             <h1>Inquiries Inbox</h1>
             <p>
-              Review and manage incoming submissions from institutional clients
-              and talent candidates.
+              Review and manage incoming submissions from institutional clients and talent candidates.
             </p>
           </div>
           <div>
@@ -128,9 +126,7 @@ export default async function AdminInquiriesPage({
             <div className="card-grid">
               {inquiryList.map((inq) => {
                 const refId = `OPG-${inq.id.slice(0, 8).toUpperCase()}`
-                const submittedDate = new Date(
-                  inq.submitted_at,
-                ).toLocaleDateString('en-US', {
+                const submittedDate = new Date(inq.submitted_at).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',

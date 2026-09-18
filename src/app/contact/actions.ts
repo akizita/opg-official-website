@@ -20,23 +20,18 @@ export async function submitContactAction(
   const headerList = await headers()
   const forwardedFor = headerList.get('x-forwarded-for')
   const realIp = headerList.get('x-real-ip')
-  const clientIp = forwardedFor?.split(',')[0]?.trim() || realIp || '127.0.0.1'
+  const clientIp =
+    forwardedFor?.split(',')[0]?.trim() || realIp || '127.0.0.1'
 
   const fullName = String(formData.get('fullName') || '')
   const email = String(formData.get('email') || '')
   const subject = String(formData.get('subject') || '')
   const message = String(formData.get('message') || '')
   const intent = (formData.get('intent') as InquiryIntent) || 'client'
-  const privacyConsent =
-    formData.get('privacyConsent') === 'on' ||
-    formData.get('privacyConsent') === 'true'
-  const honeypot = String(
-    formData.get('website') || formData.get('honeypot') || '',
-  )
+  const privacyConsent = formData.get('privacyConsent') === 'on' || formData.get('privacyConsent') === 'true'
+  const honeypot = String(formData.get('website') || formData.get('honeypot') || '')
   const elapsedSecondsRaw = formData.get('elapsedSeconds')
-  const elapsedSeconds = elapsedSecondsRaw
-    ? Number(elapsedSecondsRaw)
-    : undefined
+  const elapsedSeconds = elapsedSecondsRaw ? Number(elapsedSecondsRaw) : undefined
   const turnstileToken = String(formData.get('turnstileToken') || '')
 
   const result: SubmissionResult = await submitContactInquiry(
@@ -56,3 +51,4 @@ export async function submitContactAction(
 
   return result
 }
+

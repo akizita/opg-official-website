@@ -74,11 +74,8 @@ export function validateFaqInput(input: unknown): {
             faq_category_id: categoryId,
             question,
             answer,
-            display_order:
-              typeof raw.display_order === 'number' ? raw.display_order : 0,
-            status: (typeof raw.status === 'string'
-              ? raw.status
-              : 'draft') as Faq['status'],
+            display_order: typeof raw.display_order === 'number' ? raw.display_order : 0,
+            status: (typeof raw.status === 'string' ? raw.status : 'draft') as Faq['status'],
           }
         : null,
     errors,
@@ -111,3 +108,4 @@ export async function getPublishedFaqsByCategory(
     faqs: faqs.filter((faq) => faq.faq_category_id === cat.id),
   }))
 }
+
