@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react'
 import { Color, Mesh, Program, Renderer, Triangle } from 'ogl'
 
+const MAX_STOPS = 6
+
 const VERT = `#version 300 es
 in vec2 position;
 void main() {
@@ -15,7 +17,8 @@ precision highp float;
 
 uniform float uTime;
 uniform float uAmplitude;
-uniform vec3 uColorStops[3];
+uniform vec3 uColorStops[${MAX_STOPS}];
+uniform int uNumStops;
 uniform vec2 uResolution;
 uniform float uBlend;
 uniform float uLightMode;
@@ -66,35 +69,42 @@ float snoise(vec2 v) {
   return 130.0 * dot(m, g);
 }
 
-struct ColorStop {
-  vec3 color;
-  float position;
-};
-
-#define COLOR_RAMP(colors, factor, finalColor) {              \\
-  int index = 0;                                              \\
-  for (int i = 0; i < 2; i++) {                               \\
-     ColorStop currentColor = colors[i];                      \\
-     bool isInBetween = currentColor.position <= factor;      \\
-     index = int(mix(float(index), float(i), float(isInBetween))); \\
-  }                                                           \\
-  ColorStop currentColor = colors[index];                     \\
-  ColorStop nextColor = colors[index + 1];                    \\
-  float range = nextColor.position - currentColor.position;   \\
-  float lerpFactor = (factor - currentColor.position) / range; \\
-  finalColor = mix(currentColor.color, nextColor.color, lerpFactor); \\
+vec3 calculateRampColor(vec2 uv) {
+  if (uNumStops <= 1) {
+    return uColorStops[0];
+  }
+  float nStops = float(uNumStops);
+  float stepSize = 1.0 / (nStops - 1.0);
+  
+  if (uv.x <= 0.0) {
+    return uColorStops[0];
+  }
+  
+  vec3 rampColor = uColorStops[0];
+  for (int i = 0; i < ${MAX_STOPS - 1}; i++) {
+    if (i < uNumStops - 1) {
+      float pos0 = float(i) * stepSize;
+      float pos1 = float(i + 1) * stepSize;
+      if (uv.x >= pos0 && uv.x <= pos1) {
+        float t = (uv.x - pos0) / (pos1 - pos0);
+        rampColor = mix(uColorStops[i], uColorStops[i + 1], t);
+        return rampColor;
+      }
+    }
+  }
+  
+  for (int i = 0; i < ${MAX_STOPS}; i++) {
+    if (i == uNumStops - 1) {
+      rampColor = uColorStops[i];
+    }
+  }
+  return rampColor;
 }
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
   
-  ColorStop colors[3];
-  colors[0] = ColorStop(uColorStops[0], 0.0);
-  colors[1] = ColorStop(uColorStops[1], 0.5);
-  colors[2] = ColorStop(uColorStops[2], 1.0);
-  
-  vec3 rampColor;
-  COLOR_RAMP(colors, uv.x, rampColor);
+  vec3 rampColor = calculateRampColor(uv);
   
   float height = snoise(vec2(uv.x * 2.0 + uTime * 0.1, uTime * 0.25)) * 0.5 * uAmplitude;
   height = exp(height);
@@ -121,8 +131,8 @@ void main() {
 
 export interface AuroraProps {
   /**
-   * 3 hex color stops for the gradient wash.
-   * Defaults to pastel tints derived from OPG Golden Orange and Golden Yellow.
+   * Array of 2 to 6 hex color stops for the gradient wash.
+   * Defaults to a multi-color spectrum coordinated with OPG Golden Orange & Golden Yellow.
    */
   colorStops?: string[]
   /**
@@ -149,17 +159,45 @@ export interface AuroraProps {
   style?: React.CSSProperties
 }
 
-// Derived from OPG brand tokens:
-// #f29f04 (Golden Orange) ~70% white tint -> #fbe2b4
-// #f2b705 (Golden Yellow) ~70% white tint -> #fbe9b4
-// #d48a00 (Brand Amber) ~75% white tint   -> #f4e2bf
-const DEFAULT_COLOR_STOPS = ['#fbe2b4', '#fbe9b4', '#f4e2bf']
+/**
+ * Coordinated multi-color Aurora palette:
+ * - #00c49f: Northern Lights Emerald / Teal (growth & classic aurora wave)
+ * - #f2b705: OPG Golden Yellow (official brand secondary)
+ * - #f29f04: OPG Golden Orange (official brand primary)
+ * - #e11d48: Aurora Sunset Rose (warm magenta bridge)
+ * - #6366f1: Royal Indigo / Violet (prestige & depth)
+ */
+export const DEFAULT_AURORA_PALETTE = [
+  '#00c49f',
+  '#f2b705',
+  '#f29f04',
+  '#e11d48',
+  '#6366f1',
+]
+
+function populateColorBuffer(stops: string[]): Float32Array {
+  const buffer = new Float32Array(MAX_STOPS * 3)
+  for (let i = 0; i < MAX_STOPS; i++) {
+    if (i < stops.length) {
+      const c = new Color(stops[i])
+      buffer[i * 3 + 0] = c.r
+      buffer[i * 3 + 1] = c.g
+      buffer[i * 3 + 2] = c.b
+    } else if (stops.length > 0) {
+      const last = new Color(stops[stops.length - 1])
+      buffer[i * 3 + 0] = last.r
+      buffer[i * 3 + 1] = last.g
+      buffer[i * 3 + 2] = last.b
+    }
+  }
+  return buffer
+}
 
 export function Aurora({
-  colorStops = DEFAULT_COLOR_STOPS,
-  amplitude = 0.7,
-  blend = 0.3,
-  speed = 0.2,
+  colorStops = DEFAULT_AURORA_PALETTE,
+  amplitude = 0.75,
+  blend = 0.35,
+  speed = 0.22,
   time,
   lightMode = true,
   className = '',
@@ -215,9 +253,9 @@ export function Aurora({
     canvas.style.width = '100%'
     canvas.style.height = '100%'
     canvas.style.display = 'block'
-    // Light theme multiply blend mode to softly wash over light backgrounds without washing out
+    // Multiply blend mode smoothly embeds colors into the light background
     canvas.style.mixBlendMode = 'multiply'
-    canvas.style.opacity = '0.85'
+    canvas.style.opacity = '0.92'
     canvas.style.pointerEvents = 'none'
 
     function resize() {
@@ -237,10 +275,13 @@ export function Aurora({
       delete geometry.attributes.uv
     }
 
-    const initialColorStops = colorStops.map((hex) => {
-      const c = new Color(hex)
-      return [c.r, c.g, c.b]
-    })
+    const effectiveStops =
+      colorStops.length > 0 ? colorStops : DEFAULT_AURORA_PALETTE
+    const initialNumStops = Math.min(
+      Math.max(effectiveStops.length, 2),
+      MAX_STOPS,
+    )
+    const initialColorBuffer = populateColorBuffer(effectiveStops)
 
     program = new Program(gl, {
       vertex: VERT,
@@ -248,7 +289,8 @@ export function Aurora({
       uniforms: {
         uTime: { value: 0 },
         uAmplitude: { value: amplitude },
-        uColorStops: { value: initialColorStops },
+        uColorStops: { value: initialColorBuffer },
+        uNumStops: { value: initialNumStops },
         uResolution: {
           value: [
             container.offsetWidth || window.innerWidth,
@@ -266,22 +308,25 @@ export function Aurora({
     const renderSingleFrame = (t: number) => {
       if (!program || !renderer) return
       const currentProps = propsRef.current
+      const stops =
+        currentProps.colorStops && currentProps.colorStops.length > 0
+          ? currentProps.colorStops
+          : DEFAULT_AURORA_PALETTE
+
       program.uniforms.uTime.value = t
       program.uniforms.uAmplitude.value = currentProps.amplitude
       program.uniforms.uBlend.value = currentProps.blend
       program.uniforms.uLightMode.value = currentProps.lightMode ? 1 : 0
-      program.uniforms.uColorStops.value = currentProps.colorStops.map(
-        (hex: string) => {
-          const c = new Color(hex)
-          return [c.r, c.g, c.b]
-        },
+      program.uniforms.uNumStops.value = Math.min(
+        Math.max(stops.length, 2),
+        MAX_STOPS,
       )
+      program.uniforms.uColorStops.value = populateColorBuffer(stops)
       renderer.render({ scene: mesh })
     }
 
     const update = (timestamp: number) => {
       if (isReducedMotion) {
-        // Paused on static graceful composition for reduced motion preference
         renderSingleFrame(1.2)
         return
       }

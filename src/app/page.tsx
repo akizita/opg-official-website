@@ -42,11 +42,11 @@ export default async function HomePage() {
       {/* Hero Section */}
       <section className="hero">
         <Aurora
-          amplitude={0.7}
-          blend={0.3}
-          colorStops={['#fbe2b4', '#fbe9b4', '#f4e2bf']}
+          amplitude={0.8}
+          blend={0.35}
+          colorStops={['#00c49f', '#f2b705', '#f29f04', '#e11d48', '#6366f1']}
           lightMode
-          speed={0.2}
+          speed={0.25}
         />
         <div aria-hidden="true" className="hero__scrim" />
         <div className="container hero__content">
