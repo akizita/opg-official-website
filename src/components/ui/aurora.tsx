@@ -182,7 +182,7 @@ export function Aurora({
   colorStops = DEFAULT_AURORA_PALETTE,
   amplitude = 0.8,
   blend = 0.35,
-  speed = 0.25,
+  speed = 1.0,
   time,
   className = '',
   style,
@@ -303,7 +303,7 @@ export function Aurora({
       animateId = requestAnimationFrame(update)
       const currentProps = propsRef.current
       const t = currentProps.time ?? timestamp * 0.001
-      renderSingleFrame(t * currentProps.speed * 0.4)
+      renderSingleFrame(t * (currentProps.speed ?? 1.0))
     }
 
     const onMotionChange = (event: MediaQueryListEvent) => {

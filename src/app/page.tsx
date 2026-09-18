@@ -41,12 +41,14 @@ export default async function HomePage() {
     <>
       {/* Hero Section */}
       <section className="hero">
-        <Aurora
-          amplitude={0.8}
-          blend={0.35}
-          colorStops={['#ea580c', '#f29f04', '#f2b705', '#ffd000', '#f59e0b']}
-          speed={0.25}
-        />
+        <div aria-hidden="true" className="hero__aurora">
+          <Aurora
+            amplitude={0.8}
+            blend={0.35}
+            colorStops={['#ea580c', '#f29f04', '#f2b705', '#ffd000', '#f59e0b']}
+            speed={1.0}
+          />
+        </div>
         <div aria-hidden="true" className="hero__scrim" />
         <div className="container hero__content">
           <div className="hero__badge" role="text">
@@ -55,7 +57,10 @@ export default async function HomePage() {
           </div>
           <h1>{heroTitle}</h1>
           <p className="hero__summary">{heroSummary}</p>
-          <div aria-label="Choose your path" className="button-row">
+          <div
+            aria-label="Choose your path"
+            className="button-row hero__cta-row"
+          >
             <ButtonLink href="/services">I’m building a team</ButtonLink>
             <ButtonLink href="/careers" variant="secondary">
               I’m looking for a role
