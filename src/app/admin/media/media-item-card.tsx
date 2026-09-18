@@ -15,7 +15,8 @@ export function MediaItemCard({ asset }: { asset: MediaAsset }) {
   }
 
   const sizeKb = Math.round(asset.size_bytes / 1024)
-  const sizeLabel = sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`
+  const sizeLabel =
+    sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`
 
   return (
     <Card eyebrow={`Category: ${asset.category} · ${sizeLabel}`}>
@@ -40,10 +41,22 @@ export function MediaItemCard({ asset }: { asset: MediaAsset }) {
         />
       </div>
 
-      <h3 style={{ fontSize: '1.05rem', wordBreak: 'break-all', marginBottom: '0.25rem' }}>
+      <h3
+        style={{
+          fontSize: '1.05rem',
+          wordBreak: 'break-all',
+          marginBottom: '0.25rem',
+        }}
+      >
         {asset.file_name}
       </h3>
-      <p style={{ fontSize: '0.85rem', color: 'var(--color-ink-soft)', marginBottom: '0.75rem' }}>
+      <p
+        style={{
+          fontSize: '0.85rem',
+          color: 'var(--color-ink-soft)',
+          marginBottom: '0.75rem',
+        }}
+      >
         Alt: {asset.alt_text ? `"${asset.alt_text}"` : 'None specified'}
       </p>
 
@@ -60,7 +73,11 @@ export function MediaItemCard({ asset }: { asset: MediaAsset }) {
         <button
           className="button button--secondary"
           onClick={handleCopy}
-          style={{ minHeight: '2.25rem', padding: '0.25rem 0.75rem', fontSize: '0.82rem' }}
+          style={{
+            minHeight: '2.25rem',
+            padding: '0.25rem 0.75rem',
+            fontSize: '0.82rem',
+          }}
           type="button"
         >
           {copied ? '✓ Copied!' : '📋 Copy URL'}
@@ -69,7 +86,11 @@ export function MediaItemCard({ asset }: { asset: MediaAsset }) {
           className="button-link button-link--secondary"
           href={asset.public_url}
           rel="noreferrer"
-          style={{ minHeight: '2.25rem', padding: '0.25rem 0.75rem', fontSize: '0.82rem' }}
+          style={{
+            minHeight: '2.25rem',
+            padding: '0.25rem 0.75rem',
+            fontSize: '0.82rem',
+          }}
           target="_blank"
         >
           Open ↗
@@ -78,4 +99,3 @@ export function MediaItemCard({ asset }: { asset: MediaAsset }) {
     </Card>
   )
 }
-

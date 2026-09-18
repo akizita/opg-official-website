@@ -37,6 +37,24 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           invitation.
         </p>
       ) : null}
+      {notice === 'signup-disabled' ? (
+        <p className="form-message form-message--error" role="alert">
+          Signups are disabled in Supabase. In Supabase Dashboard, go to
+          Authentication &rarr; Sign In / Up and enable &ldquo;Allow new users
+          to sign up&rdquo;.
+        </p>
+      ) : null}
+      {notice === 'oauth-failed' || notice === 'oauth-error' ? (
+        <p className="form-message form-message--error" role="alert">
+          Google authentication could not be completed. Please ensure your
+          account has access and try again.
+        </p>
+      ) : null}
+      {notice === 'unauthorized' ? (
+        <p className="form-message form-message--error" role="alert">
+          This Google account does not have active OPG administrator access.
+        </p>
+      ) : null}
       <SignInForm />
       <p className="auth-panel__note">
         Access is restricted to invited OPG administrators and protected by an

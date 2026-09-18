@@ -20,7 +20,10 @@ export async function uploadMediaAction(
   const { profile } = await requireAdminSession({ requireAal2: true })
 
   if (!canManageMedia(profile.roleKey)) {
-    return { success: false, error: 'Unauthorized: Media write permission required.' }
+    return {
+      success: false,
+      error: 'Unauthorized: Media write permission required.',
+    }
   }
 
   const file = formData.get('file') as File | null
@@ -32,13 +35,19 @@ export async function uploadMediaAction(
   }
 
   if (!altText) {
-    return { success: false, error: 'Please enter descriptive alternative text (alt text).' }
+    return {
+      success: false,
+      error: 'Please enter descriptive alternative text (alt text).',
+    }
   }
 
   const res = await uploadMediaAsset(file, { altText, category })
 
   if (!res.success || !res.asset) {
-    return { success: false, error: res.error || 'Failed to process media upload.' }
+    return {
+      success: false,
+      error: res.error || 'Failed to process media upload.',
+    }
   }
 
   revalidatePath('/admin/media')
@@ -49,4 +58,3 @@ export async function uploadMediaAction(
     fileName: res.asset.file_name,
   }
 }
-
