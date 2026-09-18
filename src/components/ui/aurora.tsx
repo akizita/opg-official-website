@@ -109,12 +109,12 @@ void main() {
   float auroraAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
   
   // Normalize color to peak vibrancy without dimming to black
-  vec3 chroma = pow(clamp(rampColor, 0.0, 1.0), vec3(1.1));
+  vec3 chroma = pow(clamp(rampColor, 0.0, 1.0), vec3(1.05));
   float chromaPeak = max(chroma.r, max(chroma.g, chroma.b));
   chroma /= max(chromaPeak, 0.0001);
   
   float energy = clamp(max(intensity, 0.0), 0.0, 1.0);
-  float alpha = clamp(auroraAlpha * (0.45 + 0.55 * energy), 0.0, 0.88);
+  float alpha = clamp(auroraAlpha * (0.28 + 0.38 * energy), 0.0, 0.48);
   
   // Premultiplied alpha output for clean WebGL compositing on white background
   fragColor = vec4(chroma * alpha, alpha);

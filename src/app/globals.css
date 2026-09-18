@@ -275,6 +275,10 @@ button:disabled {
   background: #ffffff;
   overflow: hidden;
   width: 100%;
+  min-height: clamp(38rem, 76vh, 52rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero__aurora {
@@ -288,15 +292,17 @@ button:disabled {
   mask-image: linear-gradient(
     180deg,
     black 0%,
-    black 35%,
-    rgba(0, 0, 0, 0.75) 60%,
+    black 25%,
+    rgba(0, 0, 0, 0.65) 50%,
+    rgba(0, 0, 0, 0.2) 75%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     180deg,
     black 0%,
-    black 35%,
-    rgba(0, 0, 0, 0.75) 60%,
+    black 25%,
+    rgba(0, 0, 0, 0.65) 50%,
+    rgba(0, 0, 0, 0.2) 75%,
     transparent 100%
   );
 }
@@ -307,8 +313,9 @@ button:disabled {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    transparent 35%,
-    rgba(255, 255, 255, 0.5) 65%,
+    transparent 20%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0.85) 75%,
     #ffffff 100%
   );
   pointer-events: none;
@@ -326,7 +333,7 @@ button:disabled {
   width: 100%;
   max-width: var(--container);
   margin-inline: auto;
-  padding-block: clamp(var(--space-10), 6vw, 4.75rem);
+  padding-block: clamp(5.5rem, 9vw, 8.5rem);
 }
 
 .hero__badge {
@@ -342,8 +349,8 @@ button:disabled {
     0 4px 16px rgba(242, 159, 4, 0.08),
     0 1px 2px rgba(0, 0, 0, 0.02);
   border-radius: 9999px;
-  padding: 0.35rem 0.95rem;
-  margin-bottom: var(--space-4);
+  padding: 0.38rem 1.05rem;
+  margin-bottom: var(--space-6);
   margin-inline: auto;
   font-size: 0.76rem;
   font-weight: 700;
@@ -362,7 +369,7 @@ button:disabled {
 }
 
 .hero__content h1 {
-  font-size: clamp(2rem, 3.6vw, 3.15rem);
+  font-size: clamp(2.15rem, 3.8vw, 3.25rem);
   line-height: 1.18;
   letter-spacing: -0.035em;
   max-width: 22ch;
@@ -379,9 +386,9 @@ button:disabled {
   text-align: center;
   color: var(--color-ink-soft);
   font-size: clamp(1.02rem, 1.25vw, 1.15rem);
-  line-height: 1.6;
-  max-width: 36rem;
-  margin-top: var(--space-4);
+  line-height: 1.65;
+  max-width: 38rem;
+  margin-top: var(--space-6);
 }
 
 .hero__cta-row {
