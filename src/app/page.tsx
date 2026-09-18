@@ -44,7 +44,7 @@ export default async function HomePage() {
         <Aurora
           amplitude={0.8}
           blend={0.35}
-          colorStops={['#00c49f', '#f2b705', '#f29f04', '#e11d48', '#6366f1']}
+          colorStops={['#ea580c', '#f29f04', '#f2b705', '#ffd000', '#f59e0b']}
           lightMode
           speed={0.25}
         />

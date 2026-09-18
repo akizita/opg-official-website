@@ -160,19 +160,19 @@ export interface AuroraProps {
 }
 
 /**
- * Coordinated multi-color Aurora palette:
- * - #00c49f: Northern Lights Emerald / Teal (growth & classic aurora wave)
- * - #f2b705: OPG Golden Yellow (official brand secondary)
+ * Multi-shade yellow to yellow-orange Aurora palette:
+ * - #ea580c: Deep Tangerine Orange (rich contour & contrast)
  * - #f29f04: OPG Golden Orange (official brand primary)
- * - #e11d48: Aurora Sunset Rose (warm magenta bridge)
- * - #6366f1: Royal Indigo / Violet (prestige & depth)
+ * - #f2b705: OPG Golden Yellow (official brand secondary)
+ * - #ffd000: Radiant Bright Gold (vibrant luminous wave crests)
+ * - #f59e0b: Warm Amber Honey (rich transition tone)
  */
 export const DEFAULT_AURORA_PALETTE = [
-  '#00c49f',
-  '#f2b705',
+  '#ea580c',
   '#f29f04',
-  '#e11d48',
-  '#6366f1',
+  '#f2b705',
+  '#ffd000',
+  '#f59e0b',
 ]
 
 function populateColorBuffer(stops: string[]): Float32Array {
