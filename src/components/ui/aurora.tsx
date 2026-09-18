@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { Color, Mesh, Program, Renderer, Triangle } from 'ogl'
 
-const MAX_STOPS = 6
+const NUM_STOPS = 5
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -17,11 +17,9 @@ precision highp float;
 
 uniform float uTime;
 uniform float uAmplitude;
-uniform vec3 uColorStops[${MAX_STOPS}];
-uniform int uNumStops;
+uniform vec3 uColorStops[${NUM_STOPS}];
 uniform vec2 uResolution;
 uniform float uBlend;
-uniform float uLightMode;
 
 out vec4 fragColor;
 
@@ -69,42 +67,38 @@ float snoise(vec2 v) {
   return 130.0 * dot(m, g);
 }
 
-vec3 calculateRampColor(vec2 uv) {
-  if (uNumStops <= 1) {
-    return uColorStops[0];
-  }
-  float nStops = float(uNumStops);
-  float stepSize = 1.0 / (nStops - 1.0);
-  
-  if (uv.x <= 0.0) {
-    return uColorStops[0];
-  }
-  
-  vec3 rampColor = uColorStops[0];
-  for (int i = 0; i < ${MAX_STOPS - 1}; i++) {
-    if (i < uNumStops - 1) {
-      float pos0 = float(i) * stepSize;
-      float pos1 = float(i + 1) * stepSize;
-      if (uv.x >= pos0 && uv.x <= pos1) {
-        float t = (uv.x - pos0) / (pos1 - pos0);
-        rampColor = mix(uColorStops[i], uColorStops[i + 1], t);
-        return rampColor;
-      }
+struct ColorStop {
+  vec3 color;
+  float position;
+};
+
+vec3 getRampColor(float factor) {
+  float f = clamp(factor, 0.0, 1.0);
+  ColorStop stops[${NUM_STOPS}];
+  stops[0] = ColorStop(uColorStops[0], 0.00);
+  stops[1] = ColorStop(uColorStops[1], 0.25);
+  stops[2] = ColorStop(uColorStops[2], 0.50);
+  stops[3] = ColorStop(uColorStops[3], 0.75);
+  stops[4] = ColorStop(uColorStops[4], 1.00);
+
+  int index = 0;
+  for (int i = 0; i < 4; i++) {
+    if (stops[i].position <= f) {
+      index = i;
     }
   }
-  
-  for (int i = 0; i < ${MAX_STOPS}; i++) {
-    if (i == uNumStops - 1) {
-      rampColor = uColorStops[i];
-    }
-  }
-  return rampColor;
+
+  ColorStop curr = stops[index];
+  ColorStop next = stops[index + 1];
+  float range = max(next.position - curr.position, 0.001);
+  float t = clamp((f - curr.position) / range, 0.0, 1.0);
+  return mix(curr.color, next.color, t);
 }
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
   
-  vec3 rampColor = calculateRampColor(uv);
+  vec3 rampColor = getRampColor(uv.x);
   
   float height = snoise(vec2(uv.x * 2.0 + uTime * 0.1, uTime * 0.25)) * 0.5 * uAmplitude;
   height = exp(height);
@@ -114,57 +108,51 @@ void main() {
   float midPoint = 0.20;
   float auroraAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
   
-  vec3 auroraColor = intensity * rampColor;
+  // Normalize color to peak vibrancy without dimming to black
+  vec3 chroma = pow(clamp(rampColor, 0.0, 1.0), vec3(1.1));
+  float chromaPeak = max(chroma.r, max(chroma.g, chroma.b));
+  chroma /= max(chromaPeak, 0.0001);
   
-  if (uLightMode > 0.5) {
-    float energy = clamp(max(intensity, 0.0), 0.0, 1.0);
-    float coverage = clamp(auroraAlpha * (0.55 + 0.45 * energy), 0.0, 0.86);
-    vec3 chroma = pow(clamp(rampColor, 0.0, 1.0), vec3(1.2));
-    float chromaPeak = max(chroma.r, max(chroma.g, chroma.b));
-    chroma /= max(chromaPeak, 0.0001);
-    fragColor = vec4(mix(vec3(1.0), chroma, min(coverage * 1.08, 0.94)), 1.0);
-  } else {
-    fragColor = vec4(auroraColor * auroraAlpha, auroraAlpha);
-  }
+  float energy = clamp(max(intensity, 0.0), 0.0, 1.0);
+  float alpha = clamp(auroraAlpha * (0.45 + 0.55 * energy), 0.0, 0.88);
+  
+  // Premultiplied alpha output for clean WebGL compositing on white background
+  fragColor = vec4(chroma * alpha, alpha);
 }
 `
 
 export interface AuroraProps {
   /**
-   * Array of 2 to 6 hex color stops for the gradient wash.
-   * Defaults to a multi-color spectrum coordinated with OPG Golden Orange & Golden Yellow.
+   * Array of hex color stops for the gradient wash.
+   * Default is 5 shades of yellow to yellow-orange.
    */
   colorStops?: string[]
   /**
-   * Wave amplitude height (0.6 - 0.8 recommended for calm, premium motion).
+   * Wave amplitude height (0.6 - 0.9).
    */
   amplitude?: number
   /**
-   * Blend threshold width (0.25 - 0.4 recommended for light theme).
+   * Blend threshold width (0.25 - 0.4).
    */
   blend?: number
   /**
-   * Animation speed multiplier (0.15 - 0.3 recommended for subtle motion).
+   * Animation speed multiplier (0.15 - 0.3).
    */
   speed?: number
   /**
    * Explicit time override if manually driving animation.
    */
   time?: number
-  /**
-   * Light mode shader optimization (fades to white base instead of black edges).
-   */
-  lightMode?: boolean
   className?: string
   style?: React.CSSProperties
 }
 
 /**
- * Multi-shade yellow to yellow-orange Aurora palette:
+ * 5 shades of yellow to yellow-orange:
  * - #ea580c: Deep Tangerine Orange (rich contour & contrast)
- * - #f29f04: OPG Golden Orange (official brand primary)
- * - #f2b705: OPG Golden Yellow (official brand secondary)
- * - #ffd000: Radiant Bright Gold (vibrant luminous wave crests)
+ * - #f29f04: OPG Golden Orange (official primary brand color)
+ * - #f2b705: OPG Golden Yellow (official secondary brand color)
+ * - #ffd000: Radiant Sunshine Gold (vibrant luminous wave crests)
  * - #f59e0b: Warm Amber Honey (rich transition tone)
  */
 export const DEFAULT_AURORA_PALETTE = [
@@ -175,31 +163,27 @@ export const DEFAULT_AURORA_PALETTE = [
   '#f59e0b',
 ]
 
-function populateColorBuffer(stops: string[]): Float32Array {
-  const buffer = new Float32Array(MAX_STOPS * 3)
-  for (let i = 0; i < MAX_STOPS; i++) {
+function toColorTuples(stops: string[]): [number, number, number][] {
+  const result: [number, number, number][] = []
+  for (let i = 0; i < NUM_STOPS; i++) {
     if (i < stops.length) {
       const c = new Color(stops[i])
-      buffer[i * 3 + 0] = c.r
-      buffer[i * 3 + 1] = c.g
-      buffer[i * 3 + 2] = c.b
-    } else if (stops.length > 0) {
-      const last = new Color(stops[stops.length - 1])
-      buffer[i * 3 + 0] = last.r
-      buffer[i * 3 + 1] = last.g
-      buffer[i * 3 + 2] = last.b
+      result.push([c.r, c.g, c.b])
+    } else {
+      const fallbackHex = stops[stops.length - 1] || '#f29f04'
+      const fallbackColor = new Color(fallbackHex)
+      result.push([fallbackColor.r, fallbackColor.g, fallbackColor.b])
     }
   }
-  return buffer
+  return result
 }
 
 export function Aurora({
   colorStops = DEFAULT_AURORA_PALETTE,
-  amplitude = 0.75,
+  amplitude = 0.8,
   blend = 0.35,
-  speed = 0.22,
+  speed = 0.25,
   time,
-  lightMode = true,
   className = '',
   style,
 }: AuroraProps) {
@@ -209,12 +193,11 @@ export function Aurora({
     blend,
     speed,
     time,
-    lightMode,
   })
 
   useEffect(() => {
-    propsRef.current = { colorStops, amplitude, blend, speed, time, lightMode }
-  }, [colorStops, amplitude, blend, speed, time, lightMode])
+    propsRef.current = { colorStops, amplitude, blend, speed, time }
+  }, [colorStops, amplitude, blend, speed, time])
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -253,9 +236,6 @@ export function Aurora({
     canvas.style.width = '100%'
     canvas.style.height = '100%'
     canvas.style.display = 'block'
-    // Multiply blend mode smoothly embeds colors into the light background
-    canvas.style.mixBlendMode = 'multiply'
-    canvas.style.opacity = '0.92'
     canvas.style.pointerEvents = 'none'
 
     function resize() {
@@ -276,12 +256,8 @@ export function Aurora({
     }
 
     const effectiveStops =
-      colorStops.length > 0 ? colorStops : DEFAULT_AURORA_PALETTE
-    const initialNumStops = Math.min(
-      Math.max(effectiveStops.length, 2),
-      MAX_STOPS,
-    )
-    const initialColorBuffer = populateColorBuffer(effectiveStops)
+      colorStops && colorStops.length > 0 ? colorStops : DEFAULT_AURORA_PALETTE
+    const initialTuples = toColorTuples(effectiveStops)
 
     program = new Program(gl, {
       vertex: VERT,
@@ -289,8 +265,7 @@ export function Aurora({
       uniforms: {
         uTime: { value: 0 },
         uAmplitude: { value: amplitude },
-        uColorStops: { value: initialColorBuffer },
-        uNumStops: { value: initialNumStops },
+        uColorStops: { value: initialTuples },
         uResolution: {
           value: [
             container.offsetWidth || window.innerWidth,
@@ -298,7 +273,6 @@ export function Aurora({
           ],
         },
         uBlend: { value: blend },
-        uLightMode: { value: lightMode ? 1 : 0 },
       },
     })
 
@@ -316,12 +290,7 @@ export function Aurora({
       program.uniforms.uTime.value = t
       program.uniforms.uAmplitude.value = currentProps.amplitude
       program.uniforms.uBlend.value = currentProps.blend
-      program.uniforms.uLightMode.value = currentProps.lightMode ? 1 : 0
-      program.uniforms.uNumStops.value = Math.min(
-        Math.max(stops.length, 2),
-        MAX_STOPS,
-      )
-      program.uniforms.uColorStops.value = populateColorBuffer(stops)
+      program.uniforms.uColorStops.value = toColorTuples(stops)
       renderer.render({ scene: mesh })
     }
 
@@ -361,7 +330,7 @@ export function Aurora({
       }
       gl.getExtension('WEBGL_lose_context')?.loseContext()
     }
-  }, [amplitude, blend, colorStops, lightMode])
+  }, [amplitude, blend, colorStops])
 
   return (
     <div

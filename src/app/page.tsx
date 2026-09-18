@@ -45,7 +45,6 @@ export default async function HomePage() {
           amplitude={0.8}
           blend={0.35}
           colorStops={['#ea580c', '#f29f04', '#f2b705', '#ffd000', '#f59e0b']}
-          lightMode
           speed={0.25}
         />
         <div aria-hidden="true" className="hero__scrim" />
