@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Aurora } from '@/components/ui/aurora'
 import { ButtonLink } from '@/components/ui/button-link'
 import { Card } from '@/components/ui/card'
+import { HeroGlobe } from '@/components/ui/globe'
 import {
   getPublishedTestimonials,
   getVisibleClients,
@@ -41,6 +42,7 @@ export default async function HomePage() {
     <>
       {/* Hero Section */}
       <section className="hero">
+        {/* Full-width Aurora Wave */}
         <div aria-hidden="true" className="hero__aurora">
           <Aurora
             amplitude={0.8}
@@ -49,6 +51,26 @@ export default async function HomePage() {
             speed={1.0}
           />
         </div>
+
+        {/* Low-opacity Global Network 3D Globe */}
+        <div aria-hidden="true" className="hero__globe-layer">
+          <HeroGlobe opacity={0.24} />
+          <div className="hero__orbital-ring hero__orbital-ring--outer" />
+          <div className="hero__orbital-ring hero__orbital-ring--inner" />
+        </div>
+
+        {/* Ambient floating indicators */}
+        <div aria-hidden="true" className="hero__ambient-decor">
+          <div className="hero__floating-chip hero__floating-chip--left">
+            <span className="hero__floating-chip-dot" />
+            <span>Worldwide Talent Network</span>
+          </div>
+          <div className="hero__floating-chip hero__floating-chip--right">
+            <span className="hero__floating-chip-dot" />
+            <span>24/7 Global Operations</span>
+          </div>
+        </div>
+
         <div aria-hidden="true" className="hero__scrim" />
         <div className="container hero__content">
           <div className="hero__badge" role="text">

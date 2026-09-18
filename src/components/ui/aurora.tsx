@@ -109,12 +109,12 @@ void main() {
   float auroraAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
   
   // Normalize color to peak vibrancy without dimming to black
-  vec3 chroma = pow(clamp(rampColor, 0.0, 1.0), vec3(1.05));
+  vec3 chroma = pow(clamp(rampColor, 0.0, 1.0), vec3(1.1));
   float chromaPeak = max(chroma.r, max(chroma.g, chroma.b));
   chroma /= max(chromaPeak, 0.0001);
   
   float energy = clamp(max(intensity, 0.0), 0.0, 1.0);
-  float alpha = clamp(auroraAlpha * (0.28 + 0.38 * energy), 0.0, 0.48);
+  float alpha = clamp(auroraAlpha * (0.45 + 0.55 * energy), 0.0, 0.88);
   
   // Premultiplied alpha output for clean WebGL compositing on white background
   fragColor = vec4(chroma * alpha, alpha);
@@ -180,7 +180,7 @@ function toColorTuples(stops: string[]): [number, number, number][] {
 
 export function Aurora({
   colorStops = DEFAULT_AURORA_PALETTE,
-  amplitude = 0.8,
+  amplitude = 1.0,
   blend = 0.35,
   speed = 1.0,
   time,
@@ -303,7 +303,7 @@ export function Aurora({
       animateId = requestAnimationFrame(update)
       const currentProps = propsRef.current
       const t = currentProps.time ?? timestamp * 0.001
-      renderSingleFrame(t * (currentProps.speed ?? 1.0))
+      renderSingleFrame(t * currentProps.speed * 0.4)
     }
 
     const onMotionChange = (event: MediaQueryListEvent) => {
