@@ -10,14 +10,13 @@ import {
 } from '@/lib/auth/permissions'
 import { getAdminSession } from '@/lib/auth/admin-session'
 import {
-  buildMissionVisionBlocks,
   type DocumentStatus,
   validatePageDocumentInput,
 } from '@/lib/content/page-documents'
 import { logger } from '@/lib/logger'
 import { createClient } from '@/lib/supabase/server'
 
-export type MissionVisionActionState = {
+export type AboutActionState = {
   errors?: Record<string, string>
   message?: string
   status?: DocumentStatus
@@ -26,10 +25,10 @@ export type MissionVisionActionState = {
   version?: number
 }
 
-export async function saveMissionVisionAction(
-  prevState: MissionVisionActionState,
+export async function saveAboutAction(
+  prevState: AboutActionState,
   formData: FormData,
-): Promise<MissionVisionActionState> {
+): Promise<AboutActionState> {
   const session = await getAdminSession()
 
   if (!session) {
@@ -49,7 +48,6 @@ export async function saveMissionVisionAction(
   const roleKey = session.profile.roleKey
   const intent = formData.get('intent') as string
 
-  // Determine target status and verify permissions
   let targetStatus: DocumentStatus = 'draft'
   let successMessage = 'Draft saved successfully.'
 
@@ -62,7 +60,7 @@ export async function saveMissionVisionAction(
         }
       }
       targetStatus = 'published'
-      successMessage = 'Page published successfully. Live page updated.'
+      successMessage = 'About page published successfully. Live page updated.'
       break
 
     case 'unpublish':
@@ -75,7 +73,7 @@ export async function saveMissionVisionAction(
       }
       targetStatus = 'unpublished'
       successMessage =
-        'Page unpublished. It is no longer visible to the public.'
+        'About page unpublished. It is no longer visible to the public.'
       break
 
     case 'submit_review':
@@ -87,7 +85,7 @@ export async function saveMissionVisionAction(
         }
       }
       targetStatus = 'in_review'
-      successMessage = 'Content submitted for review.'
+      successMessage = 'About page submitted for review.'
       break
 
     case 'request_changes':
@@ -98,7 +96,7 @@ export async function saveMissionVisionAction(
         }
       }
       targetStatus = 'changes_requested'
-      successMessage = 'Content returned for revisions.'
+      successMessage = 'About page returned for revisions.'
       break
 
     case 'save_draft':
@@ -114,37 +112,30 @@ export async function saveMissionVisionAction(
       break
   }
 
-  // Extract raw form data
   const rawTitle = formData.get('title')
   const rawSummary = formData.get('summary')
-  const rawMissionTitle =
-    (formData.get('missionTitle') as string) || 'Our Mission'
-  const rawMissionBody = (formData.get('missionBody') as string) || ''
-  const rawVisionTitle = (formData.get('visionTitle') as string) || 'Our Vision'
-  const rawVisionBody = (formData.get('visionBody') as string) || ''
-  const rawCalloutText = (formData.get('calloutText') as string) || ''
-  const rawCalloutVariant =
-    formData.get('calloutVariant') === 'warning' ? 'warning' : 'info'
+  const rawBody = (formData.get('body') as string) || ''
   const rawSeoTitle = formData.get('seoTitle')
   const rawSeoDescription = formData.get('seoDescription')
   const rawOgImageUrl = formData.get('ogImageUrl')
   const rawCanonicalUrl = formData.get('canonicalUrl')
 
-  // Build RichText blocks for Mission & Vision
-  const contentBlocks = buildMissionVisionBlocks({
-    missionTitle: rawMissionTitle,
-    missionBody: rawMissionBody,
-    visionTitle: rawVisionTitle,
-    visionBody: rawVisionBody,
-    calloutText: rawCalloutText,
-    calloutVariant: rawCalloutVariant,
-  })
+  const paragraphs = rawBody
+    .split(/\n\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+  const contentBlocks = paragraphs.map((p) => ({
+    type: 'paragraph' as const,
+    content: p,
+  }))
 
-  // Validate payload against schema
   const validation = validatePageDocumentInput({
     title: rawTitle,
     summary: rawSummary,
-    content: contentBlocks,
+    content:
+      contentBlocks.length > 0
+        ? contentBlocks
+        : [{ type: 'paragraph', content: 'About Outsourced Pro Global.' }],
     seo_title: rawSeoTitle,
     seo_description: rawSeoDescription,
     og_image_url: rawOgImageUrl,
@@ -162,21 +153,19 @@ export async function saveMissionVisionAction(
 
   const supabase = await createClient()
 
-  // Retrieve current document to get version
   const { data: existingDoc, error: fetchError } = await supabase
     .from('page_documents')
     .select('id, version')
-    .eq('slug', 'mission-and-vision')
+    .eq('slug', 'about')
     .maybeSingle()
 
   if (fetchError) {
-    logger.error('Failed to query existing page document', {
+    logger.error('Failed to query existing about page document', {
       error: fetchError.message,
-      slug: 'mission-and-vision',
     })
     return {
       success: false,
-      message: 'Database query error while checking page document.',
+      message: 'Database query error while checking about page document.',
     }
   }
 
@@ -185,7 +174,7 @@ export async function saveMissionVisionAction(
   const now = new Date().toISOString()
 
   const documentData = {
-    slug: 'mission-and-vision',
+    slug: 'about',
     title: validation.data.title,
     summary: validation.data.summary,
     content: validation.data.content,
@@ -220,9 +209,8 @@ export async function saveMissionVisionAction(
   }
 
   if (mutationError) {
-    logger.error('Failed to mutate page document in database', {
+    logger.error('Failed to mutate about page document', {
       error: mutationError.message,
-      slug: 'mission-and-vision',
       userId: session.profile.id,
     })
     return {
@@ -231,17 +219,15 @@ export async function saveMissionVisionAction(
     }
   }
 
-  logger.info('Page document updated successfully', {
-    slug: 'mission-and-vision',
+  logger.info('About page updated successfully', {
     status: targetStatus,
     version: nextVersion,
     userId: session.profile.id,
     intent,
   })
 
-  // Revalidate ISR cache for public pages and admin view
-  revalidatePath('/mission-and-vision')
-  revalidatePath('/admin/pages/mission-and-vision')
+  revalidatePath('/about')
+  revalidatePath('/admin/pages/about')
   revalidatePath('/sitemap.xml')
 
   return {

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { MissionVisionForm } from '@/app/admin/pages/mission-and-vision/mission-vision-form'
+import { AboutForm } from '@/app/admin/pages/about/about-form'
 import {
   canEditDraft,
   canPublish,
@@ -9,17 +9,14 @@ import {
   canSubmitReview,
 } from '@/lib/auth/permissions'
 import { requireAdminSession } from '@/lib/auth/admin-session'
-import {
-  extractMissionVisionContent,
-  type PageDocument,
-} from '@/lib/content/page-documents'
+import type { PageDocument } from '@/lib/content/page-documents'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
-  title: 'Edit Mission & Vision | OPG Admin',
+  title: 'Edit About Us | OPG Admin',
 }
 
-export default async function AdminMissionVisionPage() {
+export default async function AdminAboutPage() {
   const session = await requireAdminSession({ requireAal2: true })
   const roleKey = session.profile.roleKey
 
@@ -27,28 +24,26 @@ export default async function AdminMissionVisionPage() {
   const { data: document } = await supabase
     .from('page_documents')
     .select('*')
-    .eq('slug', 'mission-and-vision')
+    .eq('slug', 'about')
     .maybeSingle<PageDocument>()
 
-  const contentFields = extractMissionVisionContent(document?.content)
+  // Extract plain text paragraphs from content blocks
+  let body = ''
+  if (Array.isArray(document?.content)) {
+    body = document.content
+      .filter((b) => b.type === 'paragraph')
+      .map((b) => b.content)
+      .join('\n\n')
+  }
 
   const initialData = {
-    title: document?.title || 'Mission & Vision',
+    title: document?.title || 'About Outsourced Pro Global',
     summary:
       document?.summary ||
-      'Empowering global organizations with exceptional talent, measurable delivery, and enduring human partnerships.',
-    missionTitle: contentFields.missionTitle,
-    missionBody:
-      contentFields.missionBody ||
-      'At Outsourced Pro Global, our mission is to connect ambitious enterprises with world-class talent, bridging international opportunities through integrity, transparent partnership, and operational excellence.',
-    visionTitle: contentFields.visionTitle,
-    visionBody:
-      contentFields.visionBody ||
-      'We envision a global workplace where borders do not limit capability, where companies scale seamlessly with dedicated teams, and where talent flourishes in high-trust, rewarding roles.',
-    calloutText:
-      contentFields.calloutText ||
-      'Built on values of transparency, accountability, and sustainable partnership across all global client engagements.',
-    calloutVariant: contentFields.calloutVariant,
+      'Delivering elite remote team capabilities and global talent solutions across industries.',
+    body:
+      body ||
+      'Outsourced Pro Global is a premier international talent solutions partner. We combine deep recruitment expertise with dedicated account support to deliver talent that integrates directly into your business culture.',
     seoTitle: document?.seo_title || '',
     seoDescription: document?.seo_description || '',
     ogImageUrl: document?.og_image_url || '',
@@ -67,7 +62,6 @@ export default async function AdminMissionVisionPage() {
   return (
     <section className="admin-page">
       <div className="container">
-        {/* Navigation Breadcrumb */}
         <nav aria-label="Admin Breadcrumb" className="admin-breadcrumb">
           <ol>
             <li>
@@ -78,18 +72,17 @@ export default async function AdminMissionVisionPage() {
               <span>Pages</span>
             </li>
             <li aria-hidden="true">/</li>
-            <li aria-current="page">Mission & Vision</li>
+            <li aria-current="page">About Us</li>
           </ol>
         </nav>
 
-        {/* Header */}
         <div className="admin-heading">
           <div>
-            <p className="eyebrow">Content Workspace · Vertical Slice</p>
-            <h1>Edit Mission & Vision</h1>
+            <p className="eyebrow">Content Workspace</p>
+            <h1>Edit About Us</h1>
             <p>
-              Manage official company purpose statements, values highlights, and
-              search preview metadata.
+              Manage official company background, capability narrative, and
+              metadata.
             </p>
           </div>
           <div>
@@ -99,12 +92,8 @@ export default async function AdminMissionVisionPage() {
           </div>
         </div>
 
-        {/* Content Editor Form */}
         <div className="admin-content-card">
-          <MissionVisionForm
-            initialData={initialData}
-            permissions={permissions}
-          />
+          <AboutForm initialData={initialData} permissions={permissions} />
         </div>
       </div>
     </section>

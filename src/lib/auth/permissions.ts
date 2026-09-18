@@ -1,8 +1,5 @@
 export type AdminRoleKey =
-  | 'editor'
-  | 'publisher'
-  | 'inquiry_manager'
-  | 'super_admin'
+  'editor' | 'publisher' | 'inquiry_manager' | 'super_admin'
 
 export type AdminPermissionKey =
   | 'content.view'
@@ -20,7 +17,10 @@ export type AdminPermissionKey =
   | 'settings.manage'
   | 'audit.view'
 
-export const ROLE_PERMISSIONS: Record<AdminRoleKey, readonly AdminPermissionKey[]> = {
+export const ROLE_PERMISSIONS: Record<
+  AdminRoleKey,
+  readonly AdminPermissionKey[]
+> = {
   editor: [
     'content.view',
     'content.draft.write',
@@ -57,7 +57,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleKey, readonly AdminPermissionKey[
 
 export function hasRolePermission(
   roleKey: string,
-  permission: AdminPermissionKey
+  permission: AdminPermissionKey,
 ): boolean {
   const permissions = ROLE_PERMISSIONS[roleKey as AdminRoleKey]
   if (!permissions) return false
@@ -87,4 +87,3 @@ export function canPublish(roleKey: string): boolean {
 export function canArchive(roleKey: string): boolean {
   return hasRolePermission(roleKey, 'content.archive')
 }
-

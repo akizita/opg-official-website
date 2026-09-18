@@ -1178,6 +1178,361 @@ h3 {
   }
 }
 
+/* ==========================================================================
+   Phase 3 — Core Public Experience (About, Services, Clients, Team, Home)
+   ========================================================================== */
+
+/* Spotlight Card (Used on Home and About) */
+.spotlight-card {
+  align-items: center;
+  background: var(--color-accent);
+  border-radius: var(--radius-medium);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  justify-content: space-between;
+  padding: clamp(var(--space-6), 5vw, var(--space-12));
+}
+
+.spotlight-card > div:first-child {
+  flex: 1 1 24rem;
+}
+
+.spotlight-card h2 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1.25;
+  margin-bottom: var(--space-4);
+}
+
+.spotlight-card p {
+  color: var(--color-ink-soft);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 38rem;
+}
+
+/* About Page */
+.about-page {
+  padding-block: clamp(var(--space-8), 6vw, var(--space-16));
+}
+
+.about-hero {
+  margin-bottom: var(--space-12);
+  max-width: 54rem;
+}
+
+.about-hero__title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.15;
+  margin-bottom: var(--space-4);
+}
+
+.about-hero__lead {
+  color: var(--color-ink-soft);
+  font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+  line-height: 1.6;
+}
+
+.about-story {
+  margin-bottom: var(--space-12);
+  max-width: 54rem;
+}
+
+.about-purpose-spotlight {
+  margin-block: var(--space-12);
+}
+
+.about-team {
+  margin-top: var(--space-16);
+}
+
+.department-group {
+  margin-top: var(--space-8);
+}
+
+.department-group__title {
+  border-bottom: 2px solid var(--color-border);
+  color: var(--color-ink);
+  font-size: 1.35rem;
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-2);
+}
+
+.department-group__empty {
+  color: var(--color-ink-soft);
+  font-style: italic;
+}
+
+.team-grid {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.team-card__avatar {
+  margin-bottom: var(--space-3);
+  overflow: hidden;
+  border-radius: var(--radius-small);
+  max-width: 120px;
+}
+
+.team-card__bio {
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-top: var(--space-3);
+}
+
+.about-cta {
+  margin-top: var(--space-16);
+}
+
+/* Services Pages */
+.services-page,
+.service-detail-page {
+  padding-block: clamp(var(--space-8), 6vw, var(--space-16));
+}
+
+.services-hero,
+.service-hero {
+  margin-bottom: var(--space-12);
+  max-width: 54rem;
+}
+
+.services-hero__title,
+.service-hero__title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.15;
+  margin-bottom: var(--space-4);
+}
+
+.services-hero__lead,
+.service-hero__lead {
+  color: var(--color-ink-soft);
+  font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+  line-height: 1.6;
+}
+
+.service-card__action {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+}
+
+.delivery-standards {
+  margin-block: var(--space-16);
+}
+
+.services-cta {
+  margin-top: var(--space-16);
+}
+
+.service-body {
+  margin-bottom: var(--space-12);
+  max-width: 54rem;
+}
+
+.service-cta {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-12);
+  padding-top: var(--space-12);
+}
+
+/* Clients & Testimonials */
+.clients-page {
+  padding-block: clamp(var(--space-8), 6vw, var(--space-16));
+}
+
+.clients-hero {
+  margin-bottom: var(--space-12);
+  max-width: 54rem;
+}
+
+.clients-hero__title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.15;
+  margin-bottom: var(--space-4);
+}
+
+.clients-hero__lead {
+  color: var(--color-ink-soft);
+  font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+  line-height: 1.6;
+}
+
+.clients-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: var(--space-12);
+}
+
+.client-badge {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  justify-content: center;
+  padding: var(--space-6);
+  text-align: center;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.client-badge:hover {
+  border-color: var(--color-brand);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgb(16 42 67 / 6%);
+}
+
+.client-badge__logo-mark {
+  font-size: 2rem;
+}
+
+.client-badge__name {
+  color: var(--color-ink);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.client-badge__link {
+  color: var(--color-brand);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.client-badge__link:hover {
+  text-decoration: underline;
+}
+
+.clients-testimonials {
+  margin-block: var(--space-16);
+}
+
+.testimonial-quote {
+  border-left: 3px solid var(--color-brand);
+  color: var(--color-ink);
+  font-style: italic;
+  line-height: 1.6;
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+}
+
+.clients-security {
+  margin-block: var(--space-12);
+}
+
+.clients-cta {
+  margin-top: var(--space-12);
+}
+
+/* Home Page Live Additions */
+.section--light {
+  background: #f8fafc;
+}
+
+.section--proof {
+  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  padding-block: var(--space-8);
+}
+
+.proof-label {
+  color: var(--color-ink-soft);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-4);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.proof-strip {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  justify-content: center;
+}
+
+.proof-mark {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  color: var(--color-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+}
+
+.proof-link {
+  color: var(--color-brand);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.proof-link:hover {
+  text-decoration: underline;
+}
+
+.testimonial-author {
+  color: #bcccdc;
+  font-size: 0.9rem;
+  margin-top: var(--space-3);
+}
+
+.text-link {
+  color: var(--color-brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+/* 404 Not Found Page */
+.not-found-page {
+  max-width: 48rem;
+}
+
+.not-found-links {
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  margin-block: var(--space-6);
+  padding: var(--space-6);
+}
+
+.not-found-links__title {
+  color: var(--color-ink);
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+
+.not-found-links__list {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(2, 1fr);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.not-found-links__list a {
+  color: var(--color-brand);
+  text-decoration: none;
+}
+
+.not-found-links__list a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 62rem) {
   .desktop-nav,
   .header-cta {
@@ -1190,6 +1545,14 @@ h3 {
 
   .card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .clients-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .form-grid {
@@ -1221,6 +1584,12 @@ h3 {
   .button-row,
   .button-link {
     width: 100%;
+  }
+
+  .team-grid,
+  .clients-grid,
+  .not-found-links__list {
+    grid-template-columns: 1fr;
   }
 
   .site-footer__grid {

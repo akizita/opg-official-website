@@ -1,9 +1,9 @@
-export default function MissionAndVisionLoading() {
+export default function AboutLoading() {
   return (
     <div
-      className="container mission-page"
+      className="container about-page"
       aria-busy="true"
-      aria-label="Loading content"
+      aria-label="Loading About page"
     >
       <div className="skeleton-breadcrumbs" />
       <div className="skeleton-hero">
@@ -12,11 +12,12 @@ export default function MissionAndVisionLoading() {
         <div className="skeleton-lead" />
       </div>
       <div className="skeleton-content">
-        <div className="skeleton-heading" />
         <div className="skeleton-paragraph" />
         <div className="skeleton-paragraph" />
-        <div className="skeleton-heading" />
-        <div className="skeleton-paragraph" />
+      </div>
+      <div className="card-grid" style={{ marginTop: '3rem' }}>
+        <div className="skeleton-paragraph" style={{ height: '12rem' }} />
+        <div className="skeleton-paragraph" style={{ height: '12rem' }} />
       </div>
     </div>
   )

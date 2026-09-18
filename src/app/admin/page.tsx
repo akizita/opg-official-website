@@ -17,11 +17,18 @@ export default async function AdminPage() {
   const { profile } = await requireAdminSession({ requireAal2: true })
 
   const supabase = await createClient()
-  const { data: mvDoc } = await supabase
-    .from('page_documents')
-    .select('status, version, updated_at')
-    .eq('slug', 'mission-and-vision')
-    .maybeSingle<PageDocument>()
+  const [{ data: mvDoc }, { data: aboutDoc }] = await Promise.all([
+    supabase
+      .from('page_documents')
+      .select('status, version, updated_at')
+      .eq('slug', 'mission-and-vision')
+      .maybeSingle<PageDocument>(),
+    supabase
+      .from('page_documents')
+      .select('status, version, updated_at')
+      .eq('slug', 'about')
+      .maybeSingle<PageDocument>(),
+  ])
 
   const hasContentAccess = canViewContent(profile.roleKey)
 
@@ -49,21 +56,83 @@ export default async function AdminPage() {
               official website.
             </p>
             {hasContentAccess ? (
-              <div className="admin-card__row">
-                <div>
-                  <strong>Mission & Vision</strong>
-                  <div className="admin-card__meta">
-                    <StatusBadge status={mvDoc?.status ?? 'draft'} />
-                    <span>v{mvDoc?.version ?? 1}</span>
+              <>
+                <div className="admin-card__row">
+                  <div>
+                    <strong>Mission & Vision</strong>
+                    <div className="admin-card__meta">
+                      <StatusBadge status={mvDoc?.status ?? 'draft'} />
+                      <span>v{mvDoc?.version ?? 1}</span>
+                    </div>
                   </div>
+                  <Link
+                    className="button-link button-link--secondary"
+                    href="/admin/pages/mission-and-vision"
+                  >
+                    Edit Page →
+                  </Link>
                 </div>
-                <Link
-                  className="button-link button-link--secondary"
-                  href="/admin/pages/mission-and-vision"
-                >
-                  Edit Page →
-                </Link>
-              </div>
+
+                <div className="admin-card__row">
+                  <div>
+                    <strong>About Us</strong>
+                    <div className="admin-card__meta">
+                      <StatusBadge status={aboutDoc?.status ?? 'draft'} />
+                      <span>v{aboutDoc?.version ?? 1}</span>
+                    </div>
+                  </div>
+                  <Link
+                    className="button-link button-link--secondary"
+                    href="/admin/pages/about"
+                  >
+                    Edit Page →
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <p className="form-help">
+                Your role does not have content editing permissions.
+              </p>
+            )}
+          </Card>
+
+          <Card eyebrow="Catalog & Relationships" title="Services & Clients">
+            <p>
+              Manage public service offerings, client partner badges, and
+              published testimonials.
+            </p>
+            {hasContentAccess ? (
+              <>
+                <div className="admin-card__row">
+                  <div>
+                    <strong>Services Catalog</strong>
+                    <p className="field-hint">
+                      Service descriptions and delivery models
+                    </p>
+                  </div>
+                  <Link
+                    className="button-link button-link--secondary"
+                    href="/admin/services"
+                  >
+                    Manage →
+                  </Link>
+                </div>
+
+                <div className="admin-card__row">
+                  <div>
+                    <strong>Clients & Testimonials</strong>
+                    <p className="field-hint">
+                      Client organizations and endorsements
+                    </p>
+                  </div>
+                  <Link
+                    className="button-link button-link--secondary"
+                    href="/admin/clients"
+                  >
+                    Manage →
+                  </Link>
+                </div>
+              </>
             ) : (
               <p className="form-help">
                 Your role does not have content editing permissions.

@@ -6,6 +6,7 @@ export const siteConfig = {
   canonicalUrl: 'https://opglobal.com.hk',
   navigation: [
     { href: '/about', label: 'About' },
+    { href: '/mission-and-vision', label: 'Mission & Vision' },
     { href: '/services', label: 'Services' },
     { href: '/clients', label: 'Clients' },
     { href: '/careers', label: 'Careers' },

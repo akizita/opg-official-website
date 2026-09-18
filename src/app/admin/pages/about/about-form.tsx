@@ -5,21 +5,18 @@ import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
 
 import {
-  type MissionVisionActionState,
-  saveMissionVisionAction,
-} from '@/app/admin/pages/mission-and-vision/actions'
+  type AboutActionState,
+  saveAboutAction,
+} from '@/app/admin/pages/about/actions'
 import { Input, TextArea } from '@/components/ui/form-controls'
 import { Notice } from '@/components/ui/notice'
 import { StatusBadge } from '@/components/ui/status-badge'
 import type { DocumentStatus } from '@/lib/content/page-documents'
 
-type MissionVisionFormProps = {
+type AboutFormProps = {
   initialData: {
-    calloutText: string
-    calloutVariant: 'info' | 'warning'
+    body: string
     canonicalUrl: string
-    missionBody: string
-    missionTitle: string
     ogImageUrl: string
     seoDescription: string
     seoTitle: string
@@ -27,8 +24,6 @@ type MissionVisionFormProps = {
     summary: string
     title: string
     version: number
-    visionBody: string
-    visionTitle: string
   }
   permissions: {
     canEditDraft: boolean
@@ -64,17 +59,14 @@ function ActionButton({
   )
 }
 
-export function MissionVisionForm({
-  initialData,
-  permissions,
-}: MissionVisionFormProps) {
-  const [state, formAction] = useActionState<
-    MissionVisionActionState,
-    FormData
-  >(saveMissionVisionAction, {
-    status: initialData.status,
-    version: initialData.version,
-  })
+export function AboutForm({ initialData, permissions }: AboutFormProps) {
+  const [state, formAction] = useActionState<AboutActionState, FormData>(
+    saveAboutAction,
+    {
+      status: initialData.status,
+      version: initialData.version,
+    },
+  )
 
   const currentStatus = state.status ?? initialData.status
   const currentVersion = state.version ?? initialData.version
@@ -93,7 +85,7 @@ export function MissionVisionForm({
         <div className="content-form__status-actions">
           <Link
             className="button-link button-link--secondary"
-            href="/mission-and-vision"
+            href="/about"
             target="_blank"
           >
             View Live Page ↗
@@ -101,7 +93,6 @@ export function MissionVisionForm({
         </div>
       </div>
 
-      {/* Notifications */}
       {state.message && (
         <Notice
           title={state.success ? 'Success' : 'Attention'}
@@ -111,17 +102,11 @@ export function MissionVisionForm({
         </Notice>
       )}
 
-      {/* Section 1: Basic Page Info */}
+      {/* Basic Page Info */}
       <fieldset className="form-fieldset">
-        <legend className="form-legend">Basic Page Information</legend>
-        <p className="form-fieldset__desc">
-          Sets the main header and executive summary displayed on the public
-          page.
-        </p>
-
+        <legend className="form-legend">Page Title & Summary</legend>
         <div className="form-group">
           <Input
-            aria-describedby="title-help"
             defaultValue={initialData.title}
             id="title"
             label="Page Title *"
@@ -129,10 +114,6 @@ export function MissionVisionForm({
             name="title"
             required
           />
-          <p className="form-help" id="title-help">
-            The primary H1 title displayed on the public page (1–200
-            characters).
-          </p>
           {state.errors?.title && (
             <p className="form-error" role="alert">
               {state.errors.title}
@@ -142,18 +123,13 @@ export function MissionVisionForm({
 
         <div className="form-group">
           <TextArea
-            aria-describedby="summary-help"
             defaultValue={initialData.summary}
             id="summary"
-            label="Summary Deck / Lead Paragraph"
+            label="Executive Summary Deck"
             maxLength={500}
             name="summary"
             rows={3}
           />
-          <p className="form-help" id="summary-help">
-            A concise lead paragraph introducing the purpose of the organization
-            (max 500 characters).
-          </p>
           {state.errors?.summary && (
             <p className="form-error" role="alert">
               {state.errors.summary}
@@ -162,102 +138,24 @@ export function MissionVisionForm({
         </div>
       </fieldset>
 
-      {/* Section 2: Core Mission & Vision */}
+      {/* Narrative Body */}
       <fieldset className="form-fieldset">
-        <legend className="form-legend">Mission & Vision Statements</legend>
-        <p className="form-fieldset__desc">
-          Define the formal mission and vision declarations. Paragraphs will be
-          formatted cleanly on the public page.
-        </p>
-
-        <div className="form-grid">
-          <div className="form-panel">
-            <h3 className="form-panel__title">Mission Declaration</h3>
-            <div className="form-group">
-              <Input
-                defaultValue={initialData.missionTitle}
-                id="missionTitle"
-                label="Mission Heading"
-                name="missionTitle"
-              />
-            </div>
-            <div className="form-group">
-              <TextArea
-                defaultValue={initialData.missionBody}
-                id="missionBody"
-                label="Mission Statement *"
-                name="missionBody"
-                required
-                rows={6}
-              />
-            </div>
-          </div>
-
-          <div className="form-panel">
-            <h3 className="form-panel__title">Vision Declaration</h3>
-            <div className="form-group">
-              <Input
-                defaultValue={initialData.visionTitle}
-                id="visionTitle"
-                label="Vision Heading"
-                name="visionTitle"
-              />
-            </div>
-            <div className="form-group">
-              <TextArea
-                defaultValue={initialData.visionBody}
-                id="visionBody"
-                label="Vision Statement *"
-                name="visionBody"
-                required
-                rows={6}
-              />
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
-      {/* Section 3: Values Callout */}
-      <fieldset className="form-fieldset">
-        <legend className="form-legend">Core Values & Highlights</legend>
-        <p className="form-fieldset__desc">
-          Highlight key commitments or organizational values shown in an
-          accented callout box.
-        </p>
-
+        <legend className="form-legend">About Us Narrative</legend>
         <div className="form-group">
           <TextArea
-            defaultValue={initialData.calloutText}
-            id="calloutText"
-            label="Values Highlight Callout"
-            name="calloutText"
-            rows={3}
+            defaultValue={initialData.body}
+            id="body"
+            label="Story & Capabilities (Paragraphs separated by blank lines)"
+            name="body"
+            required
+            rows={8}
           />
-        </div>
-
-        <div className="form-group">
-          <label className="field" htmlFor="calloutVariant">
-            <span>Callout Style</span>
-            <select
-              defaultValue={initialData.calloutVariant}
-              id="calloutVariant"
-              name="calloutVariant"
-            >
-              <option value="info">Info (Brand Accent)</option>
-              <option value="warning">Warning / Notice</option>
-            </select>
-          </label>
         </div>
       </fieldset>
 
-      {/* Section 4: SEO & Social Previews */}
+      {/* SEO & Previews */}
       <fieldset className="form-fieldset">
-        <legend className="form-legend">Search Engine & Social Sharing</legend>
-        <p className="form-fieldset__desc">
-          Optional overrides for Google search snippets and social media cards
-          (OpenGraph).
-        </p>
-
+        <legend className="form-legend">Search & Social Sharing</legend>
         <div className="form-group">
           <Input
             defaultValue={initialData.seoTitle}
@@ -266,10 +164,6 @@ export function MissionVisionForm({
             maxLength={100}
             name="seoTitle"
           />
-          <p className="form-help">
-            Defaults to &quot;{initialData.title} | Outsourced Pro Global&quot;
-            if blank.
-          </p>
         </div>
 
         <div className="form-group">
@@ -281,18 +175,14 @@ export function MissionVisionForm({
             name="seoDescription"
             rows={2}
           />
-          <p className="form-help">
-            Defaults to the summary deck if left empty.
-          </p>
         </div>
 
         <div className="form-group">
           <Input
             defaultValue={initialData.ogImageUrl}
             id="ogImageUrl"
-            label="OpenGraph Social Image URL"
+            label="OG Social Image URL"
             name="ogImageUrl"
-            placeholder="https://example.com/og-image.jpg or /images/..."
           />
         </div>
 
@@ -302,7 +192,6 @@ export function MissionVisionForm({
             id="canonicalUrl"
             label="Canonical URL Override"
             name="canonicalUrl"
-            placeholder="https://opglobal.com.hk/mission-and-vision"
           />
         </div>
       </fieldset>

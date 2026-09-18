@@ -129,12 +129,12 @@ Business metrics to baseline after analytics approval:
 
 ### Minimum viable launch
 
-- [ ] Home
-- [ ] About Us
-- [ ] Mission & Vision
-- [ ] Meet the Team, grouped by department
-- [ ] Services
-- [ ] Clients
+- [x] Home
+- [x] About Us
+- [x] Mission & Vision
+- [x] Meet the Team, grouped by department
+- [x] Services
+- [x] Clients
 - [ ] Careers landing page and job listings with an external application destination
 - [ ] FAQs and testimonials
 - [ ] Articles listing and article detail
@@ -382,35 +382,35 @@ The successful delivery of the **Mission & Vision** vertical slice establishes t
 
 ### Suggested implementation order
 
-- [ ] About Us
-- [ ] Services
-- [ ] Clients
-- [ ] Departments and Team Members
-- [ ] Testimonials
-- [ ] Home composition using approved content
-- [ ] Mission & Vision refinements from the vertical slice
-- [ ] Not-found, generic error, loading, and empty states
+- [x] About Us — Implemented in `src/app/about/page.tsx` with live CMS retrieval (`page_documents`), purpose spotlight, team directory, dynamic metadata, and loading skeleton.
+- [x] Services — Implemented in `src/app/services/page.tsx` and `src/app/services/[slug]/page.tsx` with dynamic metadata, SSG `generateStaticParams`, ISR revalidation, and loading skeletons.
+- [x] Clients — Implemented in `src/app/clients/page.tsx` with verified client marks (`public.clients`), client endorsements (`public.testimonials`), security commitments, dynamic metadata, and loading skeleton.
+- [x] Departments and Team Members — Implemented in `src/app/about/page.tsx` grouped by department via `getActiveDepartmentsWithMembers()`.
+- [x] Testimonials — Implemented in `src/app/clients/page.tsx` and home page proof strip via `getPublishedTestimonials()`.
+- [x] Home composition using approved content — Replaced placeholder with live CMS composition from `page_documents` (`home`), featured services, client trust logos, verified testimonials, and dual conversion paths.
+- [x] Mission & Vision refinements from the vertical slice — Added to primary navigation, purpose spotlight on About page, and consistent container styles.
+- [x] Not-found, generic error, loading, and empty states — All core pages have custom accessible `loading.tsx`, `not-found.tsx` directory links, and empty collection fallbacks.
 
 ### Cross-page requirements
 
-- [ ] Use CMS/backend content; avoid duplicating editable business copy in source code.
-- [ ] Use stable, human-readable URLs.
-- [ ] Preserve semantic heading order and meaningful link text.
-- [ ] Require alternative text or an explicit decorative-image choice.
-- [ ] Optimize responsive images and prevent layout shift.
-- [ ] Support keyboard use, visible focus, zoom, and reduced motion.
-- [ ] Handle empty collections and unavailable content without broken layouts.
-- [ ] Add unique title, description, canonical URL, Open Graph data, and structured data where appropriate.
-- [ ] Include calls to action consistent with the approved conversion goal.
+- [x] Use CMS/backend content; avoid duplicating editable business copy in source code.
+- [x] Use stable, human-readable URLs.
+- [x] Preserve semantic heading order and meaningful link text.
+- [x] Require alternative text or an explicit decorative-image choice.
+- [x] Optimize responsive images and prevent layout shift.
+- [x] Support keyboard use, visible focus, zoom, and reduced motion.
+- [x] Handle empty collections and unavailable content without broken layouts.
+- [x] Add unique title, description, canonical URL, Open Graph data, and structured data where appropriate.
+- [x] Include calls to action consistent with the approved conversion goal.
 
 ### Exit criteria / Gate G3
 
-- [ ] All core pages match approved designs at supported breakpoints.
-- [ ] Navigation, footer links, internal links, and calls to action work.
-- [ ] Editors can manage About, Mission & Vision, Services, Departments, and Team Members.
-- [ ] Services and team-member ordering is deterministic and editable.
-- [ ] Hidden/unpublished records are not returned publicly.
-- [ ] Product owner approves the core journey on staging.
+- [x] All core pages match approved designs at supported breakpoints (tested down to 320 px).
+- [x] Navigation, footer links, internal links, and calls to action work.
+- [x] Editors can manage About, Mission & Vision, Services, Departments, and Team Members. — Admin workspace at `/admin/pages/about`, `/admin/pages/mission-and-vision`, `/admin/services`, `/admin/clients`, and `/admin`.
+- [x] Services and team-member ordering is deterministic and editable. — Ordered by `display_order asc, name/title asc`.
+- [x] Hidden/unpublished records are not returned publicly. — RLS enforced and data access layer queries filter strictly by `is_published: true`, `status = 'published'`, and `is_active: true`.
+- [ ] Product owner approves the core journey on staging. — Pending staging deployment and Armi Escamilla UAT demo.
 
 ---
 

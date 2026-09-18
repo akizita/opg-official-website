@@ -7,24 +7,6 @@ type PlaceholderSection = {
 
 export const placeholderSections: PlaceholderSection[] = [
   {
-    slug: 'about',
-    title: 'About OPG',
-    audience: 'Company',
-    description: 'Company background and mission content is awaiting approval.',
-  },
-  {
-    slug: 'services',
-    title: 'Services',
-    audience: 'Organizations',
-    description: 'The approved service list and detail pages will appear here.',
-  },
-  {
-    slug: 'clients',
-    title: 'Clients',
-    audience: 'Organizations',
-    description: 'Client stories and display permissions are being prepared.',
-  },
-  {
     slug: 'careers',
     title: 'Careers',
     audience: 'Talent',

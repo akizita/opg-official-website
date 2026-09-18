@@ -106,7 +106,10 @@ describe('Mission & Vision metadata generation', () => {
     vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
 
     const metadata = await generateMetadata()
-    const robots = typeof metadata.robots === 'object' && metadata.robots !== null ? metadata.robots : {}
+    const robots =
+      typeof metadata.robots === 'object' && metadata.robots !== null
+        ? metadata.robots
+        : {}
     expect('index' in robots ? robots.index : undefined).toBe(false)
     expect('follow' in robots ? robots.follow : undefined).toBe(false)
   })

@@ -72,7 +72,7 @@ export type ValidationResult<T> =
  * Extracts structured mission & vision fields from RichTextBlock[] content.
  */
 export function extractMissionVisionContent(
-  content: RichTextBlock[] | null | undefined
+  content: RichTextBlock[] | null | undefined,
 ): {
   missionTitle: string
   missionBody: string
@@ -181,7 +181,7 @@ export function buildMissionVisionBlocks(fields: {
  * Validates document input values against schema rules.
  */
 export function validatePageDocumentInput(
-  raw: unknown
+  raw: unknown,
 ): ValidationResult<PageDocumentInput> {
   const errors: Record<string, string> = {}
 

@@ -16,6 +16,26 @@ set name = excluded.name,
     display_order = excluded.display_order,
     is_active = excluded.is_active;
 
+insert into public.team_members (department_id, full_name, position, bio, photo_url, display_order, is_active)
+select d.id, 'Armi Escamilla', 'Managing Director & Founder', 'Experienced global talent strategist specializing in enterprise cross-border operations and high-trust workforce design.', '/images/team/armi-escamilla.jpg', 1, true
+from public.departments d where d.slug = 'executive'
+and not exists (select 1 from public.team_members where full_name = 'Armi Escamilla');
+
+insert into public.team_members (department_id, full_name, position, bio, photo_url, display_order, is_active)
+select d.id, 'Marcus Vance', 'VP of Engineering', 'Leads software architecture, remote development infrastructure, and technical talent assessment.', '/images/team/marcus-vance.jpg', 2, true
+from public.departments d where d.slug = 'engineering'
+and not exists (select 1 from public.team_members where full_name = 'Marcus Vance');
+
+insert into public.team_members (department_id, full_name, position, bio, photo_url, display_order, is_active)
+select d.id, 'Elena Rostova', 'Head of Talent Solutions', 'Oversees recruitment frameworks, behavioral vetting, and international talent matching.', '/images/team/elena-rostova.jpg', 3, true
+from public.departments d where d.slug = 'talent-solutions'
+and not exists (select 1 from public.team_members where full_name = 'Elena Rostova');
+
+insert into public.team_members (department_id, full_name, position, bio, photo_url, display_order, is_active)
+select d.id, 'David Chen', 'Operations & Client Success Lead', 'Ensures smooth cross-timezone workflows, client communication cadence, and SLA compliance.', '/images/team/david-chen.jpg', 4, true
+from public.departments d where d.slug = 'operations'
+and not exists (select 1 from public.team_members where full_name = 'David Chen');
+
 -- =============================================================================
 -- 2. Page Documents
 -- =============================================================================
@@ -134,7 +154,68 @@ set title = excluded.title,
     status = excluded.status;
 
 -- =============================================================================
--- 4. FAQs
+-- 4. Clients & Testimonials
+-- =============================================================================
+
+insert into public.clients (name, logo_url, website_url, display_permission, display_order, is_visible)
+select 'Apex FinTech Solutions', '/images/clients/apex.svg', 'https://example.com/apex', true, 1, true
+where not exists (select 1 from public.clients where name = 'Apex FinTech Solutions');
+
+insert into public.clients (name, logo_url, website_url, display_permission, display_order, is_visible)
+select 'CloudScale Global', '/images/clients/cloudscale.svg', 'https://example.com/cloudscale', true, 2, true
+where not exists (select 1 from public.clients where name = 'CloudScale Global');
+
+insert into public.clients (name, logo_url, website_url, display_permission, display_order, is_visible)
+select 'Pacific Media Group', '/images/clients/pacific-media.svg', 'https://example.com/pacific-media', true, 3, true
+where not exists (select 1 from public.clients where name = 'Pacific Media Group');
+
+insert into public.clients (name, logo_url, website_url, display_permission, display_order, is_visible)
+select 'Nexus Logistics', '/images/clients/nexus.svg', 'https://example.com/nexus', true, 4, true
+where not exists (select 1 from public.clients where name = 'Nexus Logistics');
+
+insert into public.clients (name, logo_url, website_url, display_permission, display_order, is_visible)
+select 'Horizon Health Innovations', '/images/clients/horizon.svg', 'https://example.com/horizon', true, 5, true
+where not exists (select 1 from public.clients where name = 'Horizon Health Innovations');
+
+insert into public.clients (name, logo_url, website_url, display_permission, display_order, is_visible)
+select 'Vantage Software', '/images/clients/vantage.svg', 'https://example.com/vantage', true, 6, true
+where not exists (select 1 from public.clients where name = 'Vantage Software');
+
+insert into public.testimonials (quote, author_name, author_role, author_company, consent_reference, display_order, status)
+select
+  'Outsourced Pro Global transformed our engineering delivery. Their dedicated team integrated into our sprint cycle from week one with zero friction.',
+  'Julian Vance',
+  'VP of Engineering',
+  'Apex FinTech Solutions',
+  'OPG-CR-2026-01',
+  1,
+  'published'
+where not exists (select 1 from public.testimonials where author_company = 'Apex FinTech Solutions');
+
+insert into public.testimonials (quote, author_name, author_role, author_company, consent_reference, display_order, status)
+select
+  'The quality of talent and communication transparency set OPG far apart from traditional offshore agencies. We scaled our operations 3x with complete confidence.',
+  'Samantha Wu',
+  'Chief Operations Officer',
+  'CloudScale Global',
+  'OPG-CR-2026-02',
+  2,
+  'published'
+where not exists (select 1 from public.testimonials where author_company = 'CloudScale Global');
+
+insert into public.testimonials (quote, author_name, author_role, author_company, consent_reference, display_order, status)
+select
+  'Partnering with OPG provided us with vetted domain specialists who took true ownership of key workstreams. An indispensable extension of our leadership team.',
+  'Liam Gallagher',
+  'Director of People & Talent',
+  'Pacific Media Group',
+  'OPG-CR-2026-03',
+  3,
+  'published'
+where not exists (select 1 from public.testimonials where author_company = 'Pacific Media Group');
+
+-- =============================================================================
+-- 5. FAQs
 -- =============================================================================
 
 insert into public.faq_categories (name, slug, display_order, is_active)

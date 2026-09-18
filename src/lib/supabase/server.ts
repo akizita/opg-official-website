@@ -25,3 +25,16 @@ export async function createClient() {
     },
   })
 }
+
+export function createStaticClient() {
+  const { publishableKey, url } = getSupabaseBrowserEnv()
+
+  return createServerClient(url, publishableKey, {
+    cookies: {
+      getAll() {
+        return []
+      },
+      setAll() {},
+    },
+  })
+}
