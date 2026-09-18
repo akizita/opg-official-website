@@ -18,10 +18,10 @@ export function SiteHeader() {
           <Image
             alt="Outsourced Pro Global"
             className="site-header__logo"
-            height={38}
+            height={150}
             priority
             src={LOGO_URL}
-            width={120}
+            width={150}
           />
           <span className="sr-only">Outsourced Pro Global</span>
         </Link>
