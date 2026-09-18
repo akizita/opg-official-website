@@ -47,7 +47,9 @@ describe('team & departments queries', () => {
           return {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({ data: mockDepartments, error: null }),
+                order: vi
+                  .fn()
+                  .mockResolvedValue({ data: mockDepartments, error: null }),
               }),
             }),
           }
@@ -56,7 +58,9 @@ describe('team & departments queries', () => {
           return {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({ data: mockMembers, error: null }),
+                order: vi
+                  .fn()
+                  .mockResolvedValue({ data: mockMembers, error: null }),
               }),
             }),
           }
@@ -78,4 +82,3 @@ describe('team & departments queries', () => {
     expect(result[1].members[1].full_name).toBe('Charlie')
   })
 })
-

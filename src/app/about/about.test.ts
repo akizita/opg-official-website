@@ -46,7 +46,9 @@ describe('About page metadata generation', () => {
     const metadata = await generateMetadata()
 
     expect(metadata.title).toBe('Custom About SEO Title | OPG')
-    expect(metadata.description).toBe('Custom SEO Description for search engines.')
+    expect(metadata.description).toBe(
+      'Custom SEO Description for search engines.',
+    )
     expect(metadata.alternates?.canonical).toBe('https://opglobal.com.hk/about')
     expect(metadata.openGraph?.images).toEqual([
       { url: 'https://opglobal.com.hk/images/og-about.jpg' },
@@ -79,4 +81,3 @@ describe('About page metadata generation', () => {
     expect(metadata.description).toBe('Standard summary deck.')
   })
 })
-

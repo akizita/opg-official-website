@@ -65,7 +65,9 @@ describe('saveAboutAction server action', () => {
 
     const result = await saveAboutAction({}, formData)
     expect(result.success).toBe(false)
-    expect(result.message).toContain('Two-factor authentication (MFA) verification required')
+    expect(result.message).toContain(
+      'Two-factor authentication (MFA) verification required',
+    )
   })
 
   it('rejects editor role attempting to publish About page', async () => {
@@ -90,7 +92,9 @@ describe('saveAboutAction server action', () => {
 
     const result = await saveAboutAction({}, formData)
     expect(result.success).toBe(false)
-    expect(result.message).toContain('Forbidden: You do not have permission to publish')
+    expect(result.message).toContain(
+      'Forbidden: You do not have permission to publish',
+    )
   })
 
   it('allows publisher to publish About page and revalidates cache', async () => {
@@ -141,4 +145,3 @@ describe('saveAboutAction server action', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/admin/pages/about')
   })
 })
-

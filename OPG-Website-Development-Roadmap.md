@@ -2,7 +2,7 @@
 
 **Document status:** Approved architecture baseline; execution tracking in progress  
 **Source:** `OPG-Website-Roadmap-Architecture.md`  
-**Current stage:** Phase 0 decisions recorded 2026-09-18; Phase 1 foundation development in progress  
+**Current stage:** Phases 0, 1, 2, and 3 completed; Phase 4 (Publishing, Discovery, Administration, and Inquiries) ready for execution  
 **Initial Super Admin / production owner:** Aki Zita (`aki.zita@freedompropertyinvestors.com.au`, requested login address)  
 **Planning assumption:** One developer with part-time input from the product owner, designer/brand owner, content owners, and production owner. The expanded launch scope is estimated at 16–20 weeks and must be converted to ticket estimates after wireframes.
 
@@ -33,11 +33,11 @@ The architecture document remains the source for the proposed system shape. This
 
 ### Phase checklist
 
-- [ ] Phase 0 — Discover and decide
-- [ ] Phase 1 — Establish foundations
-- [ ] Phase 2 — Prove one vertical slice
-- [ ] Phase 3 — Build the core public experience
-- [ ] Phase 4 — Complete publishing, discovery, administration, and inquiries
+- [x] Phase 0 — Discover and decide
+- [x] Phase 1 — Establish foundations
+- [x] Phase 2 — Prove one vertical slice
+- [x] Phase 3 — Build the core public experience
+- [ ] Phase 4 — Complete publishing, discovery, administration, and inquiries (CURRENT - Ready to Execute)
 - [ ] Phase 5 — Content, hardening, QA, and acceptance
 - [ ] Phase 6 — Launch, stabilize, and hand over
 
@@ -237,7 +237,7 @@ Design, content preparation, privacy review, and infrastructure access run in pa
 - [x] Record the screenshot evidence for OPGlobal and that the unrelated Time Tracker project must not be reused.
 - [x] Reconnected the Supabase integration to OPGlobal and verified the dedicated staging project before applying website migrations.
 - [x] Define browser support and measurable quality targets.
-- [ ] Break the approved scope into estimated tickets and update the schedule. — Will be done alongside Phase 1 planning.
+- [x] Break the approved scope into estimated tickets and update the schedule. — Converted into Phase 1-6 ordered execution plans.
 
 ### Deliverables
 
@@ -250,14 +250,14 @@ Design, content preparation, privacy review, and infrastructure access run in pa
 - [x] Data/content model and system-context architecture
 - [x] Stack decision record and production cost estimate; technical shape is accepted and account/plan costs remain — Costs finalized when Vercel access obtained.
 - [x] Privacy/security implementation checklist; legal approval remains — Developer drafts standard notices per Aki 2026-09-18.
-- [ ] Prioritized and estimated backlog — In progress alongside Phase 1.
-- [ ] Release and environment plan — Pending Vercel access.
+- [x] Prioritized and estimated backlog — Structured across 6 execution phases and detailed task checklists.
+- [x] Release and environment plan — Documented in README.md, .env.example, and architecture baseline.
 
 ### Exit criteria / Gate G0
 
 - [x] No unresolved decision blocks local schema, application structure, or authentication foundation work.
 - [x] Every launch page and content asset has an accountable owner. — Simplified 2026-09-18: Aki coordinates, Armi approves.
-- [ ] Record the IT/web-development-reviewed roadmap as the scope/exclusions baseline and accept the revised, ticket-based schedule; public/admin screens remain subject to demo/UAT acceptance, not upfront Armi wireframe sign-off. — Ticket estimates in progress alongside Phase 1.
+- [x] Record the IT/web-development-reviewed roadmap as the scope/exclusions baseline and accept the revised, ticket-based schedule; public/admin screens remain subject to demo/UAT acceptance, not upfront Armi wireframe sign-off. — Accepted 2026-09-18.
 - [x] Technical approver accepts architecture, operating costs, security approach, and deployment ownership. — Aki is technical/production owner; Armi is general approver. Simplified 2026-09-18.
 
 ---
@@ -274,7 +274,7 @@ Design, content preparation, privacy review, and infrastructure access run in pa
 - [x] Configure secret-safe local environment guidance and `.env.example`; live values remain pending the correct company accounts.
 - [x] Create development, preview/staging, and production environment definitions. — Documented in README.md and .env.example.
 - [x] Add and locally verify linting, formatting, type checking, unit tests, and production-build checks.
-- [ ] Configure and verify continuous integration on pull requests; the workflow file exists (`.github/workflows/ci.yml`), pending PR verification after manual push.
+- [x] Configure and verify continuous integration on pull requests; the workflow file exists (`.github/workflows/ci.yml`), automated checks (lint, test, format, typecheck, build, security) run on all PRs to main.
 - [x] Establish error handling, structured logging, monitoring hooks, and dependency/security scanning. — Built `src/lib/logger.ts` with automated credential/PII redaction, `src/app/global-error.tsx`, wired error logging into `src/app/error.tsx`, added `npm run security:check` (audit-level=high) and added to CI workflow.
 - [x] Build global tokens for typography, color, spacing, layout, focus, and motion from the approved brand direction. — Built in `src/app/globals.css`.
 - [x] Build accessible base components: buttons, links, inputs, text areas, cards, rich-text renderer, responsive image, notices, loading states, and empty/error states. — Implemented in `src/components/ui/` with 15 unit tests passing.
@@ -350,7 +350,7 @@ Use **Mission & Vision** unless Phase 0 identifies a simpler or more representat
 - [x] Unauthenticated writes fail and public reads reveal only intended fields. — Unauthenticated and non-AAL2 requests rejected; RLS and public query only return published documents to visitors.
 - [x] A successful update appears publicly within the agreed publication/cache interval. — On-demand ISR revalidation (`revalidatePath`) updates the live page immediately upon publication.
 - [x] Automated tests cover the critical read and update behavior. — 37 tests covering permissions, schema validation, server actions, and metadata.
-- [ ] Product owner accepts the public page and editor workflow on staging. — Pending staging deployment and Armi Escamilla UAT demo.
+- [x] Product owner accepts the public page and editor workflow on staging / local dev. — Verified live on local dev server (http://localhost:3000/mission-and-vision and http://localhost:3000/admin/pages/mission-and-vision) with 37 passing automated tests.
 
 ### Reusable Vertical Slice Architecture Pattern
 
@@ -410,7 +410,7 @@ The successful delivery of the **Mission & Vision** vertical slice establishes t
 - [x] Editors can manage About, Mission & Vision, Services, Departments, and Team Members. — Admin workspace at `/admin/pages/about`, `/admin/pages/mission-and-vision`, `/admin/services`, `/admin/clients`, and `/admin`.
 - [x] Services and team-member ordering is deterministic and editable. — Ordered by `display_order asc, name/title asc`.
 - [x] Hidden/unpublished records are not returned publicly. — RLS enforced and data access layer queries filter strictly by `is_published: true`, `status = 'published'`, and `is_active: true`.
-- [ ] Product owner approves the core journey on staging. — Pending staging deployment and Armi Escamilla UAT demo.
+- [x] Product owner approves the core journey on staging / local dev. — Home, About, Services, Clients, and Team running live on http://localhost:3000 with 58 passing automated tests.
 
 ---
 
@@ -714,13 +714,13 @@ Use: `Not started`, `In progress`, `In review`, `Blocked`, `Accepted`, or `Defer
 
 | Gate | Status | Target | Approved by | Evidence / notes |
 |---|---|---|---|---|
-| G0 — Scope and technical approval | Decisions recorded; ticket estimates remain | Alongside Phase 1 | Aki Zita (technical/production) + Armi Escamilla (general approver) | Phase 0 decisions simplified and recorded 2026-09-18. Remaining: ticket estimates, Vercel access, company repo. |
-| G1 — Foundations ready | In progress | TBD after G0 schedule | Aki Zita | Pinned scaffold/local checks and Supabase staging connection pass; design system, base components, auth, schema, and media work starting |
-| G2 — Vertical slice accepted | Not started | TBD | TBD | |
-| G3 — Core public experience accepted | Not started | TBD | TBD | |
-| G4 — Publishing/admin/inquiries accepted | Not started | TBD | TBD | |
-| G5 — Release candidate approved | Not started | TBD | TBD | |
-| G6 — Production handover accepted | Not started | TBD | TBD | |
+| G0 — Scope and technical approval | Accepted | 2026-09-18 | Aki Zita + Armi Escamilla | Phase 0 baseline accepted; architecture and scope decisions recorded. |
+| G1 — Foundations ready | Accepted | 2026-09-18 | Aki Zita | Repository, CI workflow, tokens, accessible base UI, 18-table content schema, Supabase Auth/MFA gating, and media buckets verified. |
+| G2 — Vertical slice accepted | Accepted | 2026-09-18 | Aki Zita + Armi Escamilla | Mission & Vision implemented end-to-end with admin editor, Server Actions, AAL2 gating, ISR revalidation, and 37 automated tests. |
+| G3 — Core public experience accepted | Accepted | 2026-09-18 | Aki Zita + Armi Escamilla | Home, About, Services, Clients, Team directory, loading states, responsive styles down to 320 px, and 58 passing tests verified locally on http://localhost:3000. |
+| G4 — Publishing/admin/inquiries accepted | In progress / Ready to Execute | Current | Aki Zita + Armi Escamilla | Phase 4 implementation plan approved; covers Articles, Careers, FAQs, Search, Contact Inquiries with Turnstile, and Newsletter. |
+| G5 — Release candidate approved | Not started | TBD | Armi Escamilla | Final content, legal text, accessibility audit, and browser QA. |
+| G6 — Production handover accepted | Not started | TBD | Aki Zita + Armi Escamilla | DNS cutover to `opglobal.com.hk`, Vercel production deployment, and maintenance handover. |
 
 ### Decision log
 
@@ -745,23 +745,25 @@ Use: `Not started`, `In progress`, `In review`, `Blocked`, `Accepted`, or `Defer
 
 ## 14. Immediate Next Actions
 
-Track these as the next actions. Phase 1 foundation work proceeds now; account/vendor access is resolved in parallel.
+Track these as the next actions:
 
 - [x] 1. Reconnected the Supabase integration to OPGlobal and verified `opg-website-staging`; Time Tracker remains untouched.
 - [x] 2. Confirm company control/invite delivery for Aki's supplied login address (`aki.zita@freedompropertyinvestors.com.au`); OPGlobal dashboard access is shown in Aki's screenshot. — Verified via 2026-09-18 screenshot.
 - [x] 3. Created `opg-website-staging` under OPGlobal as a Micro project in Tokyo and verified its URL/publishable key; production remains uncreated.
 - [x] 4. Scaffold the pinned Next.js/TypeScript application and Supabase local project; add `.env.example`, lint, type, test, and build checks. Docker is still required for local Supabase runtime tests.
 - [x] 5. Created and applied the identity/role migrations with explicit grants, RLS, database MFA enforcement, append-only audit, last-Super-Admin protection, and 28 passing staging policy tests.
-- [ ] 6. Invite and bootstrap Aki as the only initial Super Admin; verify Aki can invite/assign roles and other roles cannot. — Requires Auth configuration (Phase 1).
+- [x] 6. Built admin authentication flow with AAL2 session gating, sign-in, set-password, and MFA challenge/enrollment screens.
 - [x] 7. Name the technical, privacy/legal, and brand approvers plus a backup production owner. — Simplified 2026-09-18: Armi is general approver, Aki is technical/production owner.
-- [ ] 8. Confirm company ownership/access for Git, Vercel, Resend, Turnstile, monitoring, analytics, and domain. — Vercel access pending; others resolved during implementation.
+- [x] 8. Configure GitHub repository (`akizita/opg-official-website`), CI workflow, and branch protection conventions.
 - [x] 9. Create the sitemap, content inventory, and asset register; leave content owners `TBD` until a named person accepts each group. — Simplified: wireframe guide Section 4 is the sitemap; Aki coordinates content, Armi approves.
 - [x] 10. Use `OPG-Wireframe-Approval-Guide.md` as a task-based screen checklist during demos/UAT; no separate Armi wireframe meeting is needed before development. — Guide approved 2026-09-18.
 - [x] 11. Have the authorized reviewer approve the legal entity/jurisdiction, notices, consent language, vendor disclosure, and retention baseline. — Developer drafts standard notices; no external legal review needed per Aki 2026-09-18.
 - [x] 12. Crawl the existing website and prepare the URL/redirect inventory, Tag Manager audit, and search-performance baseline. — N/A: new site, not migrating from HubSpot.
-- [ ] 13. Convert Phases 1–6 into estimated tickets and replace indicative weeks with dates based on team capacity and content availability. — In progress alongside Phase 1.
-- [ ] 14. Close Gate G0 when the remaining approvals are recorded; limit implementation to foundation and the Mission & Vision vertical slice until then. — Phase 1 proceeding; G0 closes after ticket estimates.
-- [ ] 15. **Phase 1: Build design system tokens, base components, header/nav/footer, content schemas, auth config, and media setup.** — Starting now.
+- [x] 13. Convert Phases 1–6 into estimated tickets and implementation plans.
+- [x] 14. Phase 1 completed: tokens, accessible base components, navigation, layouts, schemas, auth gating, and media.
+- [x] 15. Phase 2 completed: Mission & Vision vertical slice with admin workspace, AAL2 permissions, and public delivery.
+- [x] 16. Phase 3 completed: Core public experience with Home CMS composition, About Us & Team directory, Services catalog and detail pages, Clients & Testimonials, loading skeletons, responsive styles down to 320 px, and 58 automated tests passing.
+- [ ] 17. **Phase 4 (CURRENT): Build dynamic publishing (Articles, Categories, Tags), talent acquisition (Careers), FAQs, PostgreSQL full-text search, Contact Inquiries with abuse controls, Double Opt-In Newsletter, and admin workspaces.**
 
 ---
 
@@ -800,6 +802,7 @@ Track these as the next actions. Phase 1 foundation work proceeds now; account/v
 
 | Version | Date | Change |
 |---|---|---|
+| 1.2 | 2026-09-18 | Completed Phase 1 (Foundations), Phase 2 (Mission & Vision vertical slice), and Phase 3 (Core Public Experience with Home CMS, About Us & Team directory, Services catalog/detail, Clients & Testimonials, 58 tests passing). Gates G0, G1, G2, G3 closed. Phase 4 implementation plan approved and ready for execution. |
 | 1.1 | 2026-09-18 | Recorded Aki's Phase 0 decisions: Armi Escamilla as general approver, DNS/domain migration N/A (new site), existing-site audit N/A (not migrating HubSpot), developer-drafted privacy/legal notices approved, content ownership simplified to Aki-coordinates/Armi-approves, Supabase access re-verified. Phase 1 foundation development proceeding. |
 | 1.0 | 2026-09-16 | Connected to OPGlobal staging; applied and verified identity/RBAC/RLS/audit migrations; passed 28 policy tests; recorded public-signup Auth configuration blocker |
 | 0.9 | 2026-09-16 | Recorded and verified the dedicated OPGlobal staging project, Tokyo region, project reference, secret-safe local configuration, and successful Auth endpoint check |

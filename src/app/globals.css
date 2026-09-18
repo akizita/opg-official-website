@@ -1,13 +1,25 @@
 :root {
-  --color-ink: #102a43;
-  --color-ink-soft: #334e68;
-  --color-brand: #0b6e69;
-  --color-brand-strong: #075a56;
-  --color-accent: #d9f3ef;
+  /* Official OPG Brand Palette */
+  --palette-golden-orange: #f29f04;
+  --palette-golden-yellow: #f2b705;
+  --palette-gainsboro: #dedede;
+  --palette-dark-gray: #4d4d4d;
+  --palette-almost-black: #0d0d0d;
+
+  /* Semantic Theme Tokens */
+  --color-ink: var(--palette-almost-black);
+  --color-ink-soft: var(--palette-dark-gray);
+  --color-brand: var(--palette-golden-orange);
+  --color-brand-strong: #d48a00;
+  --color-brand-secondary: var(--palette-golden-yellow);
+  --color-brand-ink: var(--palette-almost-black);
+  --color-accent: #fef8eb;
   --color-surface: #ffffff;
-  --color-border: #cbd5dc;
-  --color-focus: #f5a623;
-  --shadow-card: 0 1rem 3rem rgb(16 42 67 / 9%);
+  --color-surface-soft: #fafafa;
+  --color-surface-neutral: var(--palette-gainsboro);
+  --color-border: var(--palette-gainsboro);
+  --color-focus: var(--palette-golden-orange);
+  --shadow-card: 0 1rem 3rem rgb(13 13 13 / 7%);
   --radius-small: 0.5rem;
   --radius-medium: 1rem;
   --space-2: 0.5rem;
@@ -149,13 +161,14 @@ button:disabled {
 .button-link--primary,
 .button {
   background: var(--color-brand);
-  color: white;
+  color: var(--color-brand-ink);
 }
 
 .header-cta:hover,
 .button-link--primary:hover,
 .button:hover:not(:disabled) {
-  background: var(--color-brand-strong);
+  background: var(--color-brand-secondary);
+  color: var(--color-brand-ink);
 }
 
 .button-link--secondary,
@@ -309,7 +322,7 @@ h3 {
 }
 
 .split-panel > p {
-  color: #d9e2ec;
+  color: var(--palette-gainsboro);
   font-size: 1.12rem;
   max-width: 37rem;
 }
@@ -326,8 +339,9 @@ h3 {
 }
 
 .site-footer {
-  background: #071b2c;
-  color: #d9e2ec;
+  background: var(--palette-almost-black);
+  border-top: 3px solid var(--palette-golden-orange);
+  color: var(--palette-gainsboro);
   padding-block: var(--space-12) var(--space-6);
 }
 
@@ -338,10 +352,11 @@ h3 {
 }
 
 .brand--footer {
-  color: white;
+  color: var(--palette-golden-orange);
 }
 
 .site-footer__summary {
+  color: #a6a6a6;
   max-width: 22rem;
 }
 
@@ -358,12 +373,12 @@ h3 {
 }
 
 .site-footer nav a {
-  color: #bcccdc;
+  color: #b8b8b8;
   text-decoration: none;
 }
 
 .site-footer nav a:hover {
-  color: white;
+  color: var(--palette-golden-yellow);
   text-decoration: underline;
 }
 
@@ -1186,6 +1201,8 @@ h3 {
 .spotlight-card {
   align-items: center;
   background: var(--color-accent);
+  border: 1px solid rgba(242, 159, 4, 0.25);
+  border-left: 6px solid var(--palette-golden-orange);
   border-radius: var(--radius-medium);
   display: flex;
   flex-wrap: wrap;

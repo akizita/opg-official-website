@@ -1,6 +1,10 @@
 export default function ClientsLoading() {
   return (
-    <div className="container clients-page" aria-busy="true" aria-label="Loading Clients">
+    <div
+      className="container clients-page"
+      aria-busy="true"
+      aria-label="Loading Clients"
+    >
       <div className="skeleton-breadcrumbs" />
       <div className="skeleton-hero">
         <div className="skeleton-eyebrow" />
@@ -16,4 +20,3 @@ export default function ClientsLoading() {
     </div>
   )
 }
-

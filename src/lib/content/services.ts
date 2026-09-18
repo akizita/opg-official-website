@@ -124,7 +124,8 @@ export function validateServiceInput(raw: unknown): ServiceValidationResult {
           ? input.seo_title.trim()
           : null,
       seo_description:
-        typeof input.seo_description === 'string' && input.seo_description.trim()
+        typeof input.seo_description === 'string' &&
+        input.seo_description.trim()
           ? input.seo_description.trim()
           : null,
       status: (input.status as DocumentStatus) || 'draft',
@@ -135,7 +136,7 @@ export function validateServiceInput(raw: unknown): ServiceValidationResult {
 type QueryClient = Awaited<ReturnType<typeof createClient>>
 
 export async function getPublishedServices(
-  client?: QueryClient
+  client?: QueryClient,
 ): Promise<Service[]> {
   const supabase = client ?? (await createClient())
   const { data, error } = await supabase
@@ -153,7 +154,7 @@ export async function getPublishedServices(
 
 export async function getServiceBySlug(
   slug: string,
-  client?: QueryClient
+  client?: QueryClient,
 ): Promise<Service | null> {
   const supabase = client ?? (await createClient())
   const { data, error } = await supabase
@@ -168,4 +169,3 @@ export async function getServiceBySlug(
 
   return data as Service
 }
-

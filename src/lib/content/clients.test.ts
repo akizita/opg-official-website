@@ -81,4 +81,3 @@ describe('clients & testimonials queries', () => {
     expect(mockEq).toHaveBeenCalledWith('status', 'published')
   })
 })
-
