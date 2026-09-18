@@ -1,17 +1,28 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { siteConfig } from '@/lib/site-config'
 
+const LOGO_URL =
+  'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/general/opg-square-logo-1789740365405.png'
+
 export function SiteHeader() {
   return (
-    <header className="site-header">
-      <div className="container site-header__inner">
+    <div className="site-header-wrapper">
+      <header className="site-header site-header--pill">
         <Link
-          className="brand"
+          className="brand site-header__brand"
           href="/"
           aria-label="Outsourced Pro Global home"
         >
-          <span aria-hidden="true">OPG</span>
+          <Image
+            alt="Outsourced Pro Global"
+            className="site-header__logo"
+            height={38}
+            priority
+            src={LOGO_URL}
+            width={120}
+          />
           <span className="sr-only">Outsourced Pro Global</span>
         </Link>
 
@@ -40,7 +51,7 @@ export function SiteHeader() {
             <Link href="/contact">Contact us</Link>
           </nav>
         </details>
-      </div>
-    </header>
+      </header>
+    </div>
   )
 }
