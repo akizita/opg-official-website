@@ -274,31 +274,30 @@ button:disabled {
   position: relative;
   background: #ffffff;
   overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 100%;
 }
 
 .hero__aurora {
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(100%, 64rem);
-  height: clamp(14rem, 28vw, 19rem);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   overflow: hidden;
   z-index: 0;
-  mask-image: radial-gradient(
-    ellipse 75% 70% at 50% 15%,
+  mask-image: linear-gradient(
+    180deg,
+    black 0%,
     black 35%,
-    transparent 95%
+    rgba(0, 0, 0, 0.75) 60%,
+    transparent 100%
   );
-  -webkit-mask-image: radial-gradient(
-    ellipse 75% 70% at 50% 15%,
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    black 0%,
     black 35%,
-    transparent 95%
+    rgba(0, 0, 0, 0.75) 60%,
+    transparent 100%
   );
 }
 
@@ -308,8 +307,8 @@ button:disabled {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    transparent 40%,
-    rgba(255, 255, 255, 0.55) 75%,
+    transparent 35%,
+    rgba(255, 255, 255, 0.5) 65%,
     #ffffff 100%
   );
   pointer-events: none;
@@ -450,16 +449,16 @@ button:disabled {
 
 .hero .button-link--secondary {
   position: relative;
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(238, 241, 246, 0.82);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(209, 214, 224, 0.82);
   border-radius: var(--radius-small);
-  color: var(--color-ink);
+  color: #1a1a1a;
   font-weight: 650;
   box-shadow:
     inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95),
-    0 6px 20px rgba(0, 0, 0, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.05),
     0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
@@ -475,21 +474,21 @@ button:disabled {
   height: 48%;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(255, 255, 255, 0) 100%
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0.05) 100%
   );
   border-radius: inherit;
   pointer-events: none;
 }
 
 .hero .button-link--secondary:hover {
-  background: rgba(255, 255, 255, 0.88);
-  border-color: rgba(242, 159, 4, 0.45);
-  color: var(--color-ink);
+  background: rgba(228, 232, 239, 0.94);
+  border-color: rgba(242, 159, 4, 0.55);
+  color: #0d0d0d;
   transform: translateY(-2px);
   box-shadow:
     inset 0 1px 2px 0 rgba(255, 255, 255, 1),
-    0 10px 28px rgba(0, 0, 0, 0.07),
+    0 8px 24px rgba(0, 0, 0, 0.08),
     0 2px 5px rgba(0, 0, 0, 0.04);
 }
 
