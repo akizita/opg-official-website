@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { Aurora } from '@/components/ui/aurora'
 import { ButtonLink } from '@/components/ui/button-link'
 import { Card } from '@/components/ui/card'
 import {
@@ -40,11 +41,22 @@ export default async function HomePage() {
     <>
       {/* Hero Section */}
       <section className="hero">
+        <Aurora
+          amplitude={0.7}
+          blend={0.3}
+          colorStops={['#fbe2b4', '#fbe9b4', '#f4e2bf']}
+          lightMode
+          speed={0.2}
+        />
+        <div aria-hidden="true" className="hero__scrim" />
         <div className="container hero__content">
-          <p className="eyebrow">Global talent. Thoughtful partnerships.</p>
+          <div className="hero__badge" role="text">
+            <span aria-hidden="true" className="hero__badge-dot" />
+            <span>Global talent. Thoughtful partnerships.</span>
+          </div>
           <h1>{heroTitle}</h1>
           <p className="hero__summary">{heroSummary}</p>
-          <div className="button-row" aria-label="Choose your path">
+          <div aria-label="Choose your path" className="button-row">
             <ButtonLink href="/services">I’m building a team</ButtonLink>
             <ButtonLink href="/careers" variant="secondary">
               I’m looking for a role

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { Aurora } from './aurora'
 import type { RichTextBlock } from './rich-text'
 import type { ContentStatus } from './status-badge'
 
@@ -28,5 +29,9 @@ describe('UI Base Components contracts', () => {
     ]
     expect(blocks).toHaveLength(5)
     expect(blocks[0].type).toBe('paragraph')
+  })
+
+  it('exports the Aurora background component', () => {
+    expect(typeof Aurora).toBe('function')
   })
 })
