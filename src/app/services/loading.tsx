@@ -1,10 +1,6 @@
 export default function ServicesLoading() {
   return (
-    <div
-      className="container services-page"
-      aria-busy="true"
-      aria-label="Loading Services"
-    >
+    <div className="container services-page" aria-busy="true" aria-label="Loading Services">
       <div className="skeleton-breadcrumbs" />
       <div className="skeleton-hero">
         <div className="skeleton-eyebrow" />
@@ -19,3 +15,4 @@ export default function ServicesLoading() {
     </div>
   )
 }
+

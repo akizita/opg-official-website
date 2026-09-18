@@ -110,9 +110,7 @@ export default async function ServicesPage() {
             <div className="section-heading">
               <div>
                 <p className="eyebrow eyebrow--light">Operational Assurance</p>
-                <h2 id="delivery-model-heading">
-                  How We Ensure High-Yield Engagements
-                </h2>
+                <h2 id="delivery-model-heading">How We Ensure High-Yield Engagements</h2>
               </div>
             </div>
             <div className="card-grid">
@@ -175,3 +173,4 @@ export default async function ServicesPage() {
     </main>
   )
 }
+

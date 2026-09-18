@@ -111,16 +111,11 @@ export default async function ClientsPage() {
 
         {/* Client Testimonials Section */}
         {testimonials.length > 0 && (
-          <section
-            aria-labelledby="testimonials-heading"
-            className="clients-testimonials"
-          >
+          <section aria-labelledby="testimonials-heading" className="clients-testimonials">
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Verified Endorsements</p>
-                <h2 id="testimonials-heading">
-                  What Our Partners Say About OPG
-                </h2>
+                <h2 id="testimonials-heading">What Our Partners Say About OPG</h2>
               </div>
             </div>
 
@@ -157,8 +152,8 @@ export default async function ClientsPage() {
               <p>
                 All team members operate under rigorous mutual NDAs, securely
                 configured hardware environments, and strict role-based access
-                governance designed to align with ISO 27001 and SOC 2 compliance
-                expectations.
+                governance designed to align with ISO 27001 and SOC 2
+                compliance expectations.
               </p>
             </div>
           </div>
@@ -185,3 +180,4 @@ export default async function ClientsPage() {
     </main>
   )
 }
+

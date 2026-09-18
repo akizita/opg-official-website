@@ -103,17 +103,11 @@ export function validateTestimonialInput(raw: unknown): {
     errors.quote = 'Quote is required.'
   }
 
-  if (
-    typeof input.author_name !== 'string' ||
-    input.author_name.trim() === ''
-  ) {
+  if (typeof input.author_name !== 'string' || input.author_name.trim() === '') {
     errors.author_name = 'Author name is required.'
   }
 
-  if (
-    typeof input.author_role !== 'string' ||
-    input.author_role.trim() === ''
-  ) {
+  if (typeof input.author_role !== 'string' || input.author_role.trim() === '') {
     errors.author_role = 'Author role is required.'
   }
 
@@ -176,3 +170,4 @@ export async function getPublishedTestimonials(): Promise<Testimonial[]> {
 
   return data as Testimonial[]
 }
+

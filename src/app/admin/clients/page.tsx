@@ -16,14 +16,8 @@ export default async function AdminClientsPage() {
 
   const supabase = await createClient()
   const [{ data: clients }, { data: testimonials }] = await Promise.all([
-    supabase
-      .from('clients')
-      .select('*')
-      .order('display_order', { ascending: true }),
-    supabase
-      .from('testimonials')
-      .select('*')
-      .order('display_order', { ascending: true }),
+    supabase.from('clients').select('*').order('display_order', { ascending: true }),
+    supabase.from('testimonials').select('*').order('display_order', { ascending: true }),
   ])
 
   const clientList = (clients as Client[]) || []
@@ -116,12 +110,7 @@ export default async function AdminClientsPage() {
                 >
                   <StatusBadge status={item.status} />
                   {item.consent_reference && (
-                    <span
-                      style={{
-                        fontSize: '0.8rem',
-                        color: 'var(--color-ink-soft)',
-                      }}
-                    >
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-soft)' }}>
                       Ref: {item.consent_reference}
                     </span>
                   )}
@@ -134,3 +123,4 @@ export default async function AdminClientsPage() {
     </section>
   )
 }
+

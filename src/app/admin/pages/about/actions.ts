@@ -27,7 +27,7 @@ export type AboutActionState = {
 
 export async function saveAboutAction(
   prevState: AboutActionState,
-  formData: FormData,
+  formData: FormData
 ): Promise<AboutActionState> {
   const session = await getAdminSession()
 
@@ -67,21 +67,18 @@ export async function saveAboutAction(
       if (!canPublish(roleKey)) {
         return {
           success: false,
-          message:
-            'Forbidden: You do not have permission to unpublish content.',
+          message: 'Forbidden: You do not have permission to unpublish content.',
         }
       }
       targetStatus = 'unpublished'
-      successMessage =
-        'About page unpublished. It is no longer visible to the public.'
+      successMessage = 'About page unpublished. It is no longer visible to the public.'
       break
 
     case 'submit_review':
       if (!canSubmitReview(roleKey)) {
         return {
           success: false,
-          message:
-            'Forbidden: You do not have permission to submit content for review.',
+          message: 'Forbidden: You do not have permission to submit content for review.',
         }
       }
       targetStatus = 'in_review'
@@ -132,10 +129,7 @@ export async function saveAboutAction(
   const validation = validatePageDocumentInput({
     title: rawTitle,
     summary: rawSummary,
-    content:
-      contentBlocks.length > 0
-        ? contentBlocks
-        : [{ type: 'paragraph', content: 'About Outsourced Pro Global.' }],
+    content: contentBlocks.length > 0 ? contentBlocks : [{ type: 'paragraph', content: 'About Outsourced Pro Global.' }],
     seo_title: rawSeoTitle,
     seo_description: rawSeoDescription,
     og_image_url: rawOgImageUrl,
@@ -200,11 +194,13 @@ export async function saveAboutAction(
       .eq('id', existingDoc.id)
     mutationError = error
   } else {
-    const { error } = await supabase.from('page_documents').insert({
-      ...documentData,
-      created_by: session.profile.id,
-      created_at: now,
-    })
+    const { error } = await supabase
+      .from('page_documents')
+      .insert({
+        ...documentData,
+        created_by: session.profile.id,
+        created_at: now,
+      })
     mutationError = error
   }
 
@@ -238,3 +234,4 @@ export async function saveAboutAction(
     updatedAt: now,
   }
 }
+

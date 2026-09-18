@@ -20,9 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const { data: doc } = await supabase
     .from('page_documents')
-    .select(
-      'title, summary, seo_title, seo_description, canonical_url, og_image_url, status',
-    )
+    .select('title, summary, seo_title, seo_description, canonical_url, og_image_url, status')
     .eq('slug', 'about')
     .maybeSingle<PageDocument>()
 
@@ -83,9 +81,7 @@ export default async function AboutPage() {
     getActiveDepartmentsWithMembers(),
   ])
 
-  const hasStaffAccess = session
-    ? canViewContent(session.profile.roleKey)
-    : false
+  const hasStaffAccess = session ? canViewContent(session.profile.roleKey) : false
   const isPublished = doc?.status === 'published'
 
   if (!doc || (!isPublished && !hasStaffAccess)) {
@@ -194,9 +190,7 @@ export default async function AboutPage() {
                               />
                             </div>
                           )}
-                          {member.bio && (
-                            <p className="team-card__bio">{member.bio}</p>
-                          )}
+                          {member.bio && <p className="team-card__bio">{member.bio}</p>}
                         </Card>
                       ))}
                     </div>
@@ -233,3 +227,4 @@ export default async function AboutPage() {
     </main>
   )
 }
+

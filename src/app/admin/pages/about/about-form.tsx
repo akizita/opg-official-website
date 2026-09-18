@@ -65,7 +65,7 @@ export function AboutForm({ initialData, permissions }: AboutFormProps) {
     {
       status: initialData.status,
       version: initialData.version,
-    },
+    }
   )
 
   const currentStatus = state.status ?? initialData.status
@@ -255,3 +255,4 @@ export function AboutForm({ initialData, permissions }: AboutFormProps) {
     </form>
   )
 }
+

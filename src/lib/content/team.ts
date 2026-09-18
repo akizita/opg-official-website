@@ -57,3 +57,4 @@ export async function getActiveDepartmentsWithMembers(): Promise<
     members: members.filter((m) => m.department_id === dept.id),
   }))
 }
+

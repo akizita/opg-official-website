@@ -1,10 +1,6 @@
 export default function AboutLoading() {
   return (
-    <div
-      className="container about-page"
-      aria-busy="true"
-      aria-label="Loading About page"
-    >
+    <div className="container about-page" aria-busy="true" aria-label="Loading About page">
       <div className="skeleton-breadcrumbs" />
       <div className="skeleton-hero">
         <div className="skeleton-eyebrow" />
@@ -22,3 +18,4 @@ export default function AboutLoading() {
     </div>
   )
 }
+
