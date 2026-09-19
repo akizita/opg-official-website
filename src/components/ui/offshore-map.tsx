@@ -101,7 +101,13 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
   },
 ]
 
-export function OffshoreMapSection() {
+export interface OffshoreMapSectionProps {
+  hideDotField?: boolean
+}
+
+export function OffshoreMapSection({
+  hideDotField = false,
+}: OffshoreMapSectionProps = {}) {
   const [activeRegion, setActiveRegion] = useState<string>('All')
 
   const filteredDestinations = useMemo(() => {
@@ -124,20 +130,22 @@ export function OffshoreMapSection() {
       className="offshore-hub-section"
     >
       {/* React Bits Interactive Dot Field Background */}
-      <DotField
-        dotRadius={2.4}
-        dotSpacing={20}
-        cursorRadius={460}
-        bulgeOnly={true}
-        bulgeStrength={85}
-        glowRadius={220}
-        waveAmplitude={2.5}
-        sparkle={true}
-        gradientFrom="rgba(217, 130, 0, 0.78)"
-        gradientTo="rgba(242, 175, 5, 0.68)"
-        glowColor="#ffe773"
-        className="offshore-hub__dot-field"
-      />
+      {!hideDotField && (
+        <DotField
+          dotRadius={2.4}
+          dotSpacing={20}
+          cursorRadius={460}
+          bulgeOnly={true}
+          bulgeStrength={85}
+          glowRadius={220}
+          waveAmplitude={2.5}
+          sparkle={true}
+          gradientFrom="rgba(217, 130, 0, 0.78)"
+          gradientTo="rgba(242, 175, 5, 0.68)"
+          glowColor="#ffe773"
+          className="offshore-hub__dot-field"
+        />
+      )}
 
       <div className="container offshore-hub__container">
         {/* Section Header */}

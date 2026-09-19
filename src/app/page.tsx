@@ -3,8 +3,11 @@ import Link from 'next/link'
 
 import { Aurora } from '@/components/ui/aurora'
 import { ButtonLink } from '@/components/ui/button-link'
+import { DotField } from '@/components/ui/dot-field'
+import { MissionVisionSection } from '@/components/ui/mission-vision-section'
 import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { SpotlightCard } from '@/components/ui/spotlight-card'
+import { Threads } from '@/components/ui/threads'
 import {
   getPublishedTestimonials,
   getVisibleClients,
@@ -74,6 +77,16 @@ export default async function HomePage() {
 
       {/* Hero Stats Divider Section (3 React Bits SpotlightCards) */}
       <section className="hero-stats-divider" aria-label="Key highlights">
+        {/* Ambient Aurora Glow Patches */}
+        <div
+          aria-hidden="true"
+          className="hero-stats__aurora-blob hero-stats__aurora-blob--left"
+        />
+        <div
+          aria-hidden="true"
+          className="hero-stats__aurora-blob hero-stats__aurora-blob--right"
+        />
+
         <div className="container hero-stats-container">
           <div className="hero-stats-grid">
             {/* Card 1: Over 1000+ Talents */}
@@ -177,6 +190,16 @@ export default async function HomePage() {
         className="about-overview"
         aria-labelledby="about-overview-heading"
       >
+        {/* Ambient Aurora Glow Patches */}
+        <div
+          aria-hidden="true"
+          className="about-overview__aurora-blob about-overview__aurora-blob--left"
+        />
+        <div
+          aria-hidden="true"
+          className="about-overview__aurora-blob about-overview__aurora-blob--right"
+        />
+
         <div className="container about-overview__grid">
           {/* Left Side: Team Image from Data Storage */}
           <div className="about-overview__visual">
@@ -218,35 +241,29 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Global Offshore Hub Interactive Map Section */}
-      <OffshoreMapSection />
+      {/* Global Showcase Band: Unified Background extending across Offshore Map, Mission, Vision & Core Values */}
+      <div className="global-showcase-band">
+        <DotField
+          dotRadius={2.4}
+          dotSpacing={20}
+          cursorRadius={460}
+          bulgeOnly={true}
+          bulgeStrength={85}
+          glowRadius={220}
+          waveAmplitude={2.5}
+          sparkle={true}
+          gradientFrom="rgba(217, 130, 0, 0.78)"
+          gradientTo="rgba(242, 175, 5, 0.68)"
+          glowColor="#ffe773"
+          className="global-showcase-band__dot-field"
+        />
 
-      {/* Purpose & Mission Spotlight */}
-      <section
-        className="section section--light"
-        aria-labelledby="purpose-heading"
-      >
-        <div className="container">
-          <div className="spotlight-card">
-            <div>
-              <p className="eyebrow">Our Mission & Purpose</p>
-              <h2 id="purpose-heading">
-                Bridging Global Capability with Enduring Human Partnerships
-              </h2>
-              <p>
-                We envision a global workplace where borders do not limit
-                capability, where companies scale seamlessly with dedicated
-                talent, and where professionals thrive in high-trust roles.
-              </p>
-            </div>
-            <div>
-              <ButtonLink href="/mission-and-vision" variant="primary">
-                Explore Mission & Vision →
-              </ButtonLink>
-            </div>
-          </div>
-        </div>
-      </section>
+        {/* Global Offshore Hub Interactive Map Section */}
+        <OffshoreMapSection hideDotField />
+
+        {/* Mission & Vision Interactive Section */}
+        <MissionVisionSection />
+      </div>
 
       {/* Social Proof Strip */}
       {clients.length > 0 && (
@@ -301,18 +318,56 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Final Dual-Conversion CTA */}
-      <section className="section" aria-labelledby="cta-heading">
-        <div className="container final-cta">
-          <div>
-            <p className="eyebrow">Start a conversation</p>
-            <h2 id="cta-heading">Your next hire. Your next role.</h2>
-          </div>
-          <div className="button-row">
-            <ButtonLink href="/contact">Contact OPG</ButtonLink>
-            <ButtonLink href="/careers" variant="secondary">
-              View open roles
-            </ButtonLink>
+      {/* Final Dual-Conversion CTA Section — Liquid Glass + Photo Layout */}
+      <section className="cta-section" aria-labelledby="cta-heading">
+        <div aria-hidden="true" className="cta-section__threads">
+          <Threads
+            color={[1, 1, 1]}
+            amplitude={1.35}
+            distance={0.25}
+            enableMouseInteraction={true}
+          />
+        </div>
+        <div className="container cta-section__container">
+          <div className="cta-liquid-card">
+            {/* Left: Photo Panel */}
+            <div className="cta-liquid-card__photo" aria-hidden="true">
+              <Image
+                src="https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/general/logo-1789740351319.png"
+                alt="Outsource Pro Global"
+                fill
+                className="cta-liquid-card__img"
+                sizes="(max-width: 62rem) 100vw, 45vw"
+              />
+              {/* Liquid glass glare overlay on photo */}
+              <div aria-hidden="true" className="cta-liquid-card__photo-glare" />
+            </div>
+
+            {/* Right: Content Panel */}
+            <div className="cta-liquid-card__body">
+              <div className="cta-glass-card__badge">
+                <span aria-hidden="true" className="cta-glass-card__badge-dot" />
+                <span>Start a conversation</span>
+              </div>
+              <h2 id="cta-heading" className="cta-liquid-card__title">
+                Your next hire.
+                <br />
+                Your next role.
+              </h2>
+              <p className="cta-liquid-card__desc">
+                Whether you are scaling a dedicated remote pod or looking for
+                your next career breakthrough, Outsource Pro Global builds
+                seamless offshore partnerships that drive tangible growth.
+              </p>
+              <div className="cta-liquid-card__actions">
+                <ButtonLink href="/contact" className="cta-pill-btn cta-pill-btn--primary">
+                  Contact OPG
+                </ButtonLink>
+                <ButtonLink href="/careers" variant="secondary" className="cta-pill-btn cta-pill-btn--ghost">
+                  View open roles
+                </ButtonLink>
+              </div>
+            </div>
           </div>
         </div>
       </section>
