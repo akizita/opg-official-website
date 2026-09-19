@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { Aurora } from '@/components/ui/aurora'
 import { ButtonLink } from '@/components/ui/button-link'
+import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { SpotlightCard } from '@/components/ui/spotlight-card'
 import {
   getPublishedTestimonials,
@@ -216,6 +217,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Global Offshore Hub Interactive Map Section */}
+      <OffshoreMapSection />
 
       {/* Purpose & Mission Spotlight */}
       <section

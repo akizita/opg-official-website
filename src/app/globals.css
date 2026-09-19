@@ -948,6 +948,326 @@ h3 {
   }
 }
 
+/* Global Offshore Hub Map Section */
+.offshore-hub-section {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    rgba(247, 249, 252, 0.7) 40%,
+    #ffffff 100%
+  );
+  padding-block: clamp(3.5rem, 6vw, 6.5rem);
+  border-top: 1px solid rgba(222, 228, 238, 0.6);
+  overflow: hidden;
+}
+
+.offshore-hub__dot-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.92;
+}
+
+.offshore-hub__container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.offshore-hub__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 52rem;
+  margin: 0 auto var(--space-8);
+  width: 100%;
+}
+
+.offshore-hub__header .eyebrow {
+  display: inline-block;
+  text-align: center;
+  margin-inline: auto;
+  margin-bottom: var(--space-3);
+}
+
+.offshore-hub__title {
+  font-size: clamp(2rem, 3.2vw, 2.85rem);
+  font-weight: 800;
+  line-height: 1.24;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+  max-width: 100%;
+  width: 100%;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.offshore-hub__summary {
+  color: var(--color-ink-soft);
+  font-size: clamp(1rem, 1.2vw, 1.12rem);
+  line-height: 1.68;
+  max-width: 44rem;
+  margin: 0 auto var(--space-8);
+}
+
+.offshore-hub__controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.offshore-hub__filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.offshore-hub__filter-chip {
+  background: rgba(238, 241, 246, 0.8);
+  border: 1px solid rgba(212, 218, 228, 0.85);
+  border-radius: 9999px;
+  padding: 0.35rem 0.95rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.offshore-hub__filter-chip:hover {
+  color: var(--color-ink);
+  border-color: rgba(242, 159, 4, 0.45);
+  background: rgba(242, 159, 4, 0.08);
+}
+
+.offshore-hub__filter-chip--active {
+  background: #0d0d0d;
+  color: #ffffff;
+  border-color: #0d0d0d;
+  box-shadow: 0 4px 12px rgba(13, 13, 13, 0.15);
+}
+
+/* Map Card Container (Explicit height prevents CF2) */
+.offshore-map-card {
+  position: relative;
+  width: 100%;
+  min-height: 520px;
+  height: clamp(500px, 62vh, 650px);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  background: #fafbfc;
+  border: 1px solid rgba(212, 218, 228, 0.85);
+  box-shadow:
+    0 24px 60px -12px rgba(15, 23, 42, 0.08),
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 1);
+}
+
+.offshore-schematic-viewport {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.offshore-schematic-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* World Country SVG Outlines */
+#world-countries path {
+  fill: rgba(242, 159, 4, 0.04);
+  stroke: rgba(212, 138, 0, 0.75);
+  stroke-width: 0.65;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+#world-countries path:hover {
+  fill: rgba(242, 159, 4, 0.16);
+  stroke: #f29f04;
+}
+
+/* Highlighted Philippines HQ */
+#world-countries [id="ph"],
+#world-countries [id="ph"] path {
+  fill: rgba(242, 159, 4, 0.45);
+  stroke: #f29f04;
+  stroke-width: 1.2;
+}
+
+/* Highlighted Client/Talent Hub Countries */
+#world-countries [id="us"],
+#world-countries [id="us"] path,
+#world-countries [id="ca"],
+#world-countries [id="ca"] path,
+#world-countries [id="gb"],
+#world-countries [id="gb"] path,
+#world-countries [id="ae"],
+#world-countries [id="ae"] path,
+#world-countries [id="in"],
+#world-countries [id="in"] path,
+#world-countries [id="sg"],
+#world-countries [id="sg"] path,
+#world-countries [id="au"],
+#world-countries [id="au"] path,
+#world-countries [id="jp"],
+#world-countries [id="jp"] path {
+  fill: rgba(242, 159, 4, 0.12);
+  stroke: #f29f04;
+  stroke-width: 0.85;
+}
+
+/* Flight Line Animation */
+@keyframes flightLineStream {
+  from {
+    stroke-dashoffset: 60;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.offshore-animated-flight-line {
+  stroke-dasharray: 6 10;
+  animation: flightLineStream 3s linear infinite;
+}
+
+/* Radar Beacon Pulse */
+@keyframes beaconPulse {
+  0% {
+    r: 4;
+    opacity: 0.9;
+  }
+  100% {
+    r: 26;
+    opacity: 0;
+  }
+}
+
+.offshore-beacon-pulse {
+  animation: beaconPulse 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  transform-origin: center;
+}
+
+.offshore-beacon-pulse--delay {
+  animation-delay: 1.4s;
+}
+
+/* Pin Hover & States */
+.offshore-destination-pin {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.offshore-destination-pin:hover,
+.offshore-destination-pin:hover {
+  transform: scale(1.12);
+}
+
+/* 3 Pillars Grid Beneath Map */
+.offshore-hub__pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.2rem, 2vw, 1.85rem);
+  width: 100%;
+  margin-top: var(--space-8);
+}
+
+.offshore-pillar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(
+    140deg,
+    rgba(238, 241, 246, 0.82) 0%,
+    rgba(228, 233, 241, 0.58) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(212, 218, 228, 0.82);
+  border-radius: 1.15rem;
+  padding: 1.6rem 1.7rem;
+  box-shadow:
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    0 12px 30px -6px rgba(15, 23, 42, 0.06);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: 1px solid rgba(242, 159, 4, 0.12);
+  outline-offset: -1px;
+}
+
+.offshore-pillar-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(242, 159, 4, 0.45);
+  box-shadow:
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 1),
+    0 20px 40px -8px rgba(242, 159, 4, 0.15);
+}
+
+.offshore-pillar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(242, 159, 4, 0.14);
+  color: #c87300;
+  border: 1px solid rgba(242, 159, 4, 0.28);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  margin-bottom: var(--space-3);
+}
+
+.offshore-pillar__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0d0d0d;
+  margin-top: 0;
+  margin-bottom: 0.45rem;
+  letter-spacing: -0.015em;
+}
+
+.offshore-pillar__desc {
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+  margin: 0;
+}
+
+@media (max-width: 62rem) {
+  .offshore-hub__pillars-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .offshore-hub__controls-row {
+    justify-content: center;
+  }
+
+  .offshore-map-card {
+    height: 440px;
+    min-height: 380px;
+  }
+}
+
 .section {
   padding-block: clamp(var(--space-16), 8vw, var(--space-24));
 }
