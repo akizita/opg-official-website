@@ -4,7 +4,7 @@ const footerGroups = [
   {
     title: 'For organizations',
     links: [
-      { href: '/services', label: 'Services' },
+      { href: '/about', label: 'About' },
       { href: '/clients', label: 'Clients' },
       { href: '/contact', label: 'Contact' },
     ],
@@ -14,7 +14,6 @@ const footerGroups = [
     links: [
       { href: '/careers', label: 'Careers' },
       { href: '/articles', label: 'Articles' },
-      { href: '/faqs', label: 'FAQs' },
     ],
   },
   {

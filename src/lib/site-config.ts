@@ -5,13 +5,11 @@ export const siteConfig = {
     'Outsourced Pro Global connects organizations with skilled professionals and helps candidates discover their next opportunity.',
   canonicalUrl: 'https://opglobal.com.hk',
   navigation: [
+    { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
-    { href: '/mission-and-vision', label: 'Mission & Vision' },
-    { href: '/services', label: 'Services' },
     { href: '/clients', label: 'Clients' },
     { href: '/careers', label: 'Careers' },
     { href: '/articles', label: 'Articles' },
-    { href: '/faqs', label: 'FAQs' },
   ],
 } as const
 

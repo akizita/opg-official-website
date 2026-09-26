@@ -142,7 +142,7 @@ export function DriftWall({
         Math.ceil((containerHeight * 1.6) / copyHeight) + 1,
       )
       return { copyHeight, copies }
-    });
+    })
   }, [columnItems, tileHeight, gap, containerHeight])
 
   useIsomorphicLayoutEffect(() => {
@@ -209,12 +209,10 @@ export function DriftWall({
           const target = baseVelocities[c] * factor
 
           const ease = 1 - Math.exp(-dt / (target === 0 ? 0.16 : 0.28))
-          velocitiesRef.current[c] +=
-            (target - velocitiesRef.current[c]) * ease
+          velocitiesRef.current[c] += (target - velocitiesRef.current[c]) * ease
           let next =
             (offsetsRef.current[c] ?? 0) + velocitiesRef.current[c] * dt
-          next =
-            ((next % meta.copyHeight) + meta.copyHeight) % meta.copyHeight
+          next = ((next % meta.copyHeight) + meta.copyHeight) % meta.copyHeight
           offsetsRef.current[c] = next
 
           const el = trackRefs.current[c]
@@ -320,11 +318,7 @@ export function DriftWall({
     ],
   )
 
-  const renderTile = (
-    item: DriftWallItem,
-    id: string,
-    colIndex: number,
-  ) => {
+  const renderTile = (item: DriftWallItem, id: string, colIndex: number) => {
     const inner = (
       <span className="drift-wall__inner">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -411,11 +405,7 @@ export function DriftWall({
               >
                 {copies.map((_, copyIndex) =>
                   col.map((item, itemIndex) =>
-                    renderTile(
-                      item,
-                      `${c}-${copyIndex}-${itemIndex}`,
-                      c,
-                    ),
+                    renderTile(item, `${c}-${copyIndex}-${itemIndex}`, c),
                   ),
                 )}
               </div>

@@ -9,6 +9,8 @@ import {
 
 type SectionProps = { params: Promise<{ section: string }> }
 
+export const dynamicParams = false
+
 export function generateStaticParams() {
   return placeholderSections.map(({ slug }) => ({ section: slug }))
 }

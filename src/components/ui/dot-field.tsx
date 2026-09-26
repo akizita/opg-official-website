@@ -96,17 +96,21 @@ export const DotField = memo(function DotField({
     if (!canvas) return
     const ctx = canvas.getContext('2d', { alpha: true })
     if (!ctx) return
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.25)
     let resizeTimer: ReturnType<typeof setTimeout>
+    let isVisible = true
+    let isRunning = false
+    let lastMouseMoveTime = 0
 
     function buildDots(w: number, h: number) {
       const p = propsRef.current
       const step = p.dotRadius + p.dotSpacing
       if (step <= 0) return
-      const cols = Math.floor(w / step)
-      const rows = Math.floor(h / step)
-      const padX = (w % step) / 2
-      const padY = (h % step) / 2
+      // Cap maximum columns and rows to keep canvas compute bounded
+      const cols = Math.min(120, Math.floor(w / step))
+      const rows = Math.min(100, Math.floor(h / step))
+      const padX = (w - cols * step) / 2
+      const padY = (h - rows * step) / 2
       const dots: Dot[] = new Array(rows * cols)
       let idx = 0
 
@@ -150,27 +154,29 @@ export const DotField = memo(function DotField({
 
     function onMouseMove(e: MouseEvent) {
       const s = sizeRef.current
-      mouseRef.current.x = e.pageX - s.offsetX
-      mouseRef.current.y = e.pageY - s.offsetY
+      const newX = e.pageX - s.offsetX
+      const newY = e.pageY - s.offsetY
+      const now = performance.now()
+      const dt = Math.max(1, now - lastMouseMoveTime)
+      lastMouseMoveTime = now
+
+      const m = mouseRef.current
+      const dx = newX - m.prevX
+      const dy = newY - m.prevY
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      m.speed = Math.min(10, dist / (dt * 0.1))
+      m.prevX = newX
+      m.prevY = newY
+      m.x = newX
+      m.y = newY
     }
 
     function onMouseLeave() {
       mouseRef.current.x = -9999
       mouseRef.current.y = -9999
+      mouseRef.current.speed = 0
     }
 
-    function updateMouseSpeed() {
-      const m = mouseRef.current
-      const dx = m.prevX - m.x
-      const dy = m.prevY - m.y
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      m.speed += (dist - m.speed) * 0.5
-      if (m.speed < 0.001) m.speed = 0
-      m.prevX = m.x
-      m.prevY = m.y
-    }
-
-    const speedInterval = setInterval(updateMouseSpeed, 20)
     let frameCount = 0
 
     function tick() {
@@ -272,14 +278,50 @@ export const DotField = memo(function DotField({
         ctx!.fill()
       }
 
-      rafRef.current = requestAnimationFrame(tick)
+      if (isVisible) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        isRunning = false
+      }
+    }
+
+    function startLoop() {
+      if (!isRunning && isVisible) {
+        isRunning = true
+        rafRef.current = requestAnimationFrame(tick)
+      }
+    }
+
+    function stopLoop() {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+      isRunning = false
     }
 
     doResize()
     window.addEventListener('resize', resize)
     window.addEventListener('mousemove', onMouseMove, { passive: true })
     document.addEventListener('mouseleave', onMouseLeave)
-    rafRef.current = requestAnimationFrame(tick)
+
+    let intersectionObserver: IntersectionObserver | null = null
+    if (typeof IntersectionObserver !== 'undefined') {
+      intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          isVisible = entry.isIntersecting
+          if (isVisible) {
+            startLoop()
+          } else {
+            stopLoop()
+          }
+        },
+        { rootMargin: '100px 0px' },
+      )
+      intersectionObserver.observe(canvas)
+    } else {
+      startLoop()
+    }
 
     let resizeObserver: ResizeObserver | null = null
     if (canvas.parentElement && typeof ResizeObserver !== 'undefined') {
@@ -290,12 +332,12 @@ export const DotField = memo(function DotField({
     }
 
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-      clearInterval(speedInterval)
+      stopLoop()
       clearTimeout(resizeTimer)
       window.removeEventListener('resize', resize)
       window.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseleave', onMouseLeave)
+      if (intersectionObserver) intersectionObserver.disconnect()
       if (resizeObserver) resizeObserver.disconnect()
     }
   }, [])
@@ -351,4 +393,3 @@ export const DotField = memo(function DotField({
     </div>
   )
 })
-

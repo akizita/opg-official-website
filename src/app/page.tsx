@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { Aurora } from '@/components/ui/aurora'
 import { ButtonLink } from '@/components/ui/button-link'
 import { DotField } from '@/components/ui/dot-field'
-import { MissionVisionSection } from '@/components/ui/mission-vision-section'
 import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { SpotlightCard } from '@/components/ui/spotlight-card'
 import { Threads } from '@/components/ui/threads'
@@ -67,7 +66,7 @@ export default async function HomePage() {
             aria-label="Choose your path"
             className="button-row hero__cta-row"
           >
-            <ButtonLink href="/services">I’m building a team</ButtonLink>
+            <ButtonLink href="/contact">I’m building a team</ButtonLink>
             <ButtonLink href="/careers" variant="secondary">
               I’m looking for a role
             </ButtonLink>
@@ -260,9 +259,6 @@ export default async function HomePage() {
 
         {/* Global Offshore Hub Interactive Map Section */}
         <OffshoreMapSection hideDotField />
-
-        {/* Mission & Vision Interactive Section */}
-        <MissionVisionSection />
       </div>
 
       {/* Social Proof Strip */}
@@ -340,13 +336,19 @@ export default async function HomePage() {
                 sizes="(max-width: 62rem) 100vw, 45vw"
               />
               {/* Liquid glass glare overlay on photo */}
-              <div aria-hidden="true" className="cta-liquid-card__photo-glare" />
+              <div
+                aria-hidden="true"
+                className="cta-liquid-card__photo-glare"
+              />
             </div>
 
             {/* Right: Content Panel */}
             <div className="cta-liquid-card__body">
               <div className="cta-glass-card__badge">
-                <span aria-hidden="true" className="cta-glass-card__badge-dot" />
+                <span
+                  aria-hidden="true"
+                  className="cta-glass-card__badge-dot"
+                />
                 <span>Start a conversation</span>
               </div>
               <h2 id="cta-heading" className="cta-liquid-card__title">
@@ -360,10 +362,17 @@ export default async function HomePage() {
                 seamless offshore partnerships that drive tangible growth.
               </p>
               <div className="cta-liquid-card__actions">
-                <ButtonLink href="/contact" className="cta-pill-btn cta-pill-btn--primary">
+                <ButtonLink
+                  href="/contact"
+                  className="cta-pill-btn cta-pill-btn--primary"
+                >
                   Contact OPG
                 </ButtonLink>
-                <ButtonLink href="/careers" variant="secondary" className="cta-pill-btn cta-pill-btn--ghost">
+                <ButtonLink
+                  href="/careers"
+                  variant="secondary"
+                  className="cta-pill-btn cta-pill-btn--ghost"
+                >
                   View open roles
                 </ButtonLink>
               </div>

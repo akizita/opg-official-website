@@ -187,13 +187,6 @@ const CORE_VALUES = [
 
 export function MissionVisionSection() {
   const [activeTab, setActiveTab] = useState<StatementTab>('mission')
-  const [openValues, setOpenValues] = useState<number[]>([0])
-
-  const toggleValue = (idx: number) => {
-    setOpenValues((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
-    )
-  }
 
   return (
     <section
@@ -204,16 +197,14 @@ export function MissionVisionSection() {
         {/* Centered Header & Tab Switcher (Mission & Vision only) */}
         <div className="mission-vision__top-header">
           <span className="eyebrow">OUR PURPOSE & DIRECTION</span>
-          <h2
-            id="mission-vision-heading"
-            className="mission-vision__title"
-          >
+          <h2 id="mission-vision-heading" className="mission-vision__title">
             Guided by Purpose.
             <br />
             Driven by Impact.
           </h2>
           <p className="mission-vision__subtitle">
-            The foundational commitments and forward-looking vision shaping how we empower businesses and build high-performing global teams.
+            The foundational commitments and forward-looking vision shaping how
+            we empower businesses and build high-performing global teams.
           </p>
 
           {/* Centered Tab Switcher */}
@@ -229,9 +220,7 @@ export function MissionVisionSection() {
               aria-selected={activeTab === 'mission'}
               aria-controls="panel-mission"
               className={`mission-vision__tab-btn ${
-                activeTab === 'mission'
-                  ? 'mission-vision__tab-btn--active'
-                  : ''
+                activeTab === 'mission' ? 'mission-vision__tab-btn--active' : ''
               }`}
               onClick={() => setActiveTab('mission')}
             >
@@ -261,9 +250,7 @@ export function MissionVisionSection() {
               aria-selected={activeTab === 'vision'}
               aria-controls="panel-vision"
               className={`mission-vision__tab-btn ${
-                activeTab === 'vision'
-                  ? 'mission-vision__tab-btn--active'
-                  : ''
+                activeTab === 'vision' ? 'mission-vision__tab-btn--active' : ''
               }`}
               onClick={() => setActiveTab('vision')}
             >
@@ -298,10 +285,7 @@ export function MissionVisionSection() {
         <div className="mission-vision__grid">
           {/* Left Column: 3D Drift Wall Showcase (Open & Blended) */}
           <div className="mission-vision__visual">
-            <div
-              aria-hidden="true"
-              className="mission-vision__drift-glow"
-            />
+            <div aria-hidden="true" className="mission-vision__drift-glow" />
             <DriftWall
               items={MOCK_DRIFT_ITEMS}
               columns={3}
@@ -331,12 +315,10 @@ export function MissionVisionSection() {
                 className="mission-vision__panel"
               >
                 <h3 className="mission-vision__statement-title">Mission</h3>
-                <p className="mission-vision__statement-text">
-                  {MISSION_TEXT}
-                </p>
+                <p className="mission-vision__statement-text">{MISSION_TEXT}</p>
                 <div className="mission-vision__footer">
                   <Link
-                    href="/mission-and-vision"
+                    href="/about#our-purpose"
                     className="mission-vision__link-btn"
                   >
                     <span>Explore Our Purpose & Values</span>
@@ -368,12 +350,10 @@ export function MissionVisionSection() {
                 className="mission-vision__panel"
               >
                 <h3 className="mission-vision__statement-title">Vision</h3>
-                <p className="mission-vision__statement-text">
-                  {VISION_TEXT}
-                </p>
+                <p className="mission-vision__statement-text">{VISION_TEXT}</p>
                 <div className="mission-vision__footer">
                   <Link
-                    href="/mission-and-vision"
+                    href="/about#our-purpose"
                     className="mission-vision__link-btn"
                   >
                     <span>Explore Our Purpose & Values</span>
@@ -404,81 +384,42 @@ export function MissionVisionSection() {
             <span className="eyebrow">THE FOUNDATION</span>
             <h3 className="mission-vision__values-title">Our Core Values</h3>
             <p className="mission-vision__values-desc">
-              The non-negotiable principles that guide our people, culture, and partnerships every day.
+              The non-negotiable principles that guide our people, culture, and
+              partnerships every day.
             </p>
           </div>
 
           <div
             className="mission-vision__accordion"
             role="region"
-            aria-label="Core Values Accordion"
+            aria-label="Core Values"
           >
-            {CORE_VALUES.map((val, idx) => {
-              const isOpen = openValues.includes(idx)
-              const itemId = `value-${idx}`
-              return (
-                <div
-                  key={val.name}
-                  className={`mission-vision__accordion-item ${
-                    isOpen ? 'mission-vision__accordion-item--open' : ''
-                  }`}
-                >
-                  <button
-                    type="button"
-                    className="mission-vision__accordion-trigger"
-                    aria-expanded={isOpen}
-                    aria-controls={`panel-${itemId}`}
-                    id={`trigger-${itemId}`}
-                    onClick={() => toggleValue(idx)}
-                  >
-                    <div className="mission-vision__accordion-trigger-left">
-                      <span className="mission-vision__accordion-num">
-                        0{idx + 1}
-                      </span>
-                      <span
-                        className="mission-vision__accordion-icon"
-                        aria-hidden="true"
-                      >
-                        {val.icon}
-                      </span>
-                      <h4 className="mission-vision__accordion-title">
-                        {val.name}
-                      </h4>
-                    </div>
+            {CORE_VALUES.map((val) => (
+              <div
+                key={val.name}
+                className="mission-vision__accordion-item mission-vision__accordion-item--static"
+              >
+                <div className="mission-vision__accordion-header">
+                  <div className="mission-vision__accordion-header-left">
                     <span
-                      className="mission-vision__accordion-indicator"
+                      className="mission-vision__accordion-icon"
                       aria-hidden="true"
                     >
-                      <svg
-                        fill="none"
-                        height="18"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.2"
-                        viewBox="0 0 24 24"
-                        width="18"
-                      >
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
+                      {val.icon}
                     </span>
-                  </button>
-
-                  {isOpen && (
-                    <div
-                      id={`panel-${itemId}`}
-                      role="region"
-                      aria-labelledby={`trigger-${itemId}`}
-                      className="mission-vision__accordion-body"
-                    >
-                      <p className="mission-vision__accordion-desc">
-                        {val.description}
-                      </p>
-                    </div>
-                  )}
+                    <h4 className="mission-vision__accordion-title">
+                      {val.name}
+                    </h4>
+                  </div>
                 </div>
-              )
-            })}
+
+                <div className="mission-vision__accordion-body">
+                  <p className="mission-vision__accordion-desc">
+                    {val.description}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

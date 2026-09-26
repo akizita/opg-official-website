@@ -173,13 +173,16 @@ export default function ContactPage() {
             </Card>
 
             <div className="contact-faq-teaser">
-              <h3>Have a quick question?</h3>
+              <h3>Looking for more insight?</h3>
               <p>
-                Browse our curated answers regarding remote staffing,
-                compliance, onboarding, and delivery models.
+                Explore practical perspectives on remote staffing, compliance,
+                onboarding, and building high-performing global teams.
               </p>
-              <Link className="button-link button-link--secondary" href="/faqs">
-                View Frequently Asked Questions →
+              <Link
+                className="button-link button-link--secondary"
+                href="/articles"
+              >
+                Browse Articles →
               </Link>
             </div>
           </div>

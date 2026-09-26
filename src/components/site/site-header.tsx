@@ -32,7 +32,6 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <Link href="/search">Search</Link>
         </nav>
 
         <Link className="header-cta" href="/contact">
@@ -47,7 +46,6 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
-            <Link href="/search">Search</Link>
             <Link href="/contact">Contact us</Link>
           </nav>
         </details>

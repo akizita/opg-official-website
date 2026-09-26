@@ -16,16 +16,19 @@ export default function NotFoundPage() {
         <p className="not-found-links__title">Helpful destinations:</p>
         <ul className="not-found-links__list">
           <li>
+            <Link href="/">Home</Link>
+          </li>
+          <li>
             <Link href="/about">About OPG</Link>
           </li>
           <li>
-            <Link href="/mission-and-vision">Mission & Vision</Link>
-          </li>
-          <li>
-            <Link href="/services">Our Services</Link>
-          </li>
-          <li>
             <Link href="/clients">Clients & Testimonials</Link>
+          </li>
+          <li>
+            <Link href="/careers">Careers</Link>
+          </li>
+          <li>
+            <Link href="/articles">Articles</Link>
           </li>
           <li>
             <Link href="/contact">Contact Support</Link>

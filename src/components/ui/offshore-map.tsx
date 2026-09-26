@@ -103,10 +103,12 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
 
 export interface OffshoreMapSectionProps {
   hideDotField?: boolean
+  layout?: 'full' | 'two-column'
 }
 
 export function OffshoreMapSection({
   hideDotField = false,
+  layout = 'full',
 }: OffshoreMapSectionProps = {}) {
   const [activeRegion, setActiveRegion] = useState<string>('All')
 
@@ -124,10 +126,249 @@ export function OffshoreMapSection({
     'Australia & NZ',
   ]
 
+  const mapViewport = (
+    <div className="offshore-map-card">
+      <div className="offshore-schematic-viewport">
+        <svg
+          viewBox="30.767 241.591 784.077 458.627"
+          className="offshore-schematic-svg"
+          preserveAspectRatio="xMidYMid meet"
+          aria-label="World map showing Outsource Pro Global offshore network connections from Philippines to global partners"
+        >
+          <defs>
+            {/* Subtle Grid Pattern */}
+            <pattern
+              id="map-grid-dots"
+              width="18"
+              height="18"
+              patternUnits="userSpaceOnUse"
+            >
+              <circle cx="9" cy="9" r="0.6" fill="rgba(13,13,13,0.06)" />
+            </pattern>
+
+            {/* Golden Gradient for Connection Arcs */}
+            <linearGradient
+              id="gold-arc-gradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="0%"
+            >
+              <stop offset="0%" stopColor="#f29f04" stopOpacity="0.85" />
+              <stop offset="50%" stopColor="#f2b705" stopOpacity="0.65" />
+              <stop offset="100%" stopColor="#4d4d4d" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Radial Pulse Gradient for HQ Beacon */}
+            <radialGradient id="hq-pulse-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f29f04" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#f2b705" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#f29f04" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Ocean Background & Grid */}
+          <rect x="30" y="240" width="790" height="465" fill="#fafbfc" />
+          <rect
+            x="30"
+            y="240"
+            width="790"
+            height="465"
+            fill="url(#map-grid-dots)"
+          />
+
+          {/* Real World Country Vector Boundaries */}
+          <WorldMapPaths />
+
+          {/* Radiating Geodesic Curved Connection Lines from Philippines */}
+          <g className="offshore-connection-arcs" pointerEvents="none">
+            {filteredDestinations.map((dest) => {
+              const midX = (PHILIPPINES_HQ.svgX + dest.svgX) / 2
+              const dx = dest.svgX - PHILIPPINES_HQ.svgX
+              const arcBulge = Math.min(Math.abs(dx) * 0.28, 90)
+              const midY =
+                Math.min(PHILIPPINES_HQ.svgY, dest.svgY) - arcBulge - 15
+
+              const pathData = `M ${PHILIPPINES_HQ.svgX} ${PHILIPPINES_HQ.svgY} Q ${midX} ${midY} ${dest.svgX} ${dest.svgY}`
+
+              return (
+                <g key={`arc-group-${dest.id}`}>
+                  {/* Subtle Glow Underlay Arc */}
+                  <path
+                    d={pathData}
+                    fill="none"
+                    stroke="rgba(242, 183, 5, 0.4)"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    className="offshore-connection-arc-glow"
+                  />
+                  {/* Dynamic Gradient Foreground Arc */}
+                  <path
+                    d={pathData}
+                    fill="none"
+                    stroke="url(#gold-arc-gradient)"
+                    strokeWidth="1.8"
+                    strokeDasharray="4 3"
+                    strokeLinecap="round"
+                    className="offshore-connection-arc-pulse"
+                  />
+                </g>
+              )
+            })}
+          </g>
+
+          {/* Philippines Central Headquarters Pulse Beacon */}
+          <g
+            className="offshore-hq-beacon"
+            transform={`translate(${PHILIPPINES_HQ.svgX}, ${PHILIPPINES_HQ.svgY})`}
+          >
+            {/* Outer Expanding Sonar Wave */}
+            <circle
+              r="24"
+              fill="url(#hq-pulse-glow)"
+              className="offshore-hq-sonar"
+            />
+            {/* Mid Pulse Ring */}
+            <circle
+              r="12"
+              fill="none"
+              stroke="#f29f04"
+              strokeWidth="1.2"
+              strokeDasharray="3 2"
+              className="offshore-hq-ring"
+            />
+            {/* Core Golden Hub Badge */}
+            <circle
+              r="6.5"
+              fill="#f29f04"
+              stroke="#ffffff"
+              strokeWidth="2"
+              className="offshore-hq-core"
+            />
+            <circle r="2" fill="#ffffff" />
+            {/* HQ Floating Badge */}
+            <g
+              transform="translate(0, -18)"
+              className="offshore-hq-badge"
+              pointerEvents="none"
+            >
+              <rect
+                x="-45"
+                y="-9"
+                width="90"
+                height="16"
+                rx="8"
+                fill="#0d0d0d"
+                stroke="#f29f04"
+                strokeWidth="1"
+              />
+              <text
+                x="0"
+                y="2.5"
+                textAnchor="middle"
+                fill="#ffffff"
+                fontSize="6.8"
+                fontWeight="800"
+                letterSpacing="0.4"
+              >
+                ★ HQ: PHILIPPINES
+              </text>
+            </g>
+          </g>
+
+          {/* Global Destination Pins */}
+          {filteredDestinations.map((dest) => {
+            return (
+              <g
+                key={dest.id}
+                className="offshore-destination-pin"
+                transform={`translate(${dest.svgX}, ${dest.svgY})`}
+                tabIndex={0}
+                role="button"
+                aria-label={`${dest.label}: ${dest.name}, ${dest.talentsConnected}`}
+              >
+                {/* Outer Glow on Hover */}
+                <circle
+                  r="14"
+                  fill="rgba(242, 159, 4, 0.16)"
+                  className="offshore-pin-glow"
+                />
+                {/* Outer Solid Ring */}
+                <circle
+                  r="5"
+                  fill="#ffffff"
+                  stroke="#f29f04"
+                  strokeWidth="2"
+                  className="offshore-pin-ring"
+                />
+                {/* Inner Accent Dot */}
+                <circle r="2.2" fill="#0d0d0d" />
+
+                {/* Permanent High-Legibility City Tag */}
+                <g
+                  transform="translate(0, -14)"
+                  className="offshore-pin-tag"
+                  pointerEvents="none"
+                >
+                  <rect
+                    x="-46"
+                    y="-8"
+                    width="92"
+                    height="15"
+                    rx="7.5"
+                    fill="rgba(255, 255, 255, 0.95)"
+                    stroke="rgba(13, 13, 13, 0.18)"
+                    strokeWidth="0.7"
+                    className="offshore-pin-label-bg"
+                  />
+                  <text
+                    x="0"
+                    y="2.5"
+                    textAnchor="middle"
+                    fill="#0d0d0d"
+                    fontSize="6.8"
+                    fontWeight="750"
+                  >
+                    {dest.label}
+                  </text>
+                </g>
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+    </div>
+  )
+
+  const regionControls = (
+    <div className="offshore-hub__controls-row">
+      <div
+        className="offshore-hub__filter-group"
+        role="tablist"
+        aria-label="Filter offshore placements by region"
+      >
+        {regions.map((region) => (
+          <button
+            key={region}
+            type="button"
+            role="tab"
+            aria-selected={activeRegion === region}
+            className={`offshore-hub__filter-chip ${
+              activeRegion === region ? 'offshore-hub__filter-chip--active' : ''
+            }`}
+            onClick={() => setActiveRegion(region)}
+          >
+            {region}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
   return (
     <section
       aria-labelledby="offshore-hub-heading"
-      className="offshore-hub-section"
+      className={`offshore-hub-section ${layout === 'two-column' ? 'offshore-hub-section--two-column' : ''}`}
     >
       {/* React Bits Interactive Dot Field Background */}
       {!hideDotField && (
@@ -147,314 +388,232 @@ export function OffshoreMapSection({
         />
       )}
 
-      <div className="container offshore-hub__container">
-        {/* Section Header */}
-        <div className="offshore-hub__header">
-          <span className="eyebrow">GLOBAL OFFSHORE FOOTPRINT</span>
-          <h2 id="offshore-hub-heading" className="offshore-hub__title">
-            More Than Recruitment.
-            <br />
-            A Complete Offshore Hub
-          </h2>
-          <p className="offshore-hub__summary">
-            We have connected more than 200 talents all over the world.
-            Headquartered in the Philippines, Outsourced Pro Global bridges
-            exceptional cross-border professionals with high-growth organizations
-            across North America, Europe, Australia, and the Middle East.
-          </p>
-
-          {/* Centered Region Filter Tabs */}
-          <div className="offshore-hub__controls-row">
-            <div
-              className="offshore-hub__filter-group"
-              role="tablist"
-              aria-label="Filter offshore placements by region"
-            >
-              {regions.map((region) => (
-                <button
-                  key={region}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeRegion === region}
-                  className={`offshore-hub__filter-chip ${
-                    activeRegion === region
-                      ? 'offshore-hub__filter-chip--active'
-                      : ''
-                  }`}
-                  onClick={() => setActiveRegion(region)}
-                >
-                  {region}
-                </button>
-              ))}
+      <div
+        className={`container offshore-hub__container ${layout === 'two-column' ? 'offshore-hub__container--two-column' : ''}`}
+      >
+        {layout === 'two-column' ? (
+          <>
+            <div className="offshore-hub__header offshore-hub__header--two-column">
+              <span className="eyebrow">GLOBAL OFFSHORE FOOTPRINT</span>
+              <h2 id="offshore-hub-heading" className="offshore-hub__title">
+                More Than Recruitment.
+                <br />A Complete Offshore Hub
+              </h2>
+              <p className="offshore-hub__summary">
+                We have connected more than 200 talents all over the world.
+                Headquartered in the Philippines, Outsourced Pro Global bridges
+                exceptional cross-border professionals with high-growth
+                organizations across North America, Europe, Australia, and the
+                Middle East.
+              </p>
+              {regionControls}
             </div>
-          </div>
-        </div>
 
-        {/* Map Viewport Card */}
-        <div className="offshore-map-card">
-          <div className="offshore-schematic-viewport">
-            <svg
-              viewBox="30.767 241.591 784.077 458.627"
-              className="offshore-schematic-svg"
-              preserveAspectRatio="xMidYMid meet"
-              aria-label="World map showing Outsource Pro Global offshore network connections from Philippines to global partners"
-            >
-              <defs>
-                {/* Subtle Grid Pattern */}
-                <pattern
-                  id="map-grid-dots"
-                  width="18"
-                  height="18"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <circle cx="9" cy="9" r="0.6" fill="rgba(13,13,13,0.06)" />
-                </pattern>
+            <div className="offshore-hub__two-column-layout">
+              {/* Left Column: Interactive Map */}
+              <div className="offshore-hub__two-column-map">{mapViewport}</div>
 
-                {/* Golden Gradient for Connection Arcs */}
-                <linearGradient
-                  id="gold-arc-gradient"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="0%"
-                >
-                  <stop offset="0%" stopColor="#f29f04" stopOpacity="0.85" />
-                  <stop offset="50%" stopColor="#f2b705" stopOpacity="0.65" />
-                  <stop offset="100%" stopColor="#4d4d4d" stopOpacity="0.3" />
-                </linearGradient>
-
-                {/* Radial Pulse Gradient for HQ Beacon */}
-                <radialGradient id="hq-pulse-glow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#f29f04" stopOpacity="0.8" />
-                  <stop offset="50%" stopColor="#f2b705" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#f29f04" stopOpacity="0" />
-                </radialGradient>
-              </defs>
-
-              {/* Ocean Background & Grid */}
-              <rect x="30" y="240" width="790" height="465" fill="#fafbfc" />
-              <rect
-                x="30"
-                y="240"
-                width="790"
-                height="465"
-                fill="url(#map-grid-dots)"
-              />
-
-              {/* Real World Country Vector Boundaries */}
-              <WorldMapPaths />
-
-              {/* Radiating Geodesic Curved Connection Lines from Philippines */}
-              <g className="offshore-connection-arcs" pointerEvents="none">
-                {filteredDestinations.map((dest) => {
-                  const midX = (PHILIPPINES_HQ.svgX + dest.svgX) / 2
-                  const midY = (PHILIPPINES_HQ.svgY + dest.svgY) / 2
-                  const dist = Math.hypot(
-                    dest.svgX - PHILIPPINES_HQ.svgX,
-                    dest.svgY - PHILIPPINES_HQ.svgY,
-                  )
-                  const arch = Math.min(85, Math.max(25, dist * 0.16))
-                  const controlX = midX
-                  const controlY = Math.max(250, midY - arch)
-
-                  const pathD = `M ${PHILIPPINES_HQ.svgX} ${PHILIPPINES_HQ.svgY} Q ${controlX} ${controlY} ${dest.svgX} ${dest.svgY}`
-
-                  return (
-                    <g key={`arc-${dest.id}`}>
-                      {/* Static Arc Base */}
-                      <path
-                        d={pathD}
+              {/* Right Column: Network Highlights */}
+              <div className="offshore-hub__two-column-content">
+                <div className="offshore-hub__two-column-features">
+                  <div className="offshore-hub__feature-item">
+                    <div
+                      className="offshore-hub__feature-icon"
+                      aria-hidden="true"
+                    >
+                      <svg
                         fill="none"
-                        stroke="rgba(242, 159, 4, 0.35)"
-                        strokeWidth="1.1"
-                        strokeDasharray="3 3"
-                      />
-                      {/* Flowing Light Beam */}
-                      <path
-                        d={pathD}
-                        fill="none"
-                        stroke="url(#gold-arc-gradient)"
-                        strokeWidth="1.8"
+                        height="18"
+                        stroke="currentColor"
                         strokeLinecap="round"
-                        className="offshore-animated-flight-line"
-                      />
-                    </g>
-                  )
-                })}
-              </g>
-
-              {/* Philippines Headquarters Radar Beacon */}
-              <g
-                className="offshore-hq-node"
-                transform={`translate(${PHILIPPINES_HQ.svgX}, ${PHILIPPINES_HQ.svgY})`}
-              >
-                <circle
-                  r="24"
-                  fill="url(#hq-pulse-glow)"
-                  className="offshore-beacon-pulse offshore-beacon-pulse--delay"
-                />
-                <circle
-                  r="14"
-                  fill="url(#hq-pulse-glow)"
-                  className="offshore-beacon-pulse"
-                />
-                <circle
-                  r="5"
-                  fill="#f29f04"
-                  stroke="#ffffff"
-                  strokeWidth="1.8"
-                  className="offshore-hq-center"
-                />
-                <circle r="2" fill="#0d0d0d" />
-
-                {/* HQ Persistent Label Badge */}
-                <g transform="translate(9, -6)">
-                  <rect
-                    x="0"
-                    y="-9"
-                    width="116"
-                    height="18"
-                    rx="9"
-                    fill="rgba(13, 13, 13, 0.94)"
-                    stroke="rgba(242, 159, 4, 0.75)"
-                    strokeWidth="0.8"
-                  />
-                  <text
-                    x="8"
-                    y="3"
-                    fill="#f2b705"
-                    fontSize="7.5"
-                    fontWeight="750"
-                    letterSpacing="0.04em"
-                  >
-                    🇵🇭 {PHILIPPINES_HQ.label}
-                  </text>
-                </g>
-              </g>
-
-              {/* Global Destination Pins */}
-              {filteredDestinations.map((dest) => {
-                return (
-                  <g
-                    key={`pin-${dest.id}`}
-                    transform={`translate(${dest.svgX}, ${dest.svgY})`}
-                    className="offshore-destination-pin"
-                  >
-                    <circle
-                      r="4"
-                      fill="#0d0d0d"
-                      stroke="#f29f04"
-                      strokeWidth="1.5"
-                      className="offshore-pin-dot"
-                    />
-                    <circle r="1.5" fill="#ffffff" />
-
-                    {/* Floating Location Name Label */}
-                    <g transform="translate(0, -9)">
-                      <rect
-                        x="-46"
-                        y="-8"
-                        width="92"
-                        height="15"
-                        rx="7.5"
-                        fill="rgba(255, 255, 255, 0.95)"
-                        stroke="rgba(13, 13, 13, 0.18)"
-                        strokeWidth="0.7"
-                        className="offshore-pin-label-bg"
-                      />
-                      <text
-                        x="0"
-                        y="2.5"
-                        textAnchor="middle"
-                        fill="#0d0d0d"
-                        fontSize="6.8"
-                        fontWeight="750"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        width="18"
                       >
-                        {dest.label}
-                      </text>
-                    </g>
-                  </g>
-                )
-              })}
-            </svg>
-          </div>
-        </div>
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="offshore-hub__feature-title">
+                        Strategic Philippine Operations Hub
+                      </h4>
+                      <p className="offshore-hub__feature-desc">
+                        Strong cultural alignment, high English proficiency, and
+                        deep cross-functional capabilities.
+                      </p>
+                    </div>
+                  </div>
 
-        {/* 3 Pillar Summary Cards Beneath Map */}
-        <div className="offshore-hub__pillars-grid">
-          <div className="offshore-pillar-card">
-            <div className="offshore-pillar__icon" aria-hidden="true">
-              <svg
-                fill="none"
-                height="20"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                width="20"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-            </div>
-            <h3 className="offshore-pillar__title">
-              Strategic Philippine Hub
-            </h3>
-            <p className="offshore-pillar__desc">
-              High English proficiency, strong cultural affinity with Western
-              markets, and a deep talent pool across engineering, finance, and
-              customer operations.
-            </p>
-          </div>
+                  <div className="offshore-hub__feature-item">
+                    <div
+                      className="offshore-hub__feature-icon"
+                      aria-hidden="true"
+                    >
+                      <svg
+                        fill="none"
+                        height="18"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        width="18"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 14 14" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="offshore-hub__feature-title">
+                        24/7 Timezone Alignment
+                      </h4>
+                      <p className="offshore-hub__feature-desc">
+                        Dedicated teams synchronized to your business hours
+                        across US, UK, APAC, and Middle East.
+                      </p>
+                    </div>
+                  </div>
 
-          <div className="offshore-pillar-card">
-            <div className="offshore-pillar__icon" aria-hidden="true">
-              <svg
-                fill="none"
-                height="20"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                width="20"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 14 14" />
-              </svg>
+                  <div className="offshore-hub__feature-item">
+                    <div
+                      className="offshore-hub__feature-icon"
+                      aria-hidden="true"
+                    >
+                      <svg
+                        fill="none"
+                        height="18"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        width="18"
+                      >
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="offshore-hub__feature-title">
+                        Turnkey Compliance & Retention
+                      </h4>
+                      <p className="offshore-hub__feature-desc">
+                        End-to-end management covering contracts, local labor
+                        law compliance, hardware, and team retention.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h3 className="offshore-pillar__title">24/7 Timezone Coverage</h3>
-            <p className="offshore-pillar__desc">
-              Whether you need direct business-hours collaboration or round-the-clock
-              follow-the-sun delivery, our offshore pods operate on your required schedule.
-            </p>
-          </div>
+          </>
+        ) : (
+          <>
+            {/* Standard Full Layout */}
+            <div className="offshore-hub__header">
+              <span className="eyebrow">GLOBAL OFFSHORE FOOTPRINT</span>
+              <h2 id="offshore-hub-heading" className="offshore-hub__title">
+                More Than Recruitment.
+                <br />A Complete Offshore Hub
+              </h2>
+              <p className="offshore-hub__summary">
+                We have connected more than 200 talents all over the world.
+                Headquartered in the Philippines, Outsourced Pro Global bridges
+                exceptional cross-border professionals with high-growth
+                organizations across North America, Europe, Australia, and the
+                Middle East.
+              </p>
+              {regionControls}
+            </div>
 
-          <div className="offshore-pillar-card">
-            <div className="offshore-pillar__icon" aria-hidden="true">
-              <svg
-                fill="none"
-                height="20"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                width="20"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
+            {mapViewport}
+
+            {/* 3 Pillar Summary Cards Beneath Map */}
+            <div className="offshore-hub__pillars-grid">
+              <div className="offshore-pillar-card">
+                <div className="offshore-pillar__icon" aria-hidden="true">
+                  <svg
+                    fill="none"
+                    height="20"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    width="20"
+                  >
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </div>
+                <h3 className="offshore-pillar__title">
+                  Strategic Philippine Hub
+                </h3>
+                <p className="offshore-pillar__desc">
+                  High English proficiency, strong cultural affinity with
+                  Western markets, and a deep talent pool across engineering,
+                  finance, and customer operations.
+                </p>
+              </div>
+
+              <div className="offshore-pillar-card">
+                <div className="offshore-pillar__icon" aria-hidden="true">
+                  <svg
+                    fill="none"
+                    height="20"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    width="20"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 14 14" />
+                  </svg>
+                </div>
+                <h3 className="offshore-pillar__title">
+                  24/7 Timezone Coverage
+                </h3>
+                <p className="offshore-pillar__desc">
+                  Whether you need direct business-hours collaboration or
+                  round-the-clock follow-the-sun delivery, our offshore pods
+                  operate on your required schedule.
+                </p>
+              </div>
+
+              <div className="offshore-pillar-card">
+                <div className="offshore-pillar__icon" aria-hidden="true">
+                  <svg
+                    fill="none"
+                    height="20"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    width="20"
+                  >
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </div>
+                <h3 className="offshore-pillar__title">
+                  Complete Offshore Lifecycle
+                </h3>
+                <p className="offshore-pillar__desc">
+                  Beyond initial placement, we manage ongoing compliance,
+                  payroll, dedicated equipment provisioning, and performance
+                  retention so your team thrives.
+                </p>
+              </div>
             </div>
-            <h3 className="offshore-pillar__title">Complete Offshore Lifecycle</h3>
-            <p className="offshore-pillar__desc">
-              Beyond initial placement, we manage ongoing compliance, payroll,
-              dedicated equipment provisioning, and performance retention so your team thrives.
-            </p>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </section>
   )

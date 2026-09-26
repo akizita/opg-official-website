@@ -191,8 +191,8 @@ export default async function ArticleDetailPage({
             <ButtonLink href="/contact" variant="primary">
               Schedule a Consultation
             </ButtonLink>
-            <ButtonLink href="/services" variant="secondary">
-              Explore Delivery Models
+            <ButtonLink href="/clients" variant="secondary">
+              See Client Results
             </ButtonLink>
           </div>
         </Card>

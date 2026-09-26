@@ -217,7 +217,8 @@ export function Aurora({
       renderer = new Renderer({
         alpha: true,
         premultipliedAlpha: true,
-        antialias: true,
+        antialias: false,
+        dpr: 1,
         powerPreference: 'low-power',
       })
     } catch {
@@ -279,6 +280,9 @@ export function Aurora({
     const mesh = new Mesh(gl, { geometry, program })
     container.appendChild(canvas)
 
+    let isVisible = true
+    let isRunning = false
+
     const renderSingleFrame = (t: number) => {
       if (!program || !renderer) return
       const currentProps = propsRef.current
@@ -297,6 +301,12 @@ export function Aurora({
     const update = (timestamp: number) => {
       if (isReducedMotion) {
         renderSingleFrame(1.2)
+        isRunning = false
+        return
+      }
+
+      if (!isVisible) {
+        isRunning = false
         return
       }
 
@@ -306,25 +316,58 @@ export function Aurora({
       renderSingleFrame(t * currentProps.speed * 0.4)
     }
 
+    function startLoop() {
+      if (!isRunning && isVisible && !isReducedMotion) {
+        isRunning = true
+        animateId = requestAnimationFrame(update)
+      }
+    }
+
+    function stopLoop() {
+      if (animateId) {
+        cancelAnimationFrame(animateId)
+        animateId = 0
+      }
+      isRunning = false
+    }
+
     const onMotionChange = (event: MediaQueryListEvent) => {
       isReducedMotion = event.matches
       if (!isReducedMotion) {
-        animateId = requestAnimationFrame(update)
+        startLoop()
       } else {
-        cancelAnimationFrame(animateId)
+        stopLoop()
         renderSingleFrame(1.2)
       }
     }
 
     mediaQuery.addEventListener('change', onMotionChange)
 
+    let intersectionObserver: IntersectionObserver | null = null
+    if (typeof IntersectionObserver !== 'undefined') {
+      intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          isVisible = entry.isIntersecting
+          if (isVisible) {
+            startLoop()
+          } else {
+            stopLoop()
+          }
+        },
+        { rootMargin: '100px 0px' },
+      )
+      intersectionObserver.observe(container)
+    } else {
+      startLoop()
+    }
+
     resize()
-    animateId = requestAnimationFrame(update)
 
     return () => {
-      cancelAnimationFrame(animateId)
+      stopLoop()
       window.removeEventListener('resize', resize)
       mediaQuery.removeEventListener('change', onMotionChange)
+      if (intersectionObserver) intersectionObserver.disconnect()
       if (canvas.parentNode === container) {
         container.removeChild(canvas)
       }

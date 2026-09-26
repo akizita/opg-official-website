@@ -17,17 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       changeFrequency: 'monthly',
       priority: 0.9,
-      url: new URL('/services', siteUrl).toString(),
-    },
-    {
-      changeFrequency: 'monthly',
-      priority: 0.9,
       url: new URL('/clients', siteUrl).toString(),
-    },
-    {
-      changeFrequency: 'monthly',
-      priority: 0.8,
-      url: new URL('/mission-and-vision', siteUrl).toString(),
     },
     {
       changeFrequency: 'weekly',
@@ -38,11 +28,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
       url: new URL('/careers', siteUrl).toString(),
-    },
-    {
-      changeFrequency: 'monthly',
-      priority: 0.8,
-      url: new URL('/faqs', siteUrl).toString(),
     },
     {
       changeFrequency: 'monthly',
@@ -81,25 +66,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         entries.push({
           url: new URL(`/${doc.slug}`, siteUrl).toString(),
           lastModified: doc.updated_at ? new Date(doc.updated_at) : undefined,
-          changeFrequency: 'monthly',
-          priority: 0.8,
-        })
-      }
-    }
-
-    // Published services
-    const { data: services } = await supabase
-      .from('services')
-      .select('slug, updated_at')
-      .eq('is_published', true)
-
-    if (services) {
-      for (const service of services) {
-        entries.push({
-          url: new URL(`/services/${service.slug}`, siteUrl).toString(),
-          lastModified: service.updated_at
-            ? new Date(service.updated_at)
-            : undefined,
           changeFrequency: 'monthly',
           priority: 0.8,
         })

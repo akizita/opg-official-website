@@ -3,8 +3,10 @@
 import React, { useEffect, useRef } from 'react'
 import { Renderer, Program, Mesh, Triangle, Color } from 'ogl'
 
-export interface ThreadsProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'color'> {
+export interface ThreadsProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  'color'
+> {
   color?: [number, number, number]
   amplitude?: number
   distance?: number
@@ -140,7 +142,12 @@ export function Threads({
   const containerRef = useRef<HTMLDivElement>(null)
   const animationFrameId = useRef<number>(0)
 
-  const propsRef = useRef({ color, amplitude, distance, enableMouseInteraction })
+  const propsRef = useRef({
+    color,
+    amplitude,
+    distance,
+    enableMouseInteraction,
+  })
   useEffect(() => {
     propsRef.current = { color, amplitude, distance, enableMouseInteraction }
   }, [color, amplitude, distance, enableMouseInteraction])

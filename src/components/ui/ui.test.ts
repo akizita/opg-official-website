@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { AboutCtaCard } from './about-cta-card'
+import { AboutServicesSection } from './about-services-section'
 import { Aurora } from './aurora'
 import type { RichTextBlock } from './rich-text'
 import type { ContentStatus } from './status-badge'
@@ -33,5 +35,13 @@ describe('UI Base Components contracts', () => {
 
   it('exports the Aurora background component', () => {
     expect(typeof Aurora).toBe('function')
+  })
+
+  it('exports the AboutCtaCard component', () => {
+    expect(typeof AboutCtaCard).toBe('function')
+  })
+
+  it('exports the AboutServicesSection component', () => {
+    expect(typeof AboutServicesSection).toBe('function')
   })
 })
