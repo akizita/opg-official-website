@@ -107,10 +107,10 @@ export const DotField = memo(function DotField({
       const step = p.dotRadius + p.dotSpacing
       if (step <= 0) return
       // Cap maximum columns and rows to keep canvas compute bounded
-      const cols = Math.min(120, Math.floor(w / step))
-      const rows = Math.min(100, Math.floor(h / step))
-      const padX = (w - cols * step) / 2
-      const padY = (h - rows * step) / 2
+      const cols = Math.min(140, Math.floor(w / step))
+      const rows = Math.min(300, Math.floor(h / step))
+      const padX = Math.max(0, (w - cols * step) / 2)
+      const padY = Math.max(0, (h - rows * step) / 2)
       const dots: Dot[] = new Array(rows * cols)
       let idx = 0
 

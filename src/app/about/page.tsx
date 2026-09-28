@@ -3,6 +3,7 @@ import Image from 'next/image'
 
 import { AboutCtaCard } from '@/components/ui/about-cta-card'
 import { AboutServicesSection } from '@/components/ui/about-services-section'
+import { AboutTeamShowcase } from '@/components/ui/about-team-showcase'
 import { ButtonLink } from '@/components/ui/button-link'
 import { Card } from '@/components/ui/card'
 import { DotField } from '@/components/ui/dot-field'
@@ -422,73 +423,81 @@ export default async function AboutPage() {
           <MissionVisionSection />
         </section>
 
-        {/* 4. Two-Column Map Section: Map on Left, Description on Right */}
+        {/* 4. Detailed One-Column Interactive Map Section with Operational Pillars */}
         <section
           className="about-map-section"
           aria-label="Global Offshore Network"
         >
-          <OffshoreMapSection hideDotField layout="two-column" />
+          <OffshoreMapSection
+            hideDotField
+            layout="one-column"
+            variant="detailed"
+            showEyebrow={false}
+          />
         </section>
-      </div>
 
-      {/* 5. Leadership & Departments Directory (if available) */}
-      {departments.length > 0 && (
-        <section
-          aria-label="Leadership and Departments"
-          className="about-team-section"
-        >
-          <div className="container">
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Our People</p>
-                <h2>Leadership & Specialized Departments</h2>
-              </div>
-              <ButtonLink href="/careers" variant="secondary">
-                Join Our Team
-              </ButtonLink>
-            </div>
+        {/* 5. Team Showcase Section: 2-Column with 3D Depth Carousel (Our People) */}
+        <AboutTeamShowcase />
 
-            <div className="departments-list">
-              {departments.map((dept) => (
-                <div className="department-group" key={dept.id}>
-                  <h3 className="department-group__title">{dept.name}</h3>
-                  {dept.members.length > 0 ? (
-                    <div className="team-grid">
-                      {dept.members.map((member) => (
-                        <Card
-                          className="team-card"
-                          eyebrow={member.position}
-                          key={member.id}
-                          title={member.full_name}
-                        >
-                          {member.photo_url && (
-                            <div className="team-card__avatar">
-                              <ResponsiveImage
-                                alt={`${member.full_name}, ${member.position}`}
-                                height={120}
-                                src={member.photo_url}
-                                width={120}
-                              />
-                            </div>
-                          )}
-                          {member.bio && (
-                            <p className="team-card__bio">{member.bio}</p>
-                          )}
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="department-group__empty">
-                      Specialists in this group work directly within client
-                      engagements.
-                    </p>
-                  )}
+        {/* 5.1 Leadership & Departments Directory (if available) */}
+        {departments.length > 0 && (
+          <section
+            aria-label="Leadership and Departments"
+            className="about-team-section"
+          >
+            <div className="container">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Our People</p>
+                  <h2>Leadership & Specialized Departments</h2>
                 </div>
-              ))}
+                <ButtonLink href="/careers" variant="secondary">
+                  Join Our Team
+                </ButtonLink>
+              </div>
+
+              <div className="departments-list">
+                {departments.map((dept) => (
+                  <div className="department-group" key={dept.id}>
+                    <h3 className="department-group__title">{dept.name}</h3>
+                    {dept.members.length > 0 ? (
+                      <div className="team-grid">
+                        {dept.members.map((member) => (
+                          <Card
+                            className="team-card"
+                            eyebrow={member.position}
+                            key={member.id}
+                            title={member.full_name}
+                          >
+                            {member.photo_url && (
+                              <div className="team-card__avatar">
+                                <ResponsiveImage
+                                  alt={`${member.full_name}, ${member.position}`}
+                                  height={120}
+                                  src={member.photo_url}
+                                  width={120}
+                                />
+                              </div>
+                            )}
+                            {member.bio && (
+                              <p className="team-card__bio">{member.bio}</p>
+                            )}
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="department-group__empty">
+                        Specialists in this group work directly within client
+                        engagements.
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
+      </div>
 
       {/* 6. Strategic Conversion CTA Section with Aurora-Toned Gradient Background */}
       <section aria-label="Get in Touch" className="about-cta-section">

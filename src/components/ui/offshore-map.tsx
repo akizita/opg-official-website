@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { ButtonLink } from '@/components/ui/button-link'
 import { DotField } from '@/components/ui/dot-field'
 import { WorldMapPaths } from '@/components/ui/world-map-paths'
 
@@ -103,14 +105,35 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
 
 export interface OffshoreMapSectionProps {
   hideDotField?: boolean
-  layout?: 'full' | 'two-column'
+  layout?: 'full' | 'two-column' | 'one-column'
+  variant?: 'detailed' | 'overview'
+  showDescriptions?: boolean
+  showTabs?: boolean
+  showEyebrow?: boolean
+  eyebrow?: string
+  title?: React.ReactNode
+  summary?: React.ReactNode
+  ctaHref?: string
+  ctaText?: string
+  className?: string
 }
 
 export function OffshoreMapSection({
   hideDotField = false,
-  layout = 'full',
+  layout = 'one-column',
+  variant = 'detailed',
+  showDescriptions,
+  showTabs = true,
+  showEyebrow = true,
+  eyebrow,
+  title,
+  summary,
+  ctaHref,
+  ctaText,
+  className = '',
 }: OffshoreMapSectionProps = {}) {
   const [activeRegion, setActiveRegion] = useState<string>('All')
+  const shouldReduceMotion = useReducedMotion()
 
   const filteredDestinations = useMemo(() => {
     if (activeRegion === 'All') return GLOBAL_DESTINATIONS
@@ -347,28 +370,274 @@ export function OffshoreMapSection({
         role="tablist"
         aria-label="Filter offshore placements by region"
       >
-        {regions.map((region) => (
-          <button
-            key={region}
-            type="button"
-            role="tab"
-            aria-selected={activeRegion === region}
-            className={`offshore-hub__filter-chip ${
-              activeRegion === region ? 'offshore-hub__filter-chip--active' : ''
-            }`}
-            onClick={() => setActiveRegion(region)}
-          >
-            {region}
-          </button>
-        ))}
+        {regions.map((region) => {
+          const isActive = activeRegion === region
+          return (
+            <button
+              key={region}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              className={`offshore-hub__filter-chip ${
+                isActive ? 'offshore-hub__filter-chip--active' : ''
+              }`}
+              onClick={() => setActiveRegion(region)}
+            >
+              {region}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
 
+  const featuresBox = (
+    <div className="offshore-hub__features-box">
+      <div className="offshore-hub__features-grid">
+        {/* Feature 1 */}
+        <div className="offshore-hub__feature-col">
+          <div className="offshore-hub__feature-icon-box" aria-hidden="true">
+            <svg
+              fill="none"
+              height="19"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              width="19"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+          </div>
+          <h3 className="offshore-hub__feature-heading">
+            Strategic Philippine Operations Hub
+          </h3>
+          <p className="offshore-hub__feature-text">
+            Strong cultural alignment, high English proficiency, and deep cross-functional capabilities across engineering, finance, and operations.
+          </p>
+        </div>
+
+        {/* Feature 2 */}
+        <div className="offshore-hub__feature-col">
+          <div className="offshore-hub__feature-icon-box" aria-hidden="true">
+            <svg
+              fill="none"
+              height="19"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              width="19"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 14 14" />
+            </svg>
+          </div>
+          <h3 className="offshore-hub__feature-heading">
+            24/7 Timezone Alignment
+          </h3>
+          <p className="offshore-hub__feature-text">
+            Dedicated teams synchronized directly to your business hours across Australia, APAC, and global market timezones.
+          </p>
+        </div>
+
+        {/* Feature 3 */}
+        <div className="offshore-hub__feature-col">
+          <div className="offshore-hub__feature-icon-box" aria-hidden="true">
+            <svg
+              fill="none"
+              height="19"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              width="19"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <h3 className="offshore-hub__feature-heading">
+            Turnkey Compliance & Retention
+          </h3>
+          <p className="offshore-hub__feature-text">
+            End-to-end management covering contracts, local labor law compliance, dedicated hardware logistics, and sustained team retention.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+
+  const isOverview = variant === 'overview'
+  const shouldShowDescriptions =
+    showDescriptions !== undefined ? showDescriptions : !isOverview
+
+  const resolvedEyebrow =
+    eyebrow || (isOverview ? 'Global Reach' : 'Global Offshore Footprint')
+
+  const resolvedTitle =
+    title ||
+    (isOverview ? (
+      <>
+        Our Global{' '}
+        <span className="offshore-hub__title-accent">
+          Offshore Network
+        </span>
+      </>
+    ) : (
+      <>
+        More Than Recruitment.{' '}
+        <span className="offshore-hub__title-accent">
+          A Complete Offshore Hub
+        </span>
+      </>
+    ))
+
+  const resolvedSummary =
+    summary ||
+    (isOverview
+      ? 'Headquartered in the Philippines, Outsourced Pro Global bridges exceptional cross-border professionals with high-growth organizations across Australia, and talents all over the world.'
+      : 'Connecting 1,000+ top-tier talents worldwide. Headquartered in the Philippines, Outsourced Pro Global bridges exceptional cross-border professionals with high-growth organizations across Australia, and talents all over the world.')
+
+  // Two-column Split Layout (Distinct UI for Homepage Overview)
+  if (layout === 'two-column') {
+    return (
+      <section
+        aria-labelledby="offshore-hub-split-heading"
+        className={`offshore-hub-section offshore-hub-section--two-column ${className}`.trim()}
+      >
+        {!hideDotField && (
+          <DotField
+            dotRadius={2.4}
+            dotSpacing={20}
+            cursorRadius={460}
+            bulgeOnly={true}
+            bulgeStrength={85}
+            glowRadius={220}
+            waveAmplitude={2.5}
+            sparkle={true}
+            gradientFrom="rgba(217, 130, 0, 0.78)"
+            gradientTo="rgba(242, 175, 5, 0.68)"
+            glowColor="#ffe773"
+            className="offshore-hub__dot-field"
+          />
+        )}
+
+        <div className="container offshore-hub__container">
+          <div className="offshore-hub__split-grid">
+            {/* Left Column: Context, Interactive Region Selector, Quick Metrics & CTA */}
+            <motion.div
+              className="offshore-hub__split-left"
+              initial={shouldReduceMotion ? false : { opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {showEyebrow && (
+                <div className="offshore-hub__split-badge" role="text">
+                  <span
+                    aria-hidden="true"
+                    className="offshore-hub__split-badge-dot"
+                  />
+                  <span>{resolvedEyebrow}</span>
+                </div>
+              )}
+
+              <h2
+                id="offshore-hub-split-heading"
+                className="offshore-hub__split-title"
+              >
+                {resolvedTitle}
+              </h2>
+
+              <p className="offshore-hub__split-summary">{resolvedSummary}</p>
+
+              {/* Interactive Region Chips for Quick Overview Filtering */}
+              <div
+                className="offshore-hub__split-filters"
+                role="tablist"
+                aria-label="Filter offshore locations by region"
+              >
+                {regions.map((region) => {
+                  const isActive = activeRegion === region
+                  return (
+                    <button
+                      key={region}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      className={`offshore-hub__split-chip ${
+                        isActive ? 'offshore-hub__split-chip--active' : ''
+                      }`}
+                      onClick={() => setActiveRegion(region)}
+                    >
+                      {region}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Quick Metrics */}
+              <div className="offshore-hub__split-metrics">
+                <div className="offshore-hub__split-metric-item">
+                  <span className="offshore-hub__split-metric-val">1,000+</span>
+                  <span className="offshore-hub__split-metric-label">
+                    Placed Talents
+                  </span>
+                </div>
+                <div className="offshore-hub__split-metric-item">
+                  <span className="offshore-hub__split-metric-val">7 Hubs</span>
+                  <span className="offshore-hub__split-metric-label">
+                    Global Reach
+                  </span>
+                </div>
+                <div className="offshore-hub__split-metric-item">
+                  <span className="offshore-hub__split-metric-val">98%</span>
+                  <span className="offshore-hub__split-metric-label">
+                    Retention
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              {ctaHref && (
+                <div className="offshore-hub__split-cta">
+                  <ButtonLink href={ctaHref} variant="secondary">
+                    {ctaText || 'Explore our complete offshore model →'}
+                  </ButtonLink>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Right Column: World Map Viewport responding to active region */}
+            <motion.div
+              className="offshore-hub__split-right"
+              initial={
+                shouldReduceMotion ? false : { opacity: 0, scale: 0.97, x: 24 }
+              }
+              whileInView={{ opacity: 1, scale: 1, x: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {mapViewport}
+            </motion.div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // One-column Layout (Detailed Deep Dive for About Page)
   return (
     <section
       aria-labelledby="offshore-hub-heading"
-      className={`offshore-hub-section ${layout === 'two-column' ? 'offshore-hub-section--two-column' : ''}`}
+      className={`offshore-hub-section offshore-hub-section--${variant} ${className}`.trim()}
     >
       {/* React Bits Interactive Dot Field Background */}
       {!hideDotField && (
@@ -388,231 +657,84 @@ export function OffshoreMapSection({
         />
       )}
 
-      <div
-        className={`container offshore-hub__container ${layout === 'two-column' ? 'offshore-hub__container--two-column' : ''}`}
-      >
-        {layout === 'two-column' ? (
-          <>
-            <div className="offshore-hub__header offshore-hub__header--two-column">
-              <span className="eyebrow">GLOBAL OFFSHORE FOOTPRINT</span>
-              <h2 id="offshore-hub-heading" className="offshore-hub__title">
-                More Than Recruitment.
-                <br />A Complete Offshore Hub
-              </h2>
-              <p className="offshore-hub__summary">
-                We have connected more than 200 talents all over the world.
-                Headquartered in the Philippines, Outsourced Pro Global bridges
-                exceptional cross-border professionals with high-growth
-                organizations across North America, Europe, Australia, and the
-                Middle East.
-              </p>
-              {regionControls}
+      <div className="container offshore-hub__container">
+        {/* 1. Header with Scroll Animation */}
+        <motion.div
+          className="offshore-hub__header"
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {showEyebrow && (
+            <div className="offshore-hub__eyebrow-badge" role="text">
+              <span
+                aria-hidden="true"
+                className="offshore-hub__eyebrow-dot"
+              />
+              <span>{resolvedEyebrow}</span>
             </div>
+          )}
 
-            <div className="offshore-hub__two-column-layout">
-              {/* Left Column: Interactive Map */}
-              <div className="offshore-hub__two-column-map">{mapViewport}</div>
+          <h2 id="offshore-hub-heading" className="offshore-hub__title">
+            {resolvedTitle}
+          </h2>
 
-              {/* Right Column: Network Highlights */}
-              <div className="offshore-hub__two-column-content">
-                <div className="offshore-hub__two-column-features">
-                  <div className="offshore-hub__feature-item">
-                    <div
-                      className="offshore-hub__feature-icon"
-                      aria-hidden="true"
-                    >
-                      <svg
-                        fill="none"
-                        height="18"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        width="18"
-                      >
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="offshore-hub__feature-title">
-                        Strategic Philippine Operations Hub
-                      </h4>
-                      <p className="offshore-hub__feature-desc">
-                        Strong cultural alignment, high English proficiency, and
-                        deep cross-functional capabilities.
-                      </p>
-                    </div>
-                  </div>
+          <p className="offshore-hub__summary">{resolvedSummary}</p>
+        </motion.div>
 
-                  <div className="offshore-hub__feature-item">
-                    <div
-                      className="offshore-hub__feature-icon"
-                      aria-hidden="true"
-                    >
-                      <svg
-                        fill="none"
-                        height="18"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        width="18"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 14 14" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="offshore-hub__feature-title">
-                        24/7 Timezone Alignment
-                      </h4>
-                      <p className="offshore-hub__feature-desc">
-                        Dedicated teams synchronized to your business hours
-                        across US, UK, APAC, and Middle East.
-                      </p>
-                    </div>
-                  </div>
+        {/* 2. One-Column Map Viewport (Bigger & More Visible, Compact Size on About Page) */}
+        <motion.div
+          className="offshore-hub__map-wrapper offshore-hub__map-wrapper--compact"
+          initial={
+            shouldReduceMotion ? false : { opacity: 0, scale: 0.98, y: 20 }
+          }
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {mapViewport}
+        </motion.div>
 
-                  <div className="offshore-hub__feature-item">
-                    <div
-                      className="offshore-hub__feature-icon"
-                      aria-hidden="true"
-                    >
-                      <svg
-                        fill="none"
-                        height="18"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        width="18"
-                      >
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="offshore-hub__feature-title">
-                        Turnkey Compliance & Retention
-                      </h4>
-                      <p className="offshore-hub__feature-desc">
-                        End-to-end management covering contracts, local labor
-                        law compliance, hardware, and team retention.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Standard Full Layout */}
-            <div className="offshore-hub__header">
-              <span className="eyebrow">GLOBAL OFFSHORE FOOTPRINT</span>
-              <h2 id="offshore-hub-heading" className="offshore-hub__title">
-                More Than Recruitment.
-                <br />A Complete Offshore Hub
-              </h2>
-              <p className="offshore-hub__summary">
-                We have connected more than 200 talents all over the world.
-                Headquartered in the Philippines, Outsourced Pro Global bridges
-                exceptional cross-border professionals with high-growth
-                organizations across North America, Europe, Australia, and the
-                Middle East.
-              </p>
-              {regionControls}
-            </div>
+        {/* 3. Filter Tabs (Moved Directly Under the Map) */}
+        {showTabs && (
+          <motion.div
+            className="offshore-hub__controls-wrap"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {regionControls}
+          </motion.div>
+        )}
 
-            {mapViewport}
+        {/* 4. The 3 Descriptions Box Aligned Horizontally Under the Tabs (Detailed Mode Only) */}
+        {shouldShowDescriptions && (
+          <motion.div
+            className="offshore-hub__features-wrap"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {featuresBox}
+          </motion.div>
+        )}
 
-            {/* 3 Pillar Summary Cards Beneath Map */}
-            <div className="offshore-hub__pillars-grid">
-              <div className="offshore-pillar-card">
-                <div className="offshore-pillar__icon" aria-hidden="true">
-                  <svg
-                    fill="none"
-                    height="20"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    width="20"
-                  >
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                </div>
-                <h3 className="offshore-pillar__title">
-                  Strategic Philippine Hub
-                </h3>
-                <p className="offshore-pillar__desc">
-                  High English proficiency, strong cultural affinity with
-                  Western markets, and a deep talent pool across engineering,
-                  finance, and customer operations.
-                </p>
-              </div>
-
-              <div className="offshore-pillar-card">
-                <div className="offshore-pillar__icon" aria-hidden="true">
-                  <svg
-                    fill="none"
-                    height="20"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    width="20"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 14 14" />
-                  </svg>
-                </div>
-                <h3 className="offshore-pillar__title">
-                  24/7 Timezone Coverage
-                </h3>
-                <p className="offshore-pillar__desc">
-                  Whether you need direct business-hours collaboration or
-                  round-the-clock follow-the-sun delivery, our offshore pods
-                  operate on your required schedule.
-                </p>
-              </div>
-
-              <div className="offshore-pillar-card">
-                <div className="offshore-pillar__icon" aria-hidden="true">
-                  <svg
-                    fill="none"
-                    height="20"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    width="20"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                </div>
-                <h3 className="offshore-pillar__title">
-                  Complete Offshore Lifecycle
-                </h3>
-                <p className="offshore-pillar__desc">
-                  Beyond initial placement, we manage ongoing compliance,
-                  payroll, dedicated equipment provisioning, and performance
-                  retention so your team thrives.
-                </p>
-              </div>
-            </div>
-          </>
+        {/* 5. Overview CTA Action Row (Overview Mode) */}
+        {isOverview && ctaHref && (
+          <motion.div
+            className="offshore-hub__cta-row"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <ButtonLink href={ctaHref} variant="secondary">
+              {ctaText || 'Explore our complete offshore model →'}
+            </ButtonLink>
+          </motion.div>
         )}
       </div>
     </section>

@@ -257,8 +257,14 @@ export default async function HomePage() {
           className="global-showcase-band__dot-field"
         />
 
-        {/* Global Offshore Hub Interactive Map Section */}
-        <OffshoreMapSection hideDotField />
+        {/* Global Offshore Hub Overview Map Section */}
+        <OffshoreMapSection
+          hideDotField
+          layout="two-column"
+          variant="overview"
+          ctaHref="/about"
+          ctaText="Explore our complete offshore model →"
+        />
       </div>
 
       {/* Social Proof Strip */}

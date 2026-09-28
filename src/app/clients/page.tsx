@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Image from 'next/image'
 
 import { ButtonLink } from '@/components/ui/button-link'
+import { ColorBends } from '@/components/ui/color-bends'
 import { DotField } from '@/components/ui/dot-field'
+import { SpotlightCard } from '@/components/ui/spotlight-card'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 
 export const revalidate = 3600
@@ -418,103 +420,79 @@ export function generateMetadata(): Metadata {
 export default function ClientsPage() {
   return (
     <main className="clients-page">
-      {/* 1. Hero Section: Underlaps Nav, Ambient Golden Lighting, Liquid Glass Stats */}
+      {/* 1. Hero Section: Underlaps Nav, Ambient Dark Base with React Bits ColorBends & Centered 3D Emblem */}
       <section className="clients-hero" aria-labelledby="clients-hero-title">
-        <div
-          className="clients-hero__orb clients-hero__orb--one"
-          aria-hidden="true"
+        <ColorBends
+          colors={['#f29f04', '#f2b705', '#d48a00', '#251706', '#ffd159']}
+          rotation={45}
+          speed={0.22}
+          frequency={0.85}
+          warpStrength={1.2}
+          intensity={1.3}
+          scale={1.1}
+          bandWidth={5.2}
+          noise={0.1}
+          transparent={true}
+          autoRotate={1.5}
         />
-        <div
-          className="clients-hero__orb clients-hero__orb--two"
-          aria-hidden="true"
-        />
+
+        <div className="clients-hero__vignette" aria-hidden="true" />
 
         <div className="container clients-hero__container">
-          <nav aria-label="Breadcrumb" className="clients-breadcrumb">
-            <ol>
-              <li>
-                <Link href="/">Home</Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li aria-current="page">Clients</li>
-            </ol>
-          </nav>
-
-          <div className="clients-hero__glass">
-            <div className="clients-hero__copy">
-              <div className="clients-hero__badge" role="text">
-                <span
-                  aria-hidden="true"
-                  className="clients-hero__badge-pulse"
-                />
-                <span>Strategic Partnerships & Clients</span>
-              </div>
-
-              <h1 id="clients-hero-title" className="clients-hero__title">
-                Powering Teams for Industry Leaders Worldwide.
-              </h1>
-              <p className="clients-hero__lead">
-                We collaborate with ambitious organizations across technology,
-                healthcare, finance, and commerce to build dedicated,
-                high-impact offshore teams that integrate seamlessly with daily
-                operations.
-              </p>
+          <div className="clients-hero__content">
+            <div className="clients-hero__badge" role="text">
+              <span
+                aria-hidden="true"
+                className="clients-hero__badge-pulse"
+              />
+              <span>Strategic Partnerships &amp; Clients</span>
             </div>
 
-            <div
-              className="clients-hero__metrics"
-              aria-label="Client partnership metrics"
-            >
-              <div className="clients-hero__metric">
-                <strong>05</strong>
-                <div>
-                  <span className="clients-hero__metric-label">
-                    Active Partnerships
-                  </span>
-                  <span className="clients-hero__metric-sub">
-                    Long-term dedicated pods
-                  </span>
-                </div>
-              </div>
-              <div className="clients-hero__metric">
-                <strong>05</strong>
-                <div>
-                  <span className="clients-hero__metric-label">
-                    Core Industries
-                  </span>
-                  <span className="clients-hero__metric-sub">
-                    Domain-specialized talent
-                  </span>
-                </div>
-              </div>
-              <div className="clients-hero__metric">
-                <strong>98%</strong>
-                <div>
-                  <span className="clients-hero__metric-label">
-                    Partner Retention
-                  </span>
-                  <span className="clients-hero__metric-sub">
-                    Reliable continuous delivery
-                  </span>
-                </div>
-              </div>
-              <div className="clients-hero__metric">
-                <strong>24/7</strong>
-                <div>
-                  <span className="clients-hero__metric-label">
-                    Global Coverage
-                  </span>
-                  <span className="clients-hero__metric-sub">
-                    Cross-timezone operations
-                  </span>
-                </div>
-              </div>
+            <h1 id="clients-hero-title" className="clients-hero__title">
+              Powering Teams for Industry Leaders{' '}
+              <span className="clients-hero__title-accent">Worldwide.</span>
+            </h1>
+
+            <p className="clients-hero__lead">
+              We collaborate with ambitious organizations across technology,
+              healthcare, finance, and commerce to build dedicated,
+              high-impact offshore teams that integrate seamlessly with daily
+              operations.
+            </p>
+
+            <div className="clients-hero__actions">
+              <ButtonLink
+                href="/contact"
+                variant="primary"
+                className="clients-hero__btn-primary"
+              >
+                Partner with Us
+              </ButtonLink>
+              <a
+                href="#client-logos-heading"
+                className="clients-hero__btn-secondary"
+              >
+                Explore Client Work
+              </a>
+            </div>
+
+            {/* Centered 3D Sculptural Emblem (OPG dynamic dual curved arrows) */}
+            <div className="clients-hero__centerpiece" aria-hidden="true">
+              <div className="clients-hero__centerpiece-halo" />
+              <Image
+                src="/images/opg-3d-centerpiece.jpg"
+                alt="Outsource Pro Global 3D Emblem"
+                width={960}
+                height={540}
+                priority
+                className="clients-hero__centerpiece-image"
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. Unified Showcase Band: Interactive DotField + Warm Amber Background */}
+      {/* 2. Unified Showcase Band: Horizontal Stats Divider + Interactive DotField + Logos & Directory */}
       <div className="clients-showcase-band">
         <DotField
           dotRadius={2.4}
@@ -530,7 +508,127 @@ export default function ClientsPage() {
           glowColor="#ffe773"
         />
 
-        {/* 2A. Client Logos Showcase */}
+        {/* 2A. Horizontal Stats Divider (Spotlight Cards serving as Divider) */}
+        <section
+          className="clients-stats-divider"
+          aria-label="Client partnership metrics"
+        >
+          <div className="container clients-stats-container">
+            <div className="clients-stats-grid">
+              <SpotlightCard className="stat-card">
+                <div className="stat-card__badge-row">
+                  <span className="stat-card__icon-wrapper" aria-hidden="true">
+                    <svg
+                      aria-hidden="true"
+                      fill="none"
+                      height="17"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      width="17"
+                    >
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                  </span>
+                  <span className="stat-card__tag">Scale</span>
+                </div>
+                <div className="stat-card__metric">05</div>
+                <h3 className="stat-card__title">Active Partnerships</h3>
+                <p className="stat-card__desc">
+                  Long-term dedicated pods embedded directly into core workflows.
+                </p>
+              </SpotlightCard>
+
+              <SpotlightCard className="stat-card">
+                <div className="stat-card__badge-row">
+                  <span className="stat-card__icon-wrapper" aria-hidden="true">
+                    <svg
+                      aria-hidden="true"
+                      fill="none"
+                      height="17"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      width="17"
+                    >
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                    </svg>
+                  </span>
+                  <span className="stat-card__tag">Domains</span>
+                </div>
+                <div className="stat-card__metric">05</div>
+                <h3 className="stat-card__title">Core Industries</h3>
+                <p className="stat-card__desc">
+                  High-compliance talent specializing in SaaS, Fintech, Health, Commerce &amp; Ops.
+                </p>
+              </SpotlightCard>
+
+              <SpotlightCard className="stat-card">
+                <div className="stat-card__badge-row">
+                  <span className="stat-card__icon-wrapper" aria-hidden="true">
+                    <svg
+                      aria-hidden="true"
+                      fill="none"
+                      height="17"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      width="17"
+                    >
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                  </span>
+                  <span className="stat-card__tag">Retention</span>
+                </div>
+                <div className="stat-card__metric">98%</div>
+                <h3 className="stat-card__title">Partner Retention</h3>
+                <p className="stat-card__desc">
+                  Consistently renewed multi-year contracts rooted in measurable ROI.
+                </p>
+              </SpotlightCard>
+
+              <SpotlightCard className="stat-card">
+                <div className="stat-card__badge-row">
+                  <span className="stat-card__icon-wrapper" aria-hidden="true">
+                    <svg
+                      aria-hidden="true"
+                      fill="none"
+                      height="17"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      width="17"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </span>
+                  <span className="stat-card__tag">Availability</span>
+                </div>
+                <div className="stat-card__metric">24/7</div>
+                <h3 className="stat-card__title">Global Coverage</h3>
+                <p className="stat-card__desc">
+                  Synchronized follow-the-sun execution spanning US, UK, APAC, and EMEA.
+                </p>
+              </SpotlightCard>
+            </div>
+          </div>
+        </section>
+
+        {/* 2B. Client Logos Showcase */}
         <section
           className="clients-logo-section"
           aria-labelledby="client-logos-heading"

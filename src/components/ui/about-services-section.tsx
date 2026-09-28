@@ -129,13 +129,16 @@ const SERVICE_FEATURES: ServiceFeature[] = [
 
 const PROCESS_LABELS = ['Sourcing', 'Vetting', 'Onboarding', 'Retention']
 
+const STEP_TARGET_PROGRESS = [0.1, 0.33, 0.55, 0.78]
+
 export function AboutServicesSection() {
   const [activeStep, setActiveStep] = useState(0)
   const trackRef = useRef<HTMLDivElement>(null)
 
   /* ------------------------------------------------------------------ */
   /*  Scroll-progress driven step detection                              */
-  /*  Maps page scroll position through the track to 4 equal steps       */
+  /*  Maps page scroll position through the track to 4 focused stages    */
+  /*  Step 4 receives a generous resting buffer so it stays pinned       */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
     const track = trackRef.current
@@ -158,7 +161,14 @@ export function AboutServicesSection() {
       // Sticky pins at top: 0
       const scrolled = -rect.top
       const progress = Math.max(0, Math.min(1, scrolled / scrollable))
-      const nextStep = Math.min(3, Math.floor(progress * 4))
+      let nextStep = 0
+      if (progress >= 0.66) {
+        nextStep = 3
+      } else if (progress >= 0.44) {
+        nextStep = 2
+      } else if (progress >= 0.22) {
+        nextStep = 1
+      }
       setActiveStep((prev) => (prev !== nextStep ? nextStep : prev))
     }
 
@@ -196,7 +206,7 @@ export function AboutServicesSection() {
 
     const rect = track.getBoundingClientRect()
     const scrollable = track.offsetHeight - window.innerHeight
-    const targetProgress = (index + 0.12) / 4
+    const targetProgress = STEP_TARGET_PROGRESS[index] ?? 0.1
     const targetScrollTop =
       window.scrollY + rect.top + targetProgress * scrollable
 

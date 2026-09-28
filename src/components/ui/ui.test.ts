@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest'
 
 import { AboutCtaCard } from './about-cta-card'
 import { AboutServicesSection } from './about-services-section'
+import { AboutTeamShowcase, TEAM_MEMBERS } from './about-team-showcase'
 import { Aurora } from './aurora'
+import { ColorBends } from './color-bends'
+import { DepthCarousel } from './depth-carousel'
+import {
+  GLOBAL_DESTINATIONS,
+  OffshoreMapSection,
+  PHILIPPINES_HQ,
+} from './offshore-map'
 import type { RichTextBlock } from './rich-text'
 import type { ContentStatus } from './status-badge'
 
@@ -43,5 +51,31 @@ describe('UI Base Components contracts', () => {
 
   it('exports the AboutServicesSection component', () => {
     expect(typeof AboutServicesSection).toBe('function')
+  })
+
+  it('exports the DepthCarousel component', () => {
+    expect(typeof DepthCarousel).toBe('object') // forwardRef returns object
+  })
+
+  it('exports the AboutTeamShowcase component and valid team data', () => {
+    expect(typeof AboutTeamShowcase).toBe('function')
+    expect(TEAM_MEMBERS.length).toBeGreaterThanOrEqual(5)
+    TEAM_MEMBERS.forEach((member) => {
+      expect(member.name).toBeTruthy()
+      expect(member.position).toBeTruthy()
+      expect(member.image).toBeTruthy()
+      expect(member.headline).toBeTruthy()
+      expect(member.bio).toBeTruthy()
+    })
+  })
+
+  it('exports the ColorBends background component', () => {
+    expect(typeof ColorBends).toBe('function')
+  })
+
+  it('exports the OffshoreMapSection component and destination hubs', () => {
+    expect(typeof OffshoreMapSection).toBe('function')
+    expect(PHILIPPINES_HQ.country).toBe('Philippines')
+    expect(GLOBAL_DESTINATIONS.length).toBeGreaterThanOrEqual(7)
   })
 })
