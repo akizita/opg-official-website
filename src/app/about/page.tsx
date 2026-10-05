@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 
 import { AboutCtaCard } from '@/components/ui/about-cta-card'
+import { AboutHeroGlobe } from '@/components/ui/about-hero-globe'
 import { AboutServicesSection } from '@/components/ui/about-services-section'
 import { AboutTeamShowcase } from '@/components/ui/about-team-showcase'
 import { ButtonLink } from '@/components/ui/button-link'
 import { Card } from '@/components/ui/card'
-import { DotField } from '@/components/ui/dot-field'
 import { EmptyState } from '@/components/ui/empty-state'
 import { MissionVisionSection } from '@/components/ui/mission-vision-section'
 import { Notice } from '@/components/ui/notice'
@@ -138,24 +138,16 @@ export default async function AboutPage() {
         </div>
       )}
 
-      {/* 1. Hero Section: Underlaps Nav, Left Text Hierarchy, Right Light Logo */}
+      {/* 1. Hero Section */}
       <section className="about-hero-banner" aria-labelledby="about-hero-title">
         <div aria-hidden="true" className="about-hero-banner__bg">
-          <Image
-            alt="Outsource Pro Global collaborative workspace"
-            className="about-hero-banner__image"
-            fill
-            priority
-            sizes="100vw"
-            src={ABOUT_HERO_BG_URL}
-          />
           <div className="about-hero-banner__overlay" />
           <div className="about-hero-banner__glow" />
+          <AboutHeroGlobe />
         </div>
 
         <div className="container about-hero-banner__container">
           <div className="about-hero-banner__grid">
-            {/* Left Side: Enhanced Text Hierarchy */}
             <div className="about-hero-banner__left">
               <div className="about-hero-banner__badge" role="text">
                 <span
@@ -188,19 +180,25 @@ export default async function AboutPage() {
                 </span>
                 {summaryDetail && (
                   <span className="about-hero-banner__lead-secondary">
-                    — {summaryDetail}
+                    {summaryDetail}
                   </span>
                 )}
               </p>
 
               <div className="about-hero-banner__actions">
+                <ButtonLink
+                  className="about-hero-banner__primary-action"
+                  href="/contact"
+                >
+                  Build your offshore team
+                  <span aria-hidden="true">↗</span>
+                </ButtonLink>
                 <a
                   className="about-hero-banner__scroll-indicator"
                   href="#who-we-are"
-                  aria-label="Scroll to explore Who We Are section"
                 >
                   <span className="about-hero-banner__scroll-text">
-                    Scroll to explore
+                    Explore our approach
                   </span>
                   <span
                     aria-hidden="true"
@@ -221,28 +219,50 @@ export default async function AboutPage() {
                   </span>
                 </a>
               </div>
+
+              <dl
+                className="about-hero-banner__proof"
+                aria-label="OPG at a glance"
+              >
+                <div>
+                  <dt>1,000+</dt>
+                  <dd>Talents placed</dd>
+                </div>
+                <div>
+                  <dt>98%</dt>
+                  <dd>Client retention</dd>
+                </div>
+                <div>
+                  <dt>7</dt>
+                  <dd>Global hubs</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="about-hero-banner__media">
+              <Image
+                alt="A global business team collaborating around a conference table"
+                className="about-hero-banner__image"
+                fill
+                priority
+                sizes="(max-width: 62rem) 100vw, 48vw"
+                src={ABOUT_HERO_BG_URL}
+              />
+              <div
+                aria-hidden="true"
+                className="about-hero-banner__media-overlay"
+              />
+              <div className="about-hero-banner__media-caption">
+                <span>Global delivery, human partnership</span>
+                <strong>Built around your business.</strong>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Unified Showcase Band: DotField & Warm Gradient extending across Who We Are */}
+      {/* Unified Showcase Band */}
       <div className="about-showcase-band about-showcase-band--who">
-        <DotField
-          dotRadius={2.4}
-          dotSpacing={20}
-          cursorRadius={460}
-          bulgeOnly={true}
-          bulgeStrength={85}
-          glowRadius={220}
-          waveAmplitude={2.5}
-          sparkle={true}
-          gradientFrom="rgba(217, 130, 0, 0.78)"
-          gradientTo="rgba(242, 175, 5, 0.68)"
-          glowColor="#ffe773"
-          className="about-showcase-band__dot-field"
-        />
-
         {/* 2. Who Are We Section */}
         <section
           id="who-we-are"
@@ -399,21 +419,6 @@ export default async function AboutPage() {
 
       {/* Unified Showcase Band: Mission/Vision & Map */}
       <div className="about-showcase-band about-showcase-band--purpose-map">
-        <DotField
-          dotRadius={2.4}
-          dotSpacing={20}
-          cursorRadius={460}
-          bulgeOnly={true}
-          bulgeStrength={85}
-          glowRadius={220}
-          waveAmplitude={2.5}
-          sparkle={true}
-          gradientFrom="rgba(217, 130, 0, 0.78)"
-          gradientTo="rgba(242, 175, 5, 0.68)"
-          glowColor="#ffe773"
-          className="about-showcase-band__dot-field"
-        />
-
         {/* 3. Mission, Vision & Core Values Section */}
         <section
           id="our-purpose"

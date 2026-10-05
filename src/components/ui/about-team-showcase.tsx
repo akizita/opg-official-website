@@ -304,6 +304,21 @@ export function AboutTeamShowcase({
                       {activeMember.bio}
                     </p>
 
+                    <dl className="about-team-card__credentials">
+                      <div>
+                        <dt>Experience</dt>
+                        <dd>{activeMember.experience}</dd>
+                      </div>
+                      <div>
+                        <dt>Operating hub</dt>
+                        <dd>{activeMember.location}</dd>
+                      </div>
+                      <div>
+                        <dt>Specialization</dt>
+                        <dd>{activeMember.specialty}</dd>
+                      </div>
+                    </dl>
+
                     {/* Highly visible LinkedIn button placed under member description */}
                     <div className="about-team-card__actions">
                       <a
@@ -354,6 +369,27 @@ export function AboutTeamShowcase({
 
               {/* Carousel Controls: Left-aligned Progress Indicator Dots */}
               <div className="about-team-card__controls">
+                <button
+                  type="button"
+                  className="about-team-card__nav-btn"
+                  aria-label="View previous leadership profile"
+                  onClick={handlePrev}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </button>
+
                 {/* Progress Dots with Active Pill */}
                 <div
                   className="about-team-card__dots"
@@ -377,6 +413,27 @@ export function AboutTeamShowcase({
                     )
                   })}
                 </div>
+
+                <button
+                  type="button"
+                  className="about-team-card__nav-btn"
+                  aria-label="View next leadership profile"
+                  onClick={handleNext}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -411,7 +468,7 @@ export function AboutTeamShowcase({
                   alt=""
                   fill
                   className="about-team-card-back__img"
-                  sizes="380px"
+                  sizes="420px"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
                 />
@@ -439,7 +496,7 @@ export function AboutTeamShowcase({
                   alt=""
                   fill
                   className="about-team-card-back__img"
-                  sizes="380px"
+                  sizes="420px"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
                 />
@@ -486,7 +543,7 @@ export function AboutTeamShowcase({
                     fill
                     priority
                     className="about-team-card-front__img"
-                    sizes="(max-width: 640px) 90vw, (max-width: 1024px) 340px, 380px"
+                    sizes="(max-width: 640px) 90vw, (max-width: 1024px) 340px, 420px"
                     placeholder="blur"
                     blurDataURL={BLUR_DATA_URL}
                   />
@@ -496,6 +553,12 @@ export function AboutTeamShowcase({
                     aria-hidden="true"
                     className="about-team-card-front__rim"
                   />
+
+                  <div className="about-team-card-front__caption">
+                    <span>Leadership profile</span>
+                    <strong>{activeMember.name}</strong>
+                    <small>{activeMember.department}</small>
+                  </div>
                 </motion.div>
               </AnimatePresence>
             </div>

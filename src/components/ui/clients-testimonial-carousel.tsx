@@ -56,6 +56,7 @@ export function ClientsTestimonialCarousel({
   const [containerWidth, setContainerWidth] = useState(0)
   const [isMounted, setIsMounted] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const [isInViewport, setIsInViewport] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const isNavigatingRef = useRef(false)
@@ -93,22 +94,38 @@ export function ClientsTestimonialCarousel({
     }
   }, [])
 
+  // Avoid carousel updates and compositor work while the section is offscreen.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || typeof IntersectionObserver === 'undefined') {
+      setIsInViewport(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInViewport(entry.isIntersecting),
+      { rootMargin: '120px 0px', threshold: 0.05 },
+    )
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
+
   // Calculate card width and track translation offset
   const width = containerWidth || 1200
   const isMobile = width < 768
   const isTablet = width >= 768 && width < 1120
 
-  let cardWidth = 720
+  let cardWidth = 900
   if (isMobile) {
     cardWidth = Math.min(width - 32, 460)
   } else if (isTablet) {
-    cardWidth = Math.min(width * 0.78, 620)
+    cardWidth = Math.min(width * 0.84, 700)
   } else {
-    // Desktop: sleek, compact width (620px - 720px) to fit comfortably on screen with header
-    cardWidth = Math.min(Math.max(620, width * 0.46), 720)
+    // Desktop: a more prominent editorial card with adjacent testimonials still visible.
+    cardWidth = Math.min(Math.max(780, width * 0.58), 920)
   }
 
-  const cardGap = isMobile ? 14 : isTablet ? 20 : 26
+  const cardGap = isMobile ? 14 : isTablet ? 22 : 32
 
   // Center the active card in the viewport
   const trackOffset =
@@ -143,12 +160,12 @@ export function ClientsTestimonialCarousel({
 
   // Autoplay with pause on hover / focus
   useEffect(() => {
-    if (isPaused || total <= 1) return
+    if (isPaused || !isInViewport || total <= 1) return
     const timer = setInterval(() => {
       goToNext()
     }, 6000)
     return () => clearInterval(timer)
-  }, [isPaused, total, goToNext])
+  }, [isPaused, isInViewport, total, goToNext])
 
   // Handle transition end for seamless infinite loop
   const handleTransitionEnd = useCallback(() => {
@@ -376,7 +393,8 @@ export function ClientsTestimonialCarousel({
                         alt={`${item.authorName}, ${item.authorRole} at ${item.companyName}`}
                         width={640}
                         height={640}
-                        priority={item._origIndex === 0}
+                        priority={index === total}
+                        sizes="(max-width: 48rem) 100vw, (max-width: 70rem) 42vw, 34vw"
                         className="clients-testimonial-card__photo-img"
                       />
                       <div

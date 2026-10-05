@@ -124,28 +124,29 @@ export function ClientsGlobeHero() {
   useEffect(() => {
     if (!canvasRef.current) return
 
+    const canvas = canvasRef.current
     let width = 0
     let globe: { update: (opts: Record<string, unknown>) => void; destroy: () => void } | null = null
-    let animId: number
+    let animId = 0
+    let isInViewport = false
+    let isPageVisible = !document.hidden
+    const renderScale = Math.min(window.devicePixelRatio || 1, 1.5)
 
     const onResize = () => {
-      if (canvasRef.current) {
-        width = canvasRef.current.offsetWidth
-      }
+      width = canvas.offsetWidth
     }
-    window.addEventListener('resize', onResize)
     onResize()
 
     try {
-      globe = createGlobe(canvasRef.current, {
-        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-        width: (width || 800) * 2,
-        height: (width || 800) * 2,
+      globe = createGlobe(canvas, {
+        devicePixelRatio: renderScale,
+        width: (width || 800) * renderScale,
+        height: (width || 800) * renderScale,
         phi: 0,
         theta: 0.28,
         dark: 1,
         diffuse: 1.25,
-        mapSamples: 16000,
+        mapSamples: 10000,
         mapBrightness: 5.5,
         baseColor: [0.14, 0.11, 0.06], // Deep warm charcoal/amber base
         markerColor: [1, 0.75, 0.1], // Glowing golden amber
@@ -159,7 +160,8 @@ export function ClientsGlobeHero() {
       })
 
       const animate = () => {
-        if (!globe) return
+        animId = 0
+        if (!globe || !isInViewport || !isPageVisible) return
 
         if (!shouldReduceMotion) {
           if (pointerInteracting.current !== null) {
@@ -173,22 +175,66 @@ export function ClientsGlobeHero() {
 
         globe.update({
           phi: phiRef.current,
-          width: width * 2,
-          height: width * 2,
+          width: width * renderScale,
+          height: width * renderScale,
         })
 
-        animId = requestAnimationFrame(animate)
+        if (!shouldReduceMotion) {
+          animId = requestAnimationFrame(animate)
+        }
       }
 
-      animId = requestAnimationFrame(animate)
+      const startAnimation = () => {
+        if (!animId && isInViewport && isPageVisible) {
+          animId = requestAnimationFrame(animate)
+        }
+      }
+
+      const stopAnimation = () => {
+        if (animId) {
+          cancelAnimationFrame(animId)
+          animId = 0
+        }
+      }
+
+      const intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          isInViewport = entry.isIntersecting
+          if (isInViewport) startAnimation()
+          else stopAnimation()
+        },
+        { rootMargin: '100px 0px' },
+      )
+
+      const resizeObserver = new ResizeObserver(() => {
+        onResize()
+        startAnimation()
+      })
+
+      const onVisibilityChange = () => {
+        isPageVisible = !document.hidden
+        if (isPageVisible) startAnimation()
+        else stopAnimation()
+      }
+
+      intersectionObserver.observe(canvas)
+      resizeObserver.observe(canvas)
+      document.addEventListener('visibilitychange', onVisibilityChange)
+
+      return () => {
+        stopAnimation()
+        intersectionObserver.disconnect()
+        resizeObserver.disconnect()
+        document.removeEventListener('visibilitychange', onVisibilityChange)
+        globe?.destroy()
+      }
     } catch {
-      setHasWebGLFailed(true)
+      queueMicrotask(() => setHasWebGLFailed(true))
     }
 
     return () => {
       if (animId) cancelAnimationFrame(animId)
-      if (globe) globe.destroy()
-      window.removeEventListener('resize', onResize)
+      globe?.destroy()
     }
   }, [shouldReduceMotion])
 

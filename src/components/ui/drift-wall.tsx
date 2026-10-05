@@ -120,6 +120,7 @@ export function DriftWall({
 
   const [containerHeight, setContainerHeight] = useState(600)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [isInViewport, setIsInViewport] = useState(false)
   const activeIdRef = useRef<string | null>(null)
   const reduced = React.useSyncExternalStore(
     subscribeReducedMotion,
@@ -154,6 +155,23 @@ export function DriftWall({
     return () => ro.disconnect()
   }, [])
 
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    if (!('IntersectionObserver' in window)) {
+      const fallbackTimer = setTimeout(() => setIsInViewport(true), 0)
+      return () => clearTimeout(fallbackTimer)
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInViewport(entry.isIntersecting),
+      { rootMargin: '200px 0px' },
+    )
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
+
   const baseVelocities = useMemo<number[]>(() => {
     const dirSign = direction === 'up' ? 1 : -1
     return columnItems.map((_, c) => {
@@ -182,6 +200,23 @@ export function DriftWall({
   )
 
   useEffect(() => {
+    if (!isInViewport) {
+      lastTsRef.current = null
+      return
+    }
+
+    if (reduced) {
+      applyPlaneTransform(0, 0)
+      for (let c = 0; c < trackRefs.current.length; c++) {
+        const el = trackRefs.current[c]
+        const meta = columnMeta[c]
+        if (el && meta) {
+          el.style.transform = `translate3d(0, ${-(offsetsRef.current[c] ?? 0)}px, 0)`
+        }
+      }
+      return
+    }
+
     const animate = (ts: number) => {
       if (lastTsRef.current === null) lastTsRef.current = ts
       const dt = Math.min(0.05, Math.max(0, ts - lastTsRef.current) / 1000)
@@ -200,31 +235,21 @@ export function DriftWall({
         pointerDampedRef.current.y,
       )
 
-      if (!reduced) {
-        for (let c = 0; c < trackRefs.current.length; c++) {
-          const meta = columnMeta[c]
-          if (!meta) continue
-          const paused = wallHoveredRef.current && pauseOnHover
-          const factor = paused || hoveredColRef.current === c ? 0 : 1
-          const target = baseVelocities[c] * factor
+      for (let c = 0; c < trackRefs.current.length; c++) {
+        const meta = columnMeta[c]
+        if (!meta) continue
+        const paused = wallHoveredRef.current && pauseOnHover
+        const factor = paused || hoveredColRef.current === c ? 0 : 1
+        const target = baseVelocities[c] * factor
 
-          const ease = 1 - Math.exp(-dt / (target === 0 ? 0.16 : 0.28))
-          velocitiesRef.current[c] += (target - velocitiesRef.current[c]) * ease
-          let next =
-            (offsetsRef.current[c] ?? 0) + velocitiesRef.current[c] * dt
-          next = ((next % meta.copyHeight) + meta.copyHeight) % meta.copyHeight
-          offsetsRef.current[c] = next
+        const ease = 1 - Math.exp(-dt / (target === 0 ? 0.16 : 0.28))
+        velocitiesRef.current[c] += (target - velocitiesRef.current[c]) * ease
+        let next = (offsetsRef.current[c] ?? 0) + velocitiesRef.current[c] * dt
+        next = ((next % meta.copyHeight) + meta.copyHeight) % meta.copyHeight
+        offsetsRef.current[c] = next
 
-          const el = trackRefs.current[c]
-          if (el) el.style.transform = `translate3d(0, ${-next}px, 0)`
-        }
-      } else {
-        for (let c = 0; c < trackRefs.current.length; c++) {
-          const el = trackRefs.current[c]
-          const meta = columnMeta[c]
-          if (el && meta)
-            el.style.transform = `translate3d(0, ${-(offsetsRef.current[c] ?? 0)}px, 0)`
-        }
+        const el = trackRefs.current[c]
+        if (el) el.style.transform = `translate3d(0, ${-next}px, 0)`
       }
 
       rafRef.current = requestAnimationFrame(animate)
@@ -243,6 +268,7 @@ export function DriftWall({
     parallax,
     reduced,
     applyPlaneTransform,
+    isInViewport,
   ])
 
   const activate = useCallback((id: string, index: number): void => {

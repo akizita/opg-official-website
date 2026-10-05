@@ -322,7 +322,7 @@ export function ColorBends({
 
     container.addEventListener('pointermove', handlePointerMove)
 
-    let startTime = performance.now()
+    const startTime = performance.now()
     let lastTime = startTime
 
     const renderLoop = (now: number) => {

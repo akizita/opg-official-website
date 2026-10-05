@@ -13,6 +13,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import gsap from 'gsap'
+import Image from 'next/image'
 
 export interface DepthCarouselItem {
   image: string
@@ -595,10 +596,12 @@ export const DepthCarousel = forwardRef<DepthCarouselHandle, DepthCarouselProps>
                 borderRadius: radius,
               }}
             >
-              <img
+              <Image
                 alt={item.alt || item.name || 'Team member portrait'}
                 className="depth-carousel__img"
                 draggable={false}
+                fill
+                sizes="(max-width: 64rem) 20rem, 24rem"
                 src={item.image}
               />
               <span

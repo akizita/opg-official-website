@@ -14,7 +14,6 @@ import {
   type CarouselTestimonialItem,
 } from '@/components/ui/clients-testimonial-carousel'
 import { ClientsGlobeHero } from '@/components/ui/clients-globe-hero'
-import { DotField } from '@/components/ui/dot-field'
 import {
   getPublishedTestimonials,
   type Testimonial,
@@ -284,22 +283,8 @@ export default async function ClientsPage() {
       {/* 1. Enhanced Modern Hero Section with Interactive 3D Dotted Network Globe & Featured Partner Cards Dock */}
       <ClientsGlobeHero />
 
-      {/* 2. Unified Showcase Band: Interactive DotField + Blog Playbooks + Client Testimonials + Partner Directory */}
+      {/* 2. Unified Showcase Band: Blog Playbooks + Client Testimonials + Partner Directory */}
       <div className="clients-showcase-band">
-        <DotField
-          dotRadius={2.4}
-          dotSpacing={22}
-          cursorRadius={460}
-          bulgeOnly={true}
-          bulgeStrength={80}
-          glowRadius={220}
-          waveAmplitude={2.2}
-          sparkle={true}
-          gradientFrom="rgba(217, 130, 0, 0.72)"
-          gradientTo="rgba(242, 175, 5, 0.62)"
-          glowColor="#ffe773"
-        />
-
         {/* 2A. Editorial Client Insights & Methodology Blog Section */}
         <section
           className="clients-blog-section"
@@ -585,39 +570,43 @@ export default async function ClientsPage() {
         >
           <ClientsPartnerProfiles partners={clientPartners} />
         </section>
-      </div>
 
-      {/* 3. Conversion CTA: Liquid Glass Card, Amber Ambient Glow, Action Buttons */}
-      <section
-        className="clients-cta"
-        aria-label="Become an OPG client partner"
-      >
-        <div className="container">
-          <div className="clients-cta__glass">
-            <div className="clients-cta__copy">
-              <p className="eyebrow eyebrow--light">Build With OPG</p>
-              <h2>Ready to Build Your Dedicated Offshore Team?</h2>
-              <p>
-                Whether you need specialized software engineers, 24/7 customer
-                support champions, or compliance professionals, OPG designs
-                bespoke offshore pods ready to deliver from day one.
-              </p>
-            </div>
-            <div className="clients-cta__actions">
-              <ButtonLink href="/contact" className="clients-cta__button">
-                Start a Conversation
-              </ButtonLink>
-              <ButtonLink
-                href="/services"
-                variant="secondary"
-                className="clients-cta__button clients-cta__button--secondary"
-              >
-                Explore Pod Services
-              </ButtonLink>
+        {/* 3. Conversion CTA: Continuous dotted field with a soft transition */}
+        <section
+          className="clients-cta"
+          aria-label="Become an OPG client partner"
+        >
+          <div className="container">
+            <div className="clients-cta__glass">
+              <div className="clients-cta__copy">
+                <div className="clients-cta__eyebrow-row">
+                  <span aria-hidden="true" />
+                  <p className="eyebrow eyebrow--light">Build With OPG</p>
+                  <span aria-hidden="true" />
+                </div>
+                <h2>Ready to Build Your Dedicated Offshore Team?</h2>
+                <p>
+                  Whether you need specialized software engineers, 24/7 customer
+                  support champions, or compliance professionals, OPG designs
+                  bespoke offshore pods ready to deliver from day one.
+                </p>
+              </div>
+              <div className="clients-cta__actions">
+                <ButtonLink href="/contact" className="clients-cta__button">
+                  Start a Conversation
+                </ButtonLink>
+                <ButtonLink
+                  href="/services"
+                  variant="secondary"
+                  className="clients-cta__button clients-cta__button--secondary"
+                >
+                  Explore Pod Services
+                </ButtonLink>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   )
 }

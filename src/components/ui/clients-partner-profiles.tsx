@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { Aurora } from '@/components/ui/aurora'
 import { ClientLogo, type ClientLogoType } from '@/components/ui/client-logo'
 
 export type PartnerProfileItem = {
@@ -28,7 +27,7 @@ type ClientsPartnerProfilesProps = {
 }
 
 // Target progress fractions for 5 steps when clicking in the index
-const STEP_TARGET_PROGRESS = [0.06, 0.28, 0.50, 0.72, 0.92]
+const STEP_TARGET_PROGRESS = [0.06, 0.28, 0.5, 0.72, 0.92]
 
 function WebsiteIcon() {
   return (
@@ -131,34 +130,31 @@ export function ClientsPartnerProfiles({
   /* ------------------------------------------------------------------ */
   /* Scroll directly to a specific step position in the 320vh track     */
   /* ------------------------------------------------------------------ */
-  const scrollToStep = useCallback(
-    (index: number) => {
-      const isMobile = window.matchMedia('(max-width: 64rem)').matches
-      if (isMobile) {
-        setActiveStep(index)
-        return
-      }
+  const scrollToStep = useCallback((index: number) => {
+    const isMobile = window.matchMedia('(max-width: 64rem)').matches
+    if (isMobile) {
+      setActiveStep(index)
+      return
+    }
 
-      const track = trackRef.current
-      if (!track) return
+    const track = trackRef.current
+    if (!track) return
 
-      const reduced = window.matchMedia(
-        '(prefers-reduced-motion: reduce)',
-      ).matches
+    const reduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
 
-      const rect = track.getBoundingClientRect()
-      const scrollable = track.offsetHeight - window.innerHeight
-      const targetProgress = STEP_TARGET_PROGRESS[index] ?? 0.06
-      const targetScrollTop =
-        window.scrollY + rect.top + targetProgress * scrollable
+    const rect = track.getBoundingClientRect()
+    const scrollable = track.offsetHeight - window.innerHeight
+    const targetProgress = STEP_TARGET_PROGRESS[index] ?? 0.06
+    const targetScrollTop =
+      window.scrollY + rect.top + targetProgress * scrollable
 
-      window.scrollTo({
-        top: targetScrollTop,
-        behavior: reduced ? 'auto' : 'smooth',
-      })
-    },
-    [],
-  )
+    window.scrollTo({
+      top: targetScrollTop,
+      behavior: reduced ? 'auto' : 'smooth',
+    })
+  }, [])
 
   /* ------------------------------------------------------------------ */
   /* User selection handler (clicking index tab in sidebar)            */
@@ -278,13 +274,13 @@ export function ClientsPartnerProfiles({
       const progress = Math.max(0, Math.min(1, scrolled / scrollable))
 
       let nextStep = 0
-      if (progress >= 0.80) {
+      if (progress >= 0.8) {
         nextStep = 4
-      } else if (progress >= 0.60) {
+      } else if (progress >= 0.6) {
         nextStep = 3
-      } else if (progress >= 0.40) {
+      } else if (progress >= 0.4) {
         nextStep = 2
-      } else if (progress >= 0.20) {
+      } else if (progress >= 0.2) {
         nextStep = 1
       }
 
@@ -340,23 +336,13 @@ export function ClientsPartnerProfiles({
       <div className="clients-sticky-directory__track" ref={trackRef}>
         {/* ── Sticky 100vh viewport frame ── */}
         <div className="clients-sticky-directory__sticky">
-          {/* Full-width Aurora Wave (matching Home page hero) */}
+          {/* Static brand wash avoids WebGL repaint flicker inside the sticky viewport. */}
           <div
             aria-hidden="true"
             className="clients-sticky-directory__aurora"
-          >
-            <Aurora
-              amplitude={0.8}
-              blend={0.35}
-              colorStops={['#ea580c', '#f29f04', '#f2b705', '#ffd000', '#f59e0b']}
-              speed={1.0}
-            />
-          </div>
-
-          <div
-            aria-hidden="true"
-            className="clients-sticky-directory__scrim"
           />
+
+          <div aria-hidden="true" className="clients-sticky-directory__scrim" />
 
           <div className="container clients-sticky-directory__inner">
             {/* Executive Section Intro Header (matching Hero standards) */}
