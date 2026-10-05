@@ -683,9 +683,9 @@ export function OffshoreMapSection({
           <p className="offshore-hub__summary">{resolvedSummary}</p>
         </motion.div>
 
-        {/* 2. One-Column Map Viewport (Bigger & More Visible, Compact Size on About Page) */}
+        {/* 2. One-Column Map Viewport (Aligned with Container) */}
         <motion.div
-          className="offshore-hub__map-wrapper offshore-hub__map-wrapper--compact"
+          className="offshore-hub__map-wrapper"
           initial={
             shouldReduceMotion ? false : { opacity: 0, scale: 0.98, y: 20 }
           }

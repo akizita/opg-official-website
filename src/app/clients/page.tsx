@@ -1,30 +1,29 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import Link from 'next/link'
 
+import { BlogShareButtons } from '@/components/ui/blog-share-buttons'
 import { ButtonLink } from '@/components/ui/button-link'
-import { ColorBends } from '@/components/ui/color-bends'
+import type { ClientLogoType } from '@/components/ui/client-logo'
+import {
+  ClientsPartnerProfiles,
+  type PartnerProfileItem,
+} from '@/components/ui/clients-partner-profiles'
+import {
+  ClientsTestimonialCarousel,
+  type CarouselTestimonialItem,
+} from '@/components/ui/clients-testimonial-carousel'
+import { ClientsGlobeHero } from '@/components/ui/clients-globe-hero'
 import { DotField } from '@/components/ui/dot-field'
-import { SpotlightCard } from '@/components/ui/spotlight-card'
+import {
+  getPublishedTestimonials,
+  type Testimonial,
+} from '@/lib/content/clients'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
-export type ClientPartner = {
-  id: string
-  name: string
-  badge: string
-  industry: string
-  region: string
-  podCapability: string
-  talentCount: string
-  tagline: string
-  description: string
-  website: string
-  social: string
-  logoType: 'northstar' | 'meridian' | 'harborline' | 'atlas' | 'veridian'
-}
-
-const clientPartners: readonly ClientPartner[] = [
+const clientPartners: readonly PartnerProfileItem[] = [
   {
     id: 'northstar-labs',
     name: 'Northstar Labs',
@@ -38,6 +37,9 @@ const clientPartners: readonly ClientPartner[] = [
       'Northstar Labs engineers secure, cloud-native workflow automation platforms and distributed collaboration software serving high-growth technology scaleups and global enterprise clients.',
     website: 'https://northstarlabs.example.com',
     social: 'https://www.linkedin.com/company/northstar-labs',
+    facebook: 'https://facebook.com/northstarlabs',
+    instagram: 'https://instagram.com/northstarlabs',
+    x: 'https://x.com/northstarlabs',
     logoType: 'northstar',
   },
   {
@@ -53,6 +55,9 @@ const clientPartners: readonly ClientPartner[] = [
       'A premier digital healthcare collective improving clinical access across Australasia through synchronized telehealth support, 24/7 triage workflows, and compassionate care navigation.',
     website: 'https://meridianhealth.example.com',
     social: 'https://www.linkedin.com/company/meridian-health',
+    facebook: 'https://facebook.com/meridianhealth',
+    instagram: 'https://instagram.com/meridianhealth',
+    x: 'https://x.com/meridianhealth',
     logoType: 'meridian',
   },
   {
@@ -68,6 +73,9 @@ const clientPartners: readonly ClientPartner[] = [
       'A regulated fintech firm providing transparent cross-border asset management, algorithmic settlement infrastructure, and institutional-grade regulatory reporting systems.',
     website: 'https://harborlinefinance.example.com',
     social: 'https://www.linkedin.com/company/harborline-finance',
+    facebook: 'https://facebook.com/harborlinefinance',
+    instagram: 'https://instagram.com/harborlinefinance',
+    x: 'https://x.com/harborlinefin',
     logoType: 'harborline',
   },
   {
@@ -83,6 +91,9 @@ const clientPartners: readonly ClientPartner[] = [
       'A fast-scaling multi-channel commerce platform enabling ambitious consumer brands to synchronize catalog feeds, streamline fulfillment pipelines, and accelerate regional marketplace growth.',
     website: 'https://atlascommerce.example.com',
     social: 'https://www.linkedin.com/company/atlas-commerce',
+    facebook: 'https://facebook.com/atlascommerce',
+    instagram: 'https://instagram.com/atlascommerce',
+    x: 'https://x.com/atlascommerce',
     logoType: 'atlas',
   },
   {
@@ -98,293 +109,118 @@ const clientPartners: readonly ClientPartner[] = [
       'A leading corporate advisory and management consultancy designing high-agility shared services, automated business intelligence pipelines, and resilient operating models for multinational enterprises.',
     website: 'https://veridianops.example.com',
     social: 'https://www.linkedin.com/company/veridian-operations',
+    facebook: 'https://facebook.com/veridianops',
+    instagram: 'https://instagram.com/veridianops',
+    x: 'https://x.com/veridianops',
     logoType: 'veridian',
   },
 ] as const
 
-function ClientLogo({
-  type,
-  className = '',
-}: {
-  type: ClientPartner['logoType']
-  className?: string
-}) {
-  switch (type) {
-    case 'northstar':
-      return (
-        <svg
-          viewBox="0 0 48 48"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className={className}
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient
-              id="client-logo-nl-primary"
-              x1="4"
-              y1="4"
-              x2="44"
-              y2="44"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#f2b705" />
-              <stop offset="1" stopColor="#f29f04" />
-            </linearGradient>
-            <linearGradient
-              id="client-logo-nl-facet"
-              x1="12"
-              y1="12"
-              x2="36"
-              y2="36"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#ffffff" stopOpacity="0.95" />
-              <stop offset="1" stopColor="#fde047" stopOpacity="0.7" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M24 3L28.8 19.2L45 24L28.8 28.8L24 45L19.2 28.8L3 24L19.2 19.2L24 3Z"
-            fill="url(#client-logo-nl-primary)"
-          />
-          <path
-            d="M24 11L27.2 20.8L37 24L27.2 27.2L24 37L20.8 27.2L11 24L20.8 20.8L24 11Z"
-            fill="url(#client-logo-nl-facet)"
-          />
-          <circle cx="24" cy="24" r="2.5" fill="#0d0d0d" />
-        </svg>
-      )
-    case 'meridian':
-      return (
-        <svg
-          viewBox="0 0 48 48"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className={className}
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient
-              id="client-logo-mh-border"
-              x1="6"
-              y1="6"
-              x2="42"
-              y2="42"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#10b981" />
-              <stop offset="1" stopColor="#047857" />
-            </linearGradient>
-            <linearGradient
-              id="client-logo-mh-pulse"
-              x1="10"
-              y1="24"
-              x2="38"
-              y2="24"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#059669" />
-              <stop offset="1" stopColor="#f2b705" />
-            </linearGradient>
-          </defs>
-          <rect
-            x="6"
-            y="6"
-            width="36"
-            height="36"
-            rx="12"
-            stroke="url(#client-logo-mh-border)"
-            strokeWidth="3"
-          />
-          <path
-            d="M13 24H18L21.5 15L26.5 33L30 24H35"
-            stroke="url(#client-logo-mh-pulse)"
-            strokeWidth="3.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle cx="26.5" cy="24" r="2.5" fill="#f29f04" />
-        </svg>
-      )
-    case 'harborline':
-      return (
-        <svg
-          viewBox="0 0 48 48"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className={className}
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient
-              id="client-logo-hf-shield"
-              x1="8"
-              y1="4"
-              x2="40"
-              y2="44"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#4f46e5" />
-              <stop offset="1" stopColor="#312e81" />
-            </linearGradient>
-            <linearGradient
-              id="client-logo-hf-pillars"
-              x1="18"
-              y1="16"
-              x2="30"
-              y2="32"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#f2b705" />
-              <stop offset="1" stopColor="#f29f04" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M24 5L41 14V28C41 36.5 33.8 42.5 24 45C14.2 42.5 7 36.5 7 28V14L24 5Z"
-            stroke="url(#client-logo-hf-shield)"
-            strokeWidth="3"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M19 18V30M24 15V33M29 18V30"
-            stroke="url(#client-logo-hf-pillars)"
-            strokeWidth="2.8"
-            strokeLinecap="round"
-          />
-        </svg>
-      )
-    case 'atlas':
-      return (
-        <svg
-          viewBox="0 0 48 48"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className={className}
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient
-              id="client-logo-ac-prism"
-              x1="6"
-              y1="6"
-              x2="42"
-              y2="42"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#f59e0b" />
-              <stop offset="1" stopColor="#d97706" />
-            </linearGradient>
-            <linearGradient
-              id="client-logo-ac-fill"
-              x1="6"
-              y1="6"
-              x2="42"
-              y2="42"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#fef3c7" stopOpacity="0.4" />
-              <stop offset="1" stopColor="#f59e0b" stopOpacity="0.1" />
-            </linearGradient>
-          </defs>
-          <polygon
-            points="24,5 42,15.5 42,32.5 24,43 6,32.5 6,15.5"
-            fill="url(#client-logo-ac-fill)"
-            stroke="url(#client-logo-ac-prism)"
-            strokeWidth="3"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M24 5V43M6 15.5L42 32.5M6 32.5L42 15.5"
-            stroke="url(#client-logo-ac-prism)"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
-          <circle cx="24" cy="24" r="3.5" fill="#f29f04" />
-        </svg>
-      )
-    case 'veridian':
-      return (
-        <svg
-          viewBox="0 0 48 48"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className={className}
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient
-              id="client-logo-vo-grad"
-              x1="8"
-              y1="8"
-              x2="40"
-              y2="40"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#0ea5e9" />
-              <stop offset="1" stopColor="#0369a1" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M24 7L39 19.5L24 32L9 19.5L24 7Z"
-            stroke="url(#client-logo-vo-grad)"
-            strokeWidth="3"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M13 25L24 35L35 25"
-            stroke="#f29f04"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M17.5 32L24 39L30.5 32"
-            stroke="#f2b705"
-            strokeWidth="2.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle cx="24" cy="19.5" r="3" fill="#0d0d0d" />
-        </svg>
-      )
-  }
+export type ClientBlogPost = {
+  id: string
+  title: string
+  category: string
+  readTime: string
+  badge: string
+  excerpt: string
+  highlights: string[]
+  author: string
+  authorRole: string
+  href: string
 }
 
-function GlobeIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="client-pill-link__icon"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-      <path d="M2 12h20" />
-    </svg>
-  )
+export type ClientTestimonialItem = {
+  id: string
+  quote: string
+  headline: string
+  authorName: string
+  authorRole: string
+  companyName: string
+  companyId: string
+  logoType: ClientLogoType
+  metricBadge: string
+  rating: number
+  industry: string
+  photoUrl: string
 }
 
-function LinkedInIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-      className="client-pill-link__icon"
-    >
-      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
-    </svg>
-  )
-}
+const clientTestimonials: readonly ClientTestimonialItem[] = [
+  {
+    id: 'testimonial-northstar',
+    companyId: 'northstar-labs',
+    companyName: 'Northstar Labs',
+    headline: 'Exceeded All Expectations on Velocity & Scale',
+    authorName: 'Marcus Vance',
+    authorRole: 'VP of Engineering & Product Infrastructure',
+    logoType: 'northstar',
+    metricBadge: '+160% Sprint Velocity',
+    industry: 'Enterprise SaaS',
+    rating: 5,
+    photoUrl: '/images/testimonial-marcus-vance.jpg',
+    quote:
+      'Outsource Pro Global integrated seamlessly into our GitHub and Jira workflows within two weeks. Their QA and full-stack engineering pod didn’t just execute sprint tickets—they overhauled our automated CI/CD pipeline, reducing release regression cycles by 65%. It feels like having our own senior in-house engineers down the hall.',
+  },
+  {
+    id: 'testimonial-meridian',
+    companyId: 'meridian-health',
+    companyName: 'Meridian Health',
+    headline: 'Uncompromised Clinical Compliance & 24/7 Care',
+    authorName: 'Dr. Eleanor Evans, MD',
+    authorRole: 'Chief Medical & Operations Officer',
+    logoType: 'meridian',
+    metricBadge: '99.8% SLA Adherence',
+    industry: 'Digital Health',
+    rating: 5,
+    photoUrl: '/images/testimonial-eleanor-evans.jpg',
+    quote:
+      'In digital health, empathy and compliance cannot be compromised. OPG built us a dedicated 24/7 clinical coordination pod that achieved a 99.8% SLA adherence rate and full HIPAA/Privacy compliance from month one. Our patients receive compassionate care within seconds, day or night.',
+  },
+  {
+    id: 'testimonial-harborline',
+    companyId: 'harborline-finance',
+    companyName: 'Harborline Finance',
+    headline: 'Slashing Fintech OpEx & Model Backlog by 48%',
+    authorName: 'Alistair Finch, CFA',
+    authorRole: 'Head of Quantitative Risk & Regulatory Systems',
+    logoType: 'harborline',
+    metricBadge: '48% OpEx Efficiency',
+    industry: 'Fintech & Compliance',
+    rating: 5,
+    photoUrl: '/images/testimonial-alistair-finch.jpg',
+    quote:
+      'Finding mathematically rigorous fintech talent with SOC 2 compliance discipline is notoriously difficult. The specialized modeling pod OPG assembled for Harborline exceeded every technical benchmark, slashing our model reconciliation backlog and lowering our operational overhead by 48%.',
+  },
+  {
+    id: 'testimonial-atlas',
+    companyId: 'atlas-commerce',
+    companyName: 'Atlas Commerce',
+    headline: 'Flawless Peak Synchronization Across 14 Hubs',
+    authorName: 'Elena Rostova',
+    authorRole: 'Global Director of Supply Chain & E-Commerce Ops',
+    logoType: 'atlas',
+    metricBadge: '14 Hubs Synchronized',
+    industry: 'Global E-Commerce',
+    rating: 5,
+    photoUrl: '/images/testimonial-elena-rostova.jpg',
+    quote:
+      'When seasonal demand surges during Q4 peak events, OPG’s dedicated operations pod scales with us effortlessly. Their multi-lingual support and vendor reconciliation pods have eliminated order bottlenecks across 14 international fulfillment hubs with near-zero error rates.',
+  },
+  {
+    id: 'testimonial-veridian',
+    companyId: 'veridian-operations',
+    companyName: 'Veridian Operations',
+    headline: 'The Gold Standard in Remote Delivery & Insights',
+    authorName: 'David Sterling',
+    authorRole: 'Managing Director & Principal Consultant',
+    logoType: 'veridian',
+    metricBadge: '35+ Hrs Saved Weekly',
+    industry: 'Shared Services',
+    rating: 5,
+    photoUrl: '/images/testimonial-david-sterling.jpg',
+    quote:
+      'OPG represents the gold standard in remote talent delivery. Their business intelligence pod engineered automated reporting pipelines that saved our executive team over 35 hours weekly in manual data assembly. The transparency, caliber, and proactive communication are unmatched.',
+  },
+]
 
 export function generateMetadata(): Metadata {
   const siteUrl = getSiteUrl()
@@ -417,82 +253,38 @@ export function generateMetadata(): Metadata {
   }
 }
 
-export default function ClientsPage() {
+export default async function ClientsPage() {
+  let dbTestimonials: Testimonial[] = []
+  try {
+    dbTestimonials = await getPublishedTestimonials()
+  } catch {
+    dbTestimonials = []
+  }
+
+  const combinedTestimonials: CarouselTestimonialItem[] = [
+    ...clientTestimonials,
+    ...dbTestimonials.map((dbItem) => ({
+      id: dbItem.id,
+      companyName: dbItem.author_company || 'Partner Enterprise',
+      headline: 'Exceptional Pod Performance & Velocity',
+      quote: dbItem.quote,
+      authorName: dbItem.author_name,
+      authorRole: dbItem.author_role,
+      companyId: 'client-partner',
+      logoType: 'northstar' as ClientLogoType,
+      metricBadge: 'Verified Partner',
+      industry: 'Enterprise Client',
+      rating: 5,
+      photoUrl: '/images/testimonial-marcus-vance.jpg',
+    })),
+  ]
+
   return (
-    <main className="clients-page">
-      {/* 1. Hero Section: Underlaps Nav, Ambient Dark Base with React Bits ColorBends & Centered 3D Emblem */}
-      <section className="clients-hero" aria-labelledby="clients-hero-title">
-        <ColorBends
-          colors={['#f29f04', '#f2b705', '#d48a00', '#251706', '#ffd159']}
-          rotation={45}
-          speed={0.22}
-          frequency={0.85}
-          warpStrength={1.2}
-          intensity={1.3}
-          scale={1.1}
-          bandWidth={5.2}
-          noise={0.1}
-          transparent={true}
-          autoRotate={1.5}
-        />
+    <div className="clients-page">
+      {/* 1. Enhanced Modern Hero Section with Interactive 3D Dotted Network Globe & Featured Partner Cards Dock */}
+      <ClientsGlobeHero />
 
-        <div className="clients-hero__vignette" aria-hidden="true" />
-
-        <div className="container clients-hero__container">
-          <div className="clients-hero__content">
-            <div className="clients-hero__badge" role="text">
-              <span
-                aria-hidden="true"
-                className="clients-hero__badge-pulse"
-              />
-              <span>Strategic Partnerships &amp; Clients</span>
-            </div>
-
-            <h1 id="clients-hero-title" className="clients-hero__title">
-              Powering Teams for Industry Leaders{' '}
-              <span className="clients-hero__title-accent">Worldwide.</span>
-            </h1>
-
-            <p className="clients-hero__lead">
-              We collaborate with ambitious organizations across technology,
-              healthcare, finance, and commerce to build dedicated,
-              high-impact offshore teams that integrate seamlessly with daily
-              operations.
-            </p>
-
-            <div className="clients-hero__actions">
-              <ButtonLink
-                href="/contact"
-                variant="primary"
-                className="clients-hero__btn-primary"
-              >
-                Partner with Us
-              </ButtonLink>
-              <a
-                href="#client-logos-heading"
-                className="clients-hero__btn-secondary"
-              >
-                Explore Client Work
-              </a>
-            </div>
-
-            {/* Centered 3D Sculptural Emblem (OPG dynamic dual curved arrows) */}
-            <div className="clients-hero__centerpiece" aria-hidden="true">
-              <div className="clients-hero__centerpiece-halo" />
-              <Image
-                src="/images/opg-3d-centerpiece.jpg"
-                alt="Outsource Pro Global 3D Emblem"
-                width={960}
-                height={540}
-                priority
-                className="clients-hero__centerpiece-image"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Unified Showcase Band: Horizontal Stats Divider + Interactive DotField + Logos & Directory */}
+      {/* 2. Unified Showcase Band: Interactive DotField + Blog Playbooks + Client Testimonials + Partner Directory */}
       <div className="clients-showcase-band">
         <DotField
           dotRadius={2.4}
@@ -508,289 +300,290 @@ export default function ClientsPage() {
           glowColor="#ffe773"
         />
 
-        {/* 2A. Horizontal Stats Divider (Spotlight Cards serving as Divider) */}
+        {/* 2A. Editorial Client Insights & Methodology Blog Section */}
         <section
-          className="clients-stats-divider"
-          aria-label="Client partnership metrics"
+          className="clients-blog-section"
+          aria-labelledby="clients-blog-heading"
         >
-          <div className="container clients-stats-container">
-            <div className="clients-stats-grid">
-              <SpotlightCard className="stat-card">
-                <div className="stat-card__badge-row">
-                  <span className="stat-card__icon-wrapper" aria-hidden="true">
-                    <svg
-                      aria-hidden="true"
-                      fill="none"
-                      height="17"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      width="17"
-                    >
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                  </span>
-                  <span className="stat-card__tag">Scale</span>
-                </div>
-                <div className="stat-card__metric">05</div>
-                <h3 className="stat-card__title">Active Partnerships</h3>
-                <p className="stat-card__desc">
-                  Long-term dedicated pods embedded directly into core workflows.
-                </p>
-              </SpotlightCard>
+          <div className="container clients-blog-container">
+            {/* Header: Date/Read Time Eyebrow, Editorial Title, and Lead Description */}
+            <header className="clients-blog-header">
+              <div className="clients-blog-meta">
+                <span className="clients-blog-meta__date">
+                  Published Autumn 2026
+                </span>
+                <span className="clients-blog-meta__sep">—</span>
+                <span className="clients-blog-meta__read-time">5 min read</span>
+              </div>
 
-              <SpotlightCard className="stat-card">
-                <div className="stat-card__badge-row">
-                  <span className="stat-card__icon-wrapper" aria-hidden="true">
-                    <svg
-                      aria-hidden="true"
-                      fill="none"
-                      height="17"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      width="17"
-                    >
-                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                    </svg>
-                  </span>
-                  <span className="stat-card__tag">Domains</span>
-                </div>
-                <div className="stat-card__metric">05</div>
-                <h3 className="stat-card__title">Core Industries</h3>
-                <p className="stat-card__desc">
-                  High-compliance talent specializing in SaaS, Fintech, Health, Commerce &amp; Ops.
-                </p>
-              </SpotlightCard>
-
-              <SpotlightCard className="stat-card">
-                <div className="stat-card__badge-row">
-                  <span className="stat-card__icon-wrapper" aria-hidden="true">
-                    <svg
-                      aria-hidden="true"
-                      fill="none"
-                      height="17"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      width="17"
-                    >
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                  </span>
-                  <span className="stat-card__tag">Retention</span>
-                </div>
-                <div className="stat-card__metric">98%</div>
-                <h3 className="stat-card__title">Partner Retention</h3>
-                <p className="stat-card__desc">
-                  Consistently renewed multi-year contracts rooted in measurable ROI.
-                </p>
-              </SpotlightCard>
-
-              <SpotlightCard className="stat-card">
-                <div className="stat-card__badge-row">
-                  <span className="stat-card__icon-wrapper" aria-hidden="true">
-                    <svg
-                      aria-hidden="true"
-                      fill="none"
-                      height="17"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      width="17"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                  </span>
-                  <span className="stat-card__tag">Availability</span>
-                </div>
-                <div className="stat-card__metric">24/7</div>
-                <h3 className="stat-card__title">Global Coverage</h3>
-                <p className="stat-card__desc">
-                  Synchronized follow-the-sun execution spanning US, UK, APAC, and EMEA.
-                </p>
-              </SpotlightCard>
-            </div>
-          </div>
-        </section>
-
-        {/* 2B. Client Logos Showcase */}
-        <section
-          className="clients-logo-section"
-          aria-labelledby="client-logos-heading"
-        >
-          <div className="container">
-            <div className="clients-section-heading clients-section-heading--centered">
-              <p className="eyebrow">Enterprise Trust</p>
-              <h2 id="client-logos-heading">
-                Five Organizations. One Shared Standard of Excellence.
+              <h2 id="clients-blog-heading" className="clients-blog-title">
+                How OPG Handles Client Partnerships: Inside Our High-Touch Pod
+                Governance &amp; Client Archetypes
               </h2>
-              <p>
-                Our client partners rely on Outsource Pro Global to deploy
-                vetted, high-performing offshore pods engineered for operational
-                longevity, seamless communication, and measurable business
-                outcomes.
+
+              <p className="clients-blog-lead">
+                In the ever-evolving distributed economy, ambitious
+                organizations must move beyond transactional staffing to
+                captivate markets and drive sustainable growth. At the heart of
+                this transformation lies the power of dedicated, high-retention
+                offshore talent pods.
               </p>
+            </header>
+
+            {/* Widescreen Hero Featured Image Showcase */}
+            <div className="clients-blog-hero-showcase">
+              <Image
+                src="/images/clients-blog-hero.jpg"
+                alt="OPG Global Pod Architecture and Distributed Operational Excellence"
+                width={1344}
+                height={756}
+                priority
+                className="clients-blog-hero-img"
+              />
+              <div
+                className="clients-blog-hero-showcase__glare"
+                aria-hidden="true"
+              />
             </div>
 
-            <div className="clients-logo-grid">
-              {clientPartners.map((client) => (
-                <div
-                  className="client-logo-tile client-logo-tile--liquid"
-                  key={client.id}
-                >
-                  <div className="client-logo-tile__shine" aria-hidden="true" />
-                  <div className="client-logo-tile__icon-box">
-                    <ClientLogo
-                      type={client.logoType}
-                      className="client-logo-svg"
+            {/* 2-Column Editorial Article Grid */}
+            <div className="clients-blog-article-grid">
+              {/* Left Column: Author, Social Share, Mini Related Card, Quick Metrics */}
+              <aside
+                className="clients-blog-sidebar"
+                aria-label="Article metadata & share"
+              >
+                <div className="clients-blog-sidebar__section">
+                  <span className="clients-blog-sidebar__label">
+                    WRITTEN BY
+                  </span>
+                  <div className="clients-blog-author-card">
+                    <div className="clients-blog-author-avatar">
+                      <span>OPG</span>
+                    </div>
+                    <div className="clients-blog-author-info">
+                      <span className="clients-blog-author-name">
+                        OPG Strategic Advisory
+                      </span>
+                      <span className="clients-blog-author-role">
+                        Global Pod Operations
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="clients-blog-sidebar__section">
+                  <span className="clients-blog-sidebar__label">
+                    SHARE THIS
+                  </span>
+                  <BlogShareButtons />
+                </div>
+
+                {/* Mini Related Playbook Card */}
+                <div className="clients-blog-sidebar-card">
+                  <div className="clients-blog-sidebar-card__media">
+                    <Image
+                      src="/images/opg-3d-centerpiece.jpg"
+                      alt="Dedicated Talent Economics"
+                      width={400}
+                      height={225}
+                      className="clients-blog-sidebar-card__img"
                     />
                   </div>
-                  <span className="client-logo-tile__name">{client.name}</span>
-                  <span className="client-logo-tile__badge">
-                    {client.badge}
-                  </span>
+                  <div className="clients-blog-sidebar-card__body">
+                    <span className="clients-blog-sidebar-card__date">
+                      OCTOBER 2026 — 4 MIN READ
+                    </span>
+                    <h4 className="clients-blog-sidebar-card__title">
+                      The Future of Dedicated Talent: Pod Economics &amp;
+                      Retention Playbooks
+                    </h4>
+                    <Link
+                      href="/articles"
+                      className="clients-blog-sidebar-card__btn"
+                    >
+                      Read Now
+                    </Link>
+                  </div>
                 </div>
-              ))}
+
+                {/* At-a-Glance Partnership Stats */}
+                <div className="clients-blog-sidebar-stats">
+                  <div className="clients-blog-stat-item">
+                    <span className="clients-blog-stat-val">98%</span>
+                    <span className="clients-blog-stat-lbl">
+                      Partner Retention
+                    </span>
+                  </div>
+                  <div className="clients-blog-stat-item">
+                    <span className="clients-blog-stat-val">4+ Hrs</span>
+                    <span className="clients-blog-stat-lbl">
+                      Daily Timezone Overlap
+                    </span>
+                  </div>
+                  <div className="clients-blog-stat-item">
+                    <span className="clients-blog-stat-val">14 Days</span>
+                    <span className="clients-blog-stat-lbl">
+                      Zero-Friction Ramp
+                    </span>
+                  </div>
+                </div>
+              </aside>
+
+              {/* Right Column: Editorial Article Body */}
+              <div className="clients-blog-content">
+                <p className="clients-blog-paragraph clients-blog-paragraph--lead">
+                  In the modern digital landscape, businesses must stay ahead of
+                  the curve to captivate their target audience and drive
+                  operational expansion. Enter Outsource Pro Global—a dedicated
+                  operating partner that empowers founders and department
+                  leaders to scale their vision with unprecedented velocity and
+                  precision. In this playbook, we explore how our pod model is
+                  revolutionizing offshore management and why it has become the
+                  tool of choice for market leaders.
+                </p>
+
+                <h3 className="clients-blog-h3">
+                  The Power of OPG: Unleashing Operational Velocity
+                </h3>
+                <p className="clients-blog-paragraph">
+                  OPG is more than just a remote staffing agency; it is an
+                  integrated operational platform that merges rigorous vetting,
+                  hands-on governance, and culture alignment into a seamless
+                  workflow. Here is how Outsource Pro Global handles client
+                  partnerships:
+                </p>
+
+                <ol className="clients-blog-feature-list">
+                  <li>
+                    <strong>Dedicated Pod Delivery Leads:</strong> Every client
+                    is paired with an embedded Pod Delivery Lead who manages
+                    daily ceremonies, resolves logistical blockers, and
+                    guarantees continuous communication alignment between
+                    onshore stakeholders and offshore specialists.
+                  </li>
+                  <li>
+                    <strong>Synchronized Timezone Overlap:</strong> In a
+                    fast-paced market, real-time collaboration is
+                    non-negotiable. We configure a guaranteed 4-hour core
+                    overlap with your primary operating timezone (US, UK,
+                    Australasia, or EMEA), eliminating frustrating 24-hour
+                    feedback delays.
+                  </li>
+                  <li>
+                    <strong>Custom Workflows &amp; Tooling Integration:</strong>{' '}
+                    With OPG, adding high-caliber specialists to your existing
+                    stack is effortless. Our pods embed natively into your
+                    Slack, Jira, GitHub, Linear, and internal ERP systems
+                    without forcing you to adapt to rigid vendor software.
+                  </li>
+                  <li>
+                    <strong>
+                      Transparent Governance &amp; Bi-Weekly KPI Reviews:
+                    </strong>{' '}
+                    Real-time metric transparency allows for dynamic iteration.
+                    We provide bi-weekly sprint dashboards tracking velocity,
+                    accuracy, and SLA adherence, reinforced by quarterly
+                    executive reviews.
+                  </li>
+                </ol>
+
+                {/* Secondary Featured Visual Ribbon Banner */}
+                <div className="clients-blog-secondary-banner">
+                  <Image
+                    src="/images/clients-blog-secondary.jpg"
+                    alt="OPG Fluid Collaboration and Infinite Scalability"
+                    width={960}
+                    height={480}
+                    className="clients-blog-secondary-img"
+                  />
+                </div>
+
+                <h3 className="clients-blog-h3">
+                  Who Are Our Clients? The Anatomy of an OPG Partner
+                </h3>
+                <p className="clients-blog-paragraph">
+                  We are deeply intentional about the organizations we partner
+                  with. OPG builds dedicated teams for businesses where talent
+                  quality, security discipline, and operational longevity
+                  directly impact enterprise valuation:
+                </p>
+
+                <ol className="clients-blog-feature-list">
+                  <li>
+                    <strong>High-Growth Technology &amp; SaaS:</strong>{' '}
+                    Venture-backed scaleups scaling distributed engineering
+                    pods, automated QA, cloud DevOps, and technical support
+                    without Silicon Valley burn rates.
+                  </li>
+                  <li>
+                    <strong>Digital Health &amp; Telehealth Innovators:</strong>{' '}
+                    Healthcare networks requiring HIPAA-compliant 24/7 care
+                    coordination, patient triage support, and compassionate
+                    clinical workflow management.
+                  </li>
+                  <li>
+                    <strong>Fintech &amp; Asset Management Platforms:</strong>{' '}
+                    Regulated financial firms that require strict SOC 2
+                    compliance, quantitative modeling, AML/KYC verification, and
+                    algorithmic settlement operations.
+                  </li>
+                  <li>
+                    <strong>Omnichannel E-Commerce &amp; Logistics:</strong>{' '}
+                    High-volume marketplace brands needing 24/7 catalog feeds,
+                    multi-hub vendor reconciliation, and global customer
+                    retention.
+                  </li>
+                  <li>
+                    <strong>
+                      Multinational Consultancies &amp; Shared Services:
+                    </strong>{' '}
+                    Corporate advisory firms seeking automated business
+                    intelligence, financial modeling, and resilient shared
+                    operating pipelines.
+                  </li>
+                </ol>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 2B. Partner Company Information Directory */}
+        {/* 2B. Testimonials Header Block (Clean Header on Cream Background) */}
+        <section
+          className="clients-testimonials-header-section"
+          aria-labelledby="clients-testimonials-heading"
+        >
+          <div className="container">
+            <div className="clients-section-heading clients-section-heading--centered clients-testimonials-heading">
+              <p className="eyebrow eyebrow--gold">
+                Verified Executive Endorsements
+              </p>
+              <h2 id="clients-testimonials-heading">
+                Hear from Brands That Trust Us
+              </h2>
+              <p>
+                Our clients&rsquo; success stories showcase the value we bring
+                to every project. Here&rsquo;s what they have to say about
+                working with us.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 2C. Testimonials Carousel Section (Full-Width, Unnested) */}
+        <section
+          className="clients-testimonials-carousel-section"
+          aria-label="Executive Client Endorsements Carousel"
+        >
+          <ClientsTestimonialCarousel testimonials={combinedTestimonials} />
+        </section>
+
+        {/* 2D. Partner Company Directory Section (Sticky Process Architecture matching About page) */}
         <section
           className="clients-directory"
           aria-labelledby="clients-directory-heading"
         >
-          <div className="clients-directory__glow" aria-hidden="true" />
-          <div className="container clients-directory__container">
-            <div className="clients-section-heading">
-              <p className="eyebrow">Partner Profiles</p>
-              <h2 id="clients-directory-heading">
-                Client Directory & Operational Footprint
-              </h2>
-              <p>
-                A comprehensive view of each partner company, their industry
-                specialization, the dedicated offshore pod powering their
-                growth, and direct links to connect with their brand.
-              </p>
-            </div>
-
-            <div className="client-profile-grid">
-              {clientPartners.map((client, index) => (
-                <article
-                  className="client-profile-card client-profile-card--liquid"
-                  key={client.id}
-                >
-                  <div
-                    className="client-profile-card__shine"
-                    aria-hidden="true"
-                  />
-
-                  <header className="client-profile-card__header">
-                    <div className="client-profile-card__brand">
-                      <div className="client-profile-card__logo-wrapper">
-                        <ClientLogo
-                          type={client.logoType}
-                          className="client-profile-card__logo-svg"
-                        />
-                      </div>
-                      <div>
-                        <span className="client-profile-card__status">
-                          Client Partner
-                        </span>
-                        <h3 className="client-profile-card__name">
-                          {client.name}
-                        </h3>
-                      </div>
-                    </div>
-                    <div
-                      className="client-profile-card__number"
-                      aria-label={`Partner ${index + 1} of ${clientPartners.length}`}
-                    >
-                      {String(index + 1).padStart(2, '0')}
-                    </div>
-                  </header>
-
-                  <div className="client-profile-card__body">
-                    <p className="client-profile-card__tagline">
-                      {client.tagline}
-                    </p>
-                    <p className="client-profile-card__description">
-                      {client.description}
-                    </p>
-                  </div>
-
-                  <dl className="client-profile-card__details">
-                    <div className="client-profile-card__detail-item">
-                      <dt>Industry Domain</dt>
-                      <dd>{client.industry}</dd>
-                    </div>
-                    <div className="client-profile-card__detail-item">
-                      <dt>Headquarters / Region</dt>
-                      <dd>{client.region}</dd>
-                    </div>
-                    <div className="client-profile-card__detail-item">
-                      <dt>OPG Dedicated Pod</dt>
-                      <dd>{client.podCapability}</dd>
-                    </div>
-                    <div className="client-profile-card__detail-item">
-                      <dt>Talent Footprint</dt>
-                      <dd>{client.talentCount}</dd>
-                    </div>
-                  </dl>
-
-                  <footer className="client-profile-card__links">
-                    <a
-                      href={client.website}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                      className="client-pill-link"
-                      aria-label={`Visit ${client.name} official website (opens in a new tab)`}
-                    >
-                      <GlobeIcon />
-                      <span>Company Website</span>
-                      <span
-                        aria-hidden="true"
-                        className="client-pill-link__arrow"
-                      >
-                        ↗
-                      </span>
-                    </a>
-                    <a
-                      href={client.social}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                      className="client-pill-link client-pill-link--social"
-                      aria-label={`Visit ${client.name} on LinkedIn (opens in a new tab)`}
-                    >
-                      <LinkedInIcon />
-                      <span>LinkedIn Profile</span>
-                      <span
-                        aria-hidden="true"
-                        className="client-pill-link__arrow"
-                      >
-                        ↗
-                      </span>
-                    </a>
-                  </footer>
-                </article>
-              ))}
-            </div>
-          </div>
+          <ClientsPartnerProfiles partners={clientPartners} />
         </section>
       </div>
 
@@ -825,6 +618,6 @@ export default function ClientsPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }
