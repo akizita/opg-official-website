@@ -3,10 +3,13 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { RichTextBlock } from '@/lib/content/page-documents'
 import { createClient } from '@/lib/supabase/server'
 
+import { featuredArticles } from './featured-articles'
+
 export type Author = {
   id: string
   slug: string
   full_name: string
+  role_title?: string | null
   bio: string | null
   avatar_url: string | null
   is_active: boolean
@@ -49,6 +52,10 @@ export type Article = {
     | 'archived'
   seo_title: string | null
   seo_description: string | null
+  source_url: string | null
+  view_count: number | null
+  like_count: number | null
+  comment_count: number | null
   created_by: string | null
   updated_by: string | null
   published_by: string | null
@@ -251,6 +258,10 @@ export async function getPublishedArticles(options?: {
       status: row.status as Article['status'],
       seo_title: row.seo_title as string | null,
       seo_description: row.seo_description as string | null,
+      source_url: (row.source_url as string | null) ?? null,
+      view_count: (row.view_count as number | null) ?? null,
+      like_count: (row.like_count as number | null) ?? null,
+      comment_count: (row.comment_count as number | null) ?? null,
       created_by: row.created_by as string | null,
       updated_by: row.updated_by as string | null,
       published_by: row.published_by as string | null,
@@ -274,6 +285,11 @@ export async function getArticleBySlug(
   slug: string,
   client?: SupabaseClient,
 ): Promise<Article | null> {
+  const featuredArticle = featuredArticles.find(
+    (article) => article.slug === slug,
+  )
+  if (featuredArticle) return featuredArticle
+
   const supabase = client ?? (await createClient())
   const { data, error } = await supabase
     .from('articles')
@@ -313,6 +329,10 @@ export async function getArticleBySlug(
     status: data.status,
     seo_title: data.seo_title,
     seo_description: data.seo_description,
+    source_url: data.source_url ?? null,
+    view_count: data.view_count ?? null,
+    like_count: data.like_count ?? null,
+    comment_count: data.comment_count ?? null,
     created_by: data.created_by,
     updated_by: data.updated_by,
     published_by: data.published_by,
