@@ -4,6 +4,7 @@ import {
   getAdminAuthDestination,
   getAdminSession,
 } from '@/lib/auth/admin-session'
+import { DESIGNATED_SUPER_ADMIN_EMAIL } from '@/lib/auth/config'
 import { getSafeAdminPath } from '@/lib/auth/redirect'
 import { createClient } from '@/lib/supabase/server'
 
@@ -36,9 +37,19 @@ export async function GET(request: NextRequest) {
     const session = await getAdminSession()
 
     if (!session) {
+      const { data: claimsData } = await supabase.auth.getClaims()
+      const email =
+        typeof claimsData?.claims?.email === 'string'
+          ? claimsData.claims.email.trim().toLowerCase()
+          : ''
       await supabase.auth.signOut()
       return NextResponse.redirect(
-        new URL('/admin/sign-in?notice=unauthorized', requestUrl.origin),
+        new URL(
+          email === DESIGNATED_SUPER_ADMIN_EMAIL
+            ? '/admin/sign-in?notice=super-admin-provisioning'
+            : '/admin/sign-in?notice=unauthorized',
+          requestUrl.origin,
+        ),
       )
     }
 

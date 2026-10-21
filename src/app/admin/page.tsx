@@ -2,8 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { signOutAction } from '@/app/admin/actions'
+import {
+  AdminAnalyticsDashboard,
+  type AnalyticsPeriod,
+} from '@/components/admin/admin-analytics-dashboard'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/ui/status-badge'
+import { isAdminMfaRequired } from '@/lib/auth/config'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import {
   canViewContent,
@@ -17,8 +22,15 @@ export const metadata: Metadata = {
   title: 'Administration',
 }
 
-export default async function AdminPage() {
+type AdminPageProps = {
+  searchParams: Promise<{ period?: string }>
+}
+
+export default async function AdminPage({ searchParams }: AdminPageProps) {
   const { profile } = await requireAdminSession({ requireAal2: true })
+  const mfaRequired = isAdminMfaRequired()
+  const { period: requestedPeriod } = await searchParams
+  const period: AnalyticsPeriod = requestedPeriod === 'week' ? 'week' : 'month'
 
   const supabase = await createClient()
   const [{ data: mvDoc }, { data: aboutDoc }] = await Promise.all([
@@ -37,6 +49,10 @@ export default async function AdminPage() {
   const hasContentAccess = canViewContent(profile.roleKey)
   const hasInquiryAccess = canViewInquiries(profile.roleKey)
   const hasSubscriberAccess = canViewSubscribers(profile.roleKey)
+
+  if (process.env.ADMIN_LEGACY_DASHBOARD !== 'true') {
+    return <AdminAnalyticsDashboard period={period} profile={profile} />
+  }
 
   return (
     <section className="admin-page">
@@ -73,7 +89,7 @@ export default async function AdminPage() {
                   </div>
                   <Link
                     className="button-link button-link--secondary"
-                    href="/admin/pages/mission-and-vision"
+                    href="/admin/pages?tab=home"
                   >
                     Edit Page →
                   </Link>
@@ -89,7 +105,7 @@ export default async function AdminPage() {
                   </div>
                   <Link
                     className="button-link button-link--secondary"
-                    href="/admin/pages/about"
+                    href="/admin/pages?tab=about"
                   >
                     Edit Page →
                   </Link>
@@ -287,8 +303,10 @@ export default async function AdminPage() {
             <p>
               Your account, assigned administrator role (
               {profile.roleDisplayName}
-              ), active status, and authenticator verification have all been
-              validated server-side with AAL2 multi-factor authentication.
+              ), and active status have been validated server-side.
+              {mfaRequired
+                ? ' AAL2 multi-factor authentication is active.'
+                : ' Authenticator verification is temporarily bypassed in development mode.'}
             </p>
           </Card>
         </div>

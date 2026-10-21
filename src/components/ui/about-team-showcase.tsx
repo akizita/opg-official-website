@@ -116,22 +116,37 @@ const BLUR_DATA_URL =
 export interface AboutTeamShowcaseProps {
   autoplay?: boolean
   autoplayDelay?: number
+  copy: Record<string, string>
 }
 
 export function AboutTeamShowcase({
   autoplay = false,
   autoplayDelay = 6000,
+  copy,
 }: AboutTeamShowcaseProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const shouldReduceMotion = useReducedMotion()
 
-  const count = TEAM_MEMBERS.length
-  const activeMember = TEAM_MEMBERS[activeIndex] || TEAM_MEMBERS[0]
+  const members = TEAM_MEMBERS.map((member, index) => {
+    const key = `teamMember${index + 1}`
+    return {
+      ...member,
+      name: copy[`${key}Name`],
+      position: copy[`${key}Position`],
+      department: copy[`${key}Department`],
+      bio: copy[`${key}Bio`],
+      experience: copy[`${key}Experience`],
+      location: copy[`${key}Location`],
+      specialty: copy[`${key}Specialty`],
+    }
+  })
+  const count = members.length
+  const activeMember = members[activeIndex] || members[0]
 
   // Two stacked preview cards behind the front card
-  const backMember1 = TEAM_MEMBERS[(activeIndex + 1) % count]
-  const backMember2 = TEAM_MEMBERS[(activeIndex + 2) % count]
+  const backMember1 = members[(activeIndex + 1) % count]
+  const backMember2 = members[(activeIndex + 2) % count]
 
   const handleNext = useCallback(() => {
     setActiveIndex((prev) => (prev + 1) % count)
@@ -211,22 +226,18 @@ export function AboutTeamShowcase({
             <header className="about-team-header">
               <div className="about-team-badge" role="text">
                 <span aria-hidden="true" className="about-team-badge__dot" />
-                <span>Our People</span>
+                <span>{copy.teamEyebrow}</span>
               </div>
 
               <h2 className="about-team-title" id="about-team-showcase-title">
-                The Leadership Driving{' '}
+                {copy.teamTitlePrefix}{' '}
                 <span className="about-team-title__accent">
-                  Global Excellence
+                  {copy.teamTitleAccent}
                 </span>
               </h2>
 
               {/* High contrast paragraph meeting WCAG AAA (>7:1) */}
-              <p className="about-team-lead">
-                Meet the leaders and domain specialists orchestrating seamless
-                cross-border recruitment, airtight compliance, and sustained
-                remote team retention.
-              </p>
+              <p className="about-team-lead">{copy.teamLead}</p>
             </header>
 
             {/* Member Details Card with Live Counter, 2-line Bio & LinkedIn Link */}
@@ -268,19 +279,14 @@ export function AboutTeamShowcase({
               </h3>
 
               {/* Subtle Warm Divider */}
-              <div
-                aria-hidden="true"
-                className="about-team-card__divider"
-              />
+              <div aria-hidden="true" className="about-team-card__divider" />
 
               {/* Person Info: Crossfade with AnimatePresence and strictly clamped height for ZERO layout shift */}
               <div className="about-team-card__person-wrap">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeMember.id}
-                    initial={
-                      shouldReduceMotion ? false : { opacity: 0, y: 6 }
-                    }
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={
                       shouldReduceMotion ? undefined : { opacity: 0, y: -6 }
@@ -300,9 +306,7 @@ export function AboutTeamShowcase({
                     </p>
 
                     {/* 2-line bio: line-clamp-2 guarantees no layout shift */}
-                    <p className="about-team-card__bio">
-                      {activeMember.bio}
-                    </p>
+                    <p className="about-team-card__bio">{activeMember.bio}</p>
 
                     <dl className="about-team-card__credentials">
                       <div>
@@ -396,7 +400,7 @@ export function AboutTeamShowcase({
                   role="tablist"
                   aria-label="Team member slides"
                 >
-                  {TEAM_MEMBERS.map((member, idx) => {
+                  {members.map((member, idx) => {
                     const isActive = idx === activeIndex
                     return (
                       <button
@@ -518,9 +522,7 @@ export function AboutTeamShowcase({
                     }
                   }}
                   initial={
-                    shouldReduceMotion
-                      ? false
-                      : { opacity: 0.85, scale: 0.96 }
+                    shouldReduceMotion ? false : { opacity: 0.85, scale: 0.96 }
                   }
                   animate={{
                     opacity: 1,
@@ -531,9 +533,7 @@ export function AboutTeamShowcase({
                     zIndex: 30,
                   }}
                   exit={
-                    shouldReduceMotion
-                      ? undefined
-                      : { opacity: 0, scale: 0.94 }
+                    shouldReduceMotion ? undefined : { opacity: 0, scale: 0.94 }
                   }
                   transition={springTransition}
                 >

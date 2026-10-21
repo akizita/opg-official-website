@@ -24,6 +24,7 @@ export type PartnerProfileItem = {
 
 type ClientsPartnerProfilesProps = {
   partners: readonly PartnerProfileItem[]
+  copy: Record<string, string>
 }
 
 // Target progress fractions for 5 steps when clicking in the index
@@ -113,6 +114,7 @@ function XIcon() {
 
 export function ClientsPartnerProfiles({
   partners,
+  copy,
 }: ClientsPartnerProfilesProps) {
   const [activeStep, setActiveStep] = useState(0)
   const activeStepRef = useRef(activeStep)
@@ -352,15 +354,11 @@ export function ClientsPartnerProfiles({
                   aria-hidden="true"
                   className="clients-sticky-directory__badge-dot"
                 />
-                <span>Partner Profiles</span>
+                <span>{copy.directoryEyebrow}</span>
               </div>
-              <h2 id="clients-directory-heading">
-                Client Directory &amp; Operational Footprint
-              </h2>
+              <h2 id="clients-directory-heading">{copy.directoryTitle}</h2>
               <p className="clients-sticky-directory__lead">
-                A comprehensive view of each partner company, their industry
-                specialization, the dedicated offshore pod powering their
-                growth, and direct links to connect with their brand.
+                {copy.directoryLead}
               </p>
             </header>
 

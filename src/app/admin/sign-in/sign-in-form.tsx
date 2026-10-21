@@ -7,7 +7,7 @@ import { initialAuthFormState } from '@/lib/auth/form-state'
 
 import { signInAction, signInWithGoogleAction } from './actions'
 
-export function SignInForm() {
+export function SignInForm({ defaultEmail = '' }: { defaultEmail?: string }) {
   const [state, action] = useActionState(signInAction, initialAuthFormState)
 
   return (
@@ -51,6 +51,7 @@ export function SignInForm() {
           <span>Email address</span>
           <input
             autoComplete="username"
+            defaultValue={defaultEmail}
             id="admin-email"
             inputMode="email"
             name="email"

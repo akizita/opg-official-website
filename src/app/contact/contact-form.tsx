@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { submitContactAction } from '@/app/contact/actions'
 import type { InquiryIntent } from '@/lib/content/inquiries'
 
-export function ContactForm() {
+export function ContactForm({ copy }: { copy: Record<string, string> }) {
   const [intent, setIntent] = useState<InquiryIntent>('client')
   const [isPending, startTransition] = useTransition()
   const [result, setResult] = useState<{
@@ -68,9 +68,11 @@ export function ContactForm() {
           role="tab"
           type="button"
         >
-          <span className="contact-intent-tab__title">Client Inquiry</span>
+          <span className="contact-intent-tab__title">
+            {copy.clientTabTitle}
+          </span>
           <span className="contact-intent-tab__desc">
-            For organizations seeking global talent solutions
+            {copy.clientTabDescription}
           </span>
         </button>
         <button
@@ -80,9 +82,11 @@ export function ContactForm() {
           role="tab"
           type="button"
         >
-          <span className="contact-intent-tab__title">Talent Inquiry</span>
+          <span className="contact-intent-tab__title">
+            {copy.talentTabTitle}
+          </span>
           <span className="contact-intent-tab__desc">
-            For professionals & candidate questions
+            {copy.talentTabDescription}
           </span>
         </button>
       </div>
@@ -93,10 +97,9 @@ export function ContactForm() {
           className="contact-talent-notice"
         >
           <p>
-            <strong>Looking for open positions?</strong> Browse active roles and
-            apply directly through our official portal on the{' '}
+            {copy.talentNotice}{' '}
             <Link className="inline-link" href="/careers">
-              Careers Page →
+              {copy.careersLink}
             </Link>
           </p>
         </aside>
@@ -104,20 +107,17 @@ export function ContactForm() {
 
       {result?.success ? (
         <div aria-live="polite" className="contact-success-card" role="status">
-          <div className="contact-success-badge">✓ Inquiry Received</div>
-          <h3>Thank you for reaching out</h3>
+          <div className="contact-success-badge">{copy.successBadge}</div>
+          <h3>{copy.successTitle}</h3>
           <p>
-            Your inquiry has been received by our global operations team.
+            {copy.successBody}
             {result.referenceId && (
               <span className="contact-reference">
-                Reference ID: <strong>{result.referenceId}</strong>
+                {copy.referenceLabel} <strong>{result.referenceId}</strong>
               </span>
             )}
           </p>
-          <p className="contact-sla-note">
-            Our team reviews all incoming inquiries and will respond within 1
-            business day.
-          </p>
+          <p className="contact-sla-note">{copy.successSla}</p>
           <button
             className="button button--secondary"
             onClick={() => {
@@ -126,7 +126,7 @@ export function ContactForm() {
             }}
             type="button"
           >
-            Submit Another Inquiry
+            {copy.againButton}
           </button>
         </div>
       ) : (
@@ -161,7 +161,7 @@ export function ContactForm() {
 
           <div className="form-field">
             <label htmlFor="fullName">
-              Full Name <span className="field-required">*</span>
+              {copy.nameLabel} <span className="field-required">*</span>
             </label>
             <input
               aria-describedby={
@@ -173,7 +173,7 @@ export function ContactForm() {
               id="fullName"
               maxLength={100}
               name="fullName"
-              placeholder="e.g. Eleanor Vance"
+              placeholder={copy.namePlaceholder}
               required
               type="text"
             />
@@ -186,7 +186,7 @@ export function ContactForm() {
 
           <div className="form-field">
             <label htmlFor="email">
-              Work Email Address <span className="field-required">*</span>
+              {copy.emailLabel} <span className="field-required">*</span>
             </label>
             <input
               aria-describedby={
@@ -198,7 +198,7 @@ export function ContactForm() {
               id="email"
               maxLength={254}
               name="email"
-              placeholder="e.g. eleanor.vance@enterprise.com"
+              placeholder={copy.emailPlaceholder}
               required
               type="email"
             />
@@ -211,7 +211,7 @@ export function ContactForm() {
 
           <div className="form-field">
             <label htmlFor="subject">
-              Subject <span className="field-required">*</span>
+              {copy.subjectLabel} <span className="field-required">*</span>
             </label>
             <input
               aria-describedby={
@@ -224,8 +224,8 @@ export function ContactForm() {
               name="subject"
               placeholder={
                 intent === 'client'
-                  ? 'e.g. Scaling Engineering Pods in APAC'
-                  : 'e.g. Candidate Operations Inquiry'
+                  ? copy.clientSubjectPlaceholder
+                  : copy.talentSubjectPlaceholder
               }
               required
               type="text"
@@ -239,7 +239,7 @@ export function ContactForm() {
 
           <div className="form-field">
             <label htmlFor="message">
-              Message <span className="field-required">*</span>
+              {copy.messageLabel} <span className="field-required">*</span>
             </label>
             <textarea
               aria-describedby={
@@ -250,13 +250,12 @@ export function ContactForm() {
               id="message"
               maxLength={5000}
               name="message"
-              placeholder="Please provide details about your organization, team requirements, timeline, or query..."
+              placeholder={copy.messagePlaceholder}
               required
               rows={5}
             />
             <span className="field-hint" id="message-hint">
-              Minimum 20 characters. Include organizational scope or technical
-              objectives.
+              {copy.messageHint}
             </span>
             {result?.errors?.message && (
               <p className="field-error" id="message-error">
@@ -279,10 +278,9 @@ export function ContactForm() {
                 type="checkbox"
               />
               <span>
-                I agree to the processing of my contact information in
-                accordance with OPG&apos;s{' '}
+                {copy.privacyPrefix}{' '}
                 <Link className="inline-link" href="/privacy" target="_blank">
-                  Privacy Notice
+                  {copy.privacyLink}
                 </Link>
                 . <span className="field-required">*</span>
               </span>
@@ -300,11 +298,9 @@ export function ContactForm() {
               disabled={isPending}
               type="submit"
             >
-              {isPending ? 'Sending Inquiry...' : 'Submit Inquiry'}
+              {isPending ? copy.sendingButton : copy.submitButton}
             </button>
-            <p className="field-hint contact-sla-badge">
-              ⚡ SLA: Response typically within 1 business day
-            </p>
+            <p className="field-hint contact-sla-badge">{copy.formSla}</p>
           </div>
         </form>
       )}

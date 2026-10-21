@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 import { getSupabaseBrowserEnv } from '@/lib/supabase/env'
@@ -35,6 +36,20 @@ export function createStaticClient() {
         return []
       },
       setAll() {},
+    },
+  })
+}
+
+export function createPrivilegedClient() {
+  const secretKey = process.env.SUPABASE_SECRET_KEY?.trim()
+  if (!secretKey) return null
+
+  const { url } = getSupabaseBrowserEnv()
+
+  return createSupabaseClient(url, secretKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
     },
   })
 }

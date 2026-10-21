@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import { GeistSans } from 'geist/font/sans'
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 
 import { SiteFooter } from '@/components/site/site-footer'
 import { SiteHeader } from '@/components/site/site-header'
+import { SiteVisitTracker } from '@/components/site/site-visit-tracker'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 
 import './globals.css'
@@ -47,6 +48,9 @@ export default function RootLayout({
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
+        <Suspense fallback={null}>
+          <SiteVisitTracker />
+        </Suspense>
         <SiteHeader />
         <main id="main-content">{children}</main>
         <SiteFooter />

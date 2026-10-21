@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 import { MissionVisionForm } from '@/app/admin/pages/mission-and-vision/mission-vision-form'
 import {
@@ -13,6 +14,7 @@ import {
   extractMissionVisionContent,
   type PageDocument,
 } from '@/lib/content/page-documents'
+import { HOME_EDITOR_DEFAULTS } from '@/lib/content/site-page-defaults'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -20,6 +22,8 @@ export const metadata: Metadata = {
 }
 
 export default async function AdminMissionVisionPage() {
+  redirect('/admin/pages?tab=home')
+
   const session = await requireAdminSession({ requireAal2: true })
   const roleKey = session.profile.roleKey
 
@@ -33,27 +37,37 @@ export default async function AdminMissionVisionPage() {
   const contentFields = extractMissionVisionContent(document?.content)
 
   const initialData = {
-    title: document?.title || 'Mission & Vision',
-    summary:
-      document?.summary ||
-      'Empowering global organizations with exceptional talent, measurable delivery, and enduring human partnerships.',
-    missionTitle: contentFields.missionTitle,
+    title: document?.title ?? HOME_EDITOR_DEFAULTS.title,
+    summary: document?.summary ?? HOME_EDITOR_DEFAULTS.summary,
+    missionTitle: document
+      ? contentFields.missionTitle
+      : HOME_EDITOR_DEFAULTS.missionTitle,
     missionBody:
-      contentFields.missionBody ||
-      'At Outsourced Pro Global, our mission is to connect ambitious enterprises with world-class talent, bridging international opportunities through integrity, transparent partnership, and operational excellence.',
-    visionTitle: contentFields.visionTitle,
+      document && contentFields.missionBody
+        ? contentFields.missionBody
+        : HOME_EDITOR_DEFAULTS.missionBody,
+    visionTitle: document
+      ? contentFields.visionTitle
+      : HOME_EDITOR_DEFAULTS.visionTitle,
     visionBody:
-      contentFields.visionBody ||
-      'We envision a global workplace where borders do not limit capability, where companies scale seamlessly with dedicated teams, and where talent flourishes in high-trust, rewarding roles.',
+      document && contentFields.visionBody
+        ? contentFields.visionBody
+        : HOME_EDITOR_DEFAULTS.visionBody,
     calloutText:
-      contentFields.calloutText ||
-      'Built on values of transparency, accountability, and sustainable partnership across all global client engagements.',
-    calloutVariant: contentFields.calloutVariant,
+      document && contentFields.calloutText
+        ? contentFields.calloutText
+        : HOME_EDITOR_DEFAULTS.calloutText,
+    calloutVariant: document
+      ? contentFields.calloutVariant
+      : HOME_EDITOR_DEFAULTS.calloutVariant,
     seoTitle: document?.seo_title || '',
     seoDescription: document?.seo_description || '',
     ogImageUrl: document?.og_image_url || '',
     canonicalUrl: document?.canonical_url || '',
     status: document?.status || 'draft',
+    updatedAt: document?.updated_at || null,
+    editorName: session.profile.displayName,
+    hasSavedDraft: document?.status === 'draft',
     version: document?.version || 1,
   }
 

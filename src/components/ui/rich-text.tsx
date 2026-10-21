@@ -1,5 +1,5 @@
 export type RichTextBlock =
-  | { type: 'paragraph'; content: string }
+  | { type: 'paragraph'; content: string; key?: string }
   | { type: 'heading'; level: 2 | 3 | 4; content: string }
   | { type: 'list'; ordered?: boolean; items: string[] }
   | { type: 'blockquote'; content: string; citation?: string }

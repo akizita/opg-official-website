@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 import { AboutForm } from '@/app/admin/pages/about/about-form'
 import {
@@ -10,6 +11,8 @@ import {
 } from '@/lib/auth/permissions'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import type { PageDocument } from '@/lib/content/page-documents'
+import { ABOUT_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
+import { ABOUT_PAGE_DEFAULTS } from '@/lib/content/site-page-defaults'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -17,6 +20,8 @@ export const metadata: Metadata = {
 }
 
 export default async function AdminAboutPage() {
+  redirect('/admin/pages?tab=about')
+
   const session = await requireAdminSession({ requireAal2: true })
   const roleKey = session.profile.roleKey
 
@@ -29,26 +34,26 @@ export default async function AdminAboutPage() {
 
   // Extract plain text paragraphs from content blocks
   let body = ''
-  if (Array.isArray(document?.content)) {
-    body = document.content
-      .filter((b) => b.type === 'paragraph')
-      .map((b) => b.content)
+  const documentContent = document?.content ?? []
+  if (Array.isArray(documentContent)) {
+    body = documentContent
+      .flatMap((b) => (b.type === 'paragraph' && !b.key ? [b.content] : []))
       .join('\n\n')
   }
 
   const initialData = {
-    title: document?.title || 'About Outsourced Pro Global',
-    summary:
-      document?.summary ||
-      'Delivering elite remote team capabilities and global talent solutions across industries.',
-    body:
-      body ||
-      'Outsourced Pro Global is a premier international talent solutions partner. We combine deep recruitment expertise with dedicated account support to deliver talent that integrates directly into your business culture.',
+    copy: getPageCopy(document?.content, ABOUT_COPY_SECTIONS),
+    title: document?.title ?? ABOUT_PAGE_DEFAULTS.title,
+    summary: document?.summary ?? ABOUT_PAGE_DEFAULTS.summary,
+    body: body || ABOUT_PAGE_DEFAULTS.body,
     seoTitle: document?.seo_title || '',
     seoDescription: document?.seo_description || '',
     ogImageUrl: document?.og_image_url || '',
     canonicalUrl: document?.canonical_url || '',
     status: document?.status || 'draft',
+    updatedAt: document?.updated_at || null,
+    editorName: session.profile.displayName,
+    hasSavedDraft: document?.status === 'draft',
     version: document?.version || 1,
   }
 

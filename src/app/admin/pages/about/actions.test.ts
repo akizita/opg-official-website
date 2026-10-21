@@ -17,6 +17,7 @@ import { revalidatePath } from 'next/cache'
 import { saveAboutAction } from '@/app/admin/pages/about/actions'
 import { getAdminSession } from '@/lib/auth/admin-session'
 import { createClient } from '@/lib/supabase/server'
+import { ABOUT_COPY_SECTIONS } from '@/lib/content/page-copy'
 
 describe('saveAboutAction server action', () => {
   beforeEach(() => {
@@ -134,13 +135,34 @@ describe('saveAboutAction server action', () => {
       title: 'About Outsourced Pro Global',
       summary: 'Executive summary of OPG.',
       body: 'Leading international remote workforce partner.',
+      ...Object.fromEntries(
+        ABOUT_COPY_SECTIONS.flatMap((section) =>
+          section.fields.map((field) => [field.key, field.defaultValue]),
+        ),
+      ),
     })
+    formData.set('card1Title', 'Updated talent card')
 
     const result = await saveAboutAction({}, formData)
 
     expect(result.success).toBe(true)
     expect(result.status).toBe('published')
     expect(result.version).toBe(3)
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: expect.arrayContaining([
+          {
+            type: 'paragraph',
+            content: 'Leading international remote workforce partner.',
+          },
+          {
+            type: 'paragraph',
+            key: 'card1Title',
+            content: 'Updated talent card',
+          },
+        ]),
+      }),
+    )
     expect(revalidatePath).toHaveBeenCalledWith('/about')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/pages/about')
   })

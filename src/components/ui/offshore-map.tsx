@@ -116,6 +116,7 @@ export interface OffshoreMapSectionProps {
   ctaHref?: string
   ctaText?: string
   className?: string
+  copy?: Record<string, string>
 }
 
 export function OffshoreMapSection({
@@ -131,6 +132,7 @@ export function OffshoreMapSection({
   ctaHref,
   ctaText,
   className = '',
+  copy,
 }: OffshoreMapSectionProps = {}) {
   const [activeRegion, setActiveRegion] = useState<string>('All')
   const shouldReduceMotion = useReducedMotion()
@@ -412,10 +414,11 @@ export function OffshoreMapSection({
             </svg>
           </div>
           <h3 className="offshore-hub__feature-heading">
-            Strategic Philippine Operations Hub
+            {copy?.networkCard1Title || 'Strategic Philippine Operations Hub'}
           </h3>
           <p className="offshore-hub__feature-text">
-            Strong cultural alignment, high English proficiency, and deep cross-functional capabilities across engineering, finance, and operations.
+            {copy?.networkCard1Body ||
+              'Strong cultural alignment, high English proficiency, and deep cross-functional capabilities across engineering, finance, and operations.'}
           </p>
         </div>
 
@@ -437,10 +440,11 @@ export function OffshoreMapSection({
             </svg>
           </div>
           <h3 className="offshore-hub__feature-heading">
-            24/7 Timezone Alignment
+            {copy?.networkCard2Title || '24/7 Timezone Alignment'}
           </h3>
           <p className="offshore-hub__feature-text">
-            Dedicated teams synchronized directly to your business hours across Australia, APAC, and global market timezones.
+            {copy?.networkCard2Body ||
+              'Dedicated teams synchronized directly to your business hours across Australia, APAC, and global market timezones.'}
           </p>
         </div>
 
@@ -464,10 +468,11 @@ export function OffshoreMapSection({
             </svg>
           </div>
           <h3 className="offshore-hub__feature-heading">
-            Turnkey Compliance & Retention
+            {copy?.networkCard3Title || 'Turnkey Compliance & Retention'}
           </h3>
           <p className="offshore-hub__feature-text">
-            End-to-end management covering contracts, local labor law compliance, dedicated hardware logistics, and sustained team retention.
+            {copy?.networkCard3Body ||
+              'End-to-end management covering contracts, local labor law compliance, dedicated hardware logistics, and sustained team retention.'}
           </p>
         </div>
       </div>
@@ -486,9 +491,7 @@ export function OffshoreMapSection({
     (isOverview ? (
       <>
         Our Global{' '}
-        <span className="offshore-hub__title-accent">
-          Offshore Network
-        </span>
+        <span className="offshore-hub__title-accent">Offshore Network</span>
       </>
     ) : (
       <>
@@ -586,21 +589,27 @@ export function OffshoreMapSection({
               {/* Quick Metrics */}
               <div className="offshore-hub__split-metrics">
                 <div className="offshore-hub__split-metric-item">
-                  <span className="offshore-hub__split-metric-val">1,000+</span>
+                  <span className="offshore-hub__split-metric-val">
+                    {copy?.networkMetric1 || '1,000+'}
+                  </span>
                   <span className="offshore-hub__split-metric-label">
-                    Placed Talents
+                    {copy?.networkMetric1Label || 'Placed Talents'}
                   </span>
                 </div>
                 <div className="offshore-hub__split-metric-item">
-                  <span className="offshore-hub__split-metric-val">7 Hubs</span>
+                  <span className="offshore-hub__split-metric-val">
+                    {copy?.networkMetric2 || '7 Hubs'}
+                  </span>
                   <span className="offshore-hub__split-metric-label">
-                    Global Reach
+                    {copy?.networkMetric2Label || 'Global Reach'}
                   </span>
                 </div>
                 <div className="offshore-hub__split-metric-item">
-                  <span className="offshore-hub__split-metric-val">98%</span>
+                  <span className="offshore-hub__split-metric-val">
+                    {copy?.networkMetric3 || '98%'}
+                  </span>
                   <span className="offshore-hub__split-metric-label">
-                    Retention
+                    {copy?.networkMetric3Label || 'Retention'}
                   </span>
                 </div>
               </div>
@@ -668,10 +677,7 @@ export function OffshoreMapSection({
         >
           {showEyebrow && (
             <div className="offshore-hub__eyebrow-badge" role="text">
-              <span
-                aria-hidden="true"
-                className="offshore-hub__eyebrow-dot"
-              />
+              <span aria-hidden="true" className="offshore-hub__eyebrow-dot" />
               <span>{resolvedEyebrow}</span>
             </div>
           )}

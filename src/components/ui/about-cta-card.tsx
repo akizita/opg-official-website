@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { ButtonLink } from '@/components/ui/button-link'
 
-export function AboutCtaCard() {
+export function AboutCtaCard({ copy }: { copy: Record<string, string> }) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [isHovered, setIsHovered] = useState(false)
@@ -80,24 +80,19 @@ export function AboutCtaCard() {
                 className="about-cta-card__eyebrow-dot"
                 aria-hidden="true"
               />
-              Work With Outsourced Pro Global
+              {copy.ctaEyebrow}
             </span>
           </div>
 
           <div className="about-cta-anim-item">
-            <h2 className="about-cta-card__title">
-              Experience the Difference Exceptional Offshore Talent Makes
-            </h2>
+            <h2 className="about-cta-card__title">{copy.ctaTitle}</h2>
           </div>
         </div>
 
         {/* Right Column: Narrative Subtext + Actions */}
         <div className="about-cta-card__col about-cta-card__col--right">
           <div className="about-cta-anim-item">
-            <p className="about-cta-card__desc">
-              Whether you are launching a dedicated offshore pod or exploring
-              your next career move, our advisors are here to guide every step.
-            </p>
+            <p className="about-cta-card__desc">{copy.ctaBody}</p>
           </div>
 
           <div className="about-cta-anim-item">
@@ -106,14 +101,14 @@ export function AboutCtaCard() {
                 className="about-pill-btn about-pill-btn--primary"
                 href="/contact"
               >
-                Partner With Us
+                {copy.ctaPrimary}
               </ButtonLink>
               <ButtonLink
                 className="about-pill-btn about-pill-btn--ghost"
                 href="/clients"
                 variant="secondary"
               >
-                Meet Our Clients
+                {copy.ctaSecondary}
               </ButtonLink>
             </div>
           </div>

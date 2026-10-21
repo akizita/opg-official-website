@@ -9,6 +9,7 @@ import {
   getAdminAuthDestination,
   getAdminSession,
 } from '@/lib/auth/admin-session'
+import { DESIGNATED_SUPER_ADMIN_EMAIL } from '@/lib/auth/config'
 import type { AuthFormState } from '@/lib/auth/form-state'
 import { createClient } from '@/lib/supabase/server'
 
@@ -77,7 +78,10 @@ export async function signInAction(
     await supabase.auth.signOut()
     return {
       status: 'error',
-      message: 'This account does not have active OPG administrator access.',
+      message:
+        email === DESIGNATED_SUPER_ADMIN_EMAIL
+          ? 'The OPG account was authenticated, but its Super Admin profile has not been provisioned in Supabase yet.'
+          : 'This account does not have active OPG administrator access.',
     }
   }
 

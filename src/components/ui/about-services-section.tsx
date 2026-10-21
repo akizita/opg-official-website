@@ -127,11 +127,13 @@ const SERVICE_FEATURES: ServiceFeature[] = [
   },
 ]
 
-const PROCESS_LABELS = ['Sourcing', 'Vetting', 'Onboarding', 'Retention']
-
 const STEP_TARGET_PROGRESS = [0.1, 0.33, 0.55, 0.78]
 
-export function AboutServicesSection() {
+export function AboutServicesSection({
+  copy,
+}: {
+  copy: Record<string, string>
+}) {
   const [activeStep, setActiveStep] = useState(0)
   const trackRef = useRef<HTMLDivElement>(null)
 
@@ -216,7 +218,20 @@ export function AboutServicesSection() {
     })
   }, [])
 
-  const activeFeature = SERVICE_FEATURES[activeStep]
+  const features = SERVICE_FEATURES.map((feature, index) => {
+    const number = index + 1
+    return {
+      ...feature,
+      tag: copy[`service${number}Tag`],
+      title: copy[`service${number}Title`],
+      summary: copy[`service${number}Summary`],
+      bullets: copy[`service${number}Bullets`].split(/\r?\n/).filter(Boolean),
+    }
+  })
+  const activeFeature = features[activeStep]
+  const processLabels = features.map(
+    (_, index) => copy[`service${index + 1}Label`],
+  )
 
   return (
     <section
@@ -231,7 +246,7 @@ export function AboutServicesSection() {
             <div className="about-services-hero__text">
               <div className="about-services-anim-item">
                 <div className="about-services-section__badge">
-                  <span className="eyebrow">What We Offer</span>
+                  <span className="eyebrow">{copy.servicesEyebrow}</span>
                 </div>
               </div>
               <div className="about-services-anim-item">
@@ -239,18 +254,15 @@ export function AboutServicesSection() {
                   className="about-services-section__title"
                   id="about-services-heading"
                 >
-                  Our Core Service:{' '}
+                  {copy.servicesTitlePrefix}{' '}
                   <span className="about-services-section__title-accent">
-                    Talent Acquisition
+                    {copy.servicesTitleAccent}
                   </span>
                 </h2>
               </div>
               <div className="about-services-anim-item">
                 <p className="about-services-section__lead">
-                  We connect ambitious companies with world-class offshore
-                  professionals. From specialist contributors to integrated pods,
-                  our recruitment framework removes administrative friction and
-                  builds teams designed to last.
+                  {copy.servicesLead}
                 </p>
               </div>
             </div>
@@ -282,12 +294,11 @@ export function AboutServicesSection() {
               <div className="container about-sticky-process__inner">
                 <header className="about-sticky-process__intro">
                   <p className="about-sticky-process__eyebrow">
-                    How our process works
+                    {copy.processEyebrow}
                   </p>
-                  <h3>A clear path from first search to long-term success.</h3>
+                  <h3>{copy.processTitle}</h3>
                   <p className="about-sticky-process__lead">
-                    One connected workflow, four focused stages, and a dedicated OPG
-                    team keeping every handoff clear.
+                    {copy.processLead}
                   </p>
                 </header>
 
@@ -308,10 +319,12 @@ export function AboutServicesSection() {
                           aria-label="Process stages"
                           className="about-sticky-process__tabs"
                         >
-                          {PROCESS_LABELS.map((label, index) => (
+                          {processLabels.map((label, index) => (
                             <button
                               aria-pressed={activeStep === index}
-                              className={activeStep === index ? 'is-active' : ''}
+                              className={
+                                activeStep === index ? 'is-active' : ''
+                              }
                               key={label}
                               onClick={() => scrollToStep(index)}
                               type="button"
@@ -332,8 +345,7 @@ export function AboutServicesSection() {
                           </span>
                           <div>
                             <span>
-                              Stage{' '}
-                              {String(activeStep + 1).padStart(2, '0')}
+                              Stage {String(activeStep + 1).padStart(2, '0')}
                             </span>
                             <strong>{activeFeature.tag}</strong>
                           </div>
@@ -347,9 +359,7 @@ export function AboutServicesSection() {
                               className="about-sticky-process__preview-row"
                               key={bullet}
                             >
-                              <span>
-                                {String(index + 1).padStart(2, '0')}
-                              </span>
+                              <span>{String(index + 1).padStart(2, '0')}</span>
                               <strong>{bullet}</strong>
                               <i aria-hidden="true" />
                             </div>
@@ -372,7 +382,7 @@ export function AboutServicesSection() {
                     role="region"
                     aria-label="Process details"
                   >
-                    {SERVICE_FEATURES.map((item, index) => (
+                    {features.map((item, index) => (
                       <div
                         aria-hidden={activeStep !== index}
                         className={`about-sticky-process__detail${activeStep === index ? ' is-active' : ''}`}
@@ -405,7 +415,7 @@ export function AboutServicesSection() {
                     className="about-pill-btn about-pill-btn--primary"
                     href="/contact"
                   >
-                    Explore Our Services
+                    {copy.processCta}
                   </ButtonLink>
                 </div>
               </div>

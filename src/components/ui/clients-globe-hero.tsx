@@ -5,6 +5,7 @@ import createGlobe from 'cobe'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ButtonLink } from '@/components/ui/button-link'
 import { ClientLogo, type ClientLogoType } from '@/components/ui/client-logo'
+import { CLIENT_PAGE_DEFAULTS } from '@/lib/content/client-page'
 
 // Strategic offshore hubs and client locations
 const GLOBE_MARKERS: Array<{
@@ -90,13 +91,26 @@ const CLIENT_CARDS_DATA: Array<{
   },
 ]
 
-export function ClientsGlobeHero() {
+export function ClientsGlobeHero({
+  title = CLIENT_PAGE_DEFAULTS.title,
+  summary = CLIENT_PAGE_DEFAULTS.summary,
+  copy,
+}: {
+  title?: string
+  summary?: string
+  copy: Record<string, string>
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const pointerInteracting = useRef<number | null>(null)
   const pointerInteractionMovement = useRef(0)
   const phiRef = useRef(0)
   const shouldReduceMotion = useReducedMotion()
   const [hasWebGLFailed, setHasWebGLFailed] = useState(false)
+  const featuredCards = CLIENT_CARDS_DATA.map((card, index) => ({
+    ...card,
+    name: copy[`partner${index + 1}Name`] || card.name,
+    domain: copy[`partner${index + 1}HeroDomain`] || card.domain,
+  }))
 
   // Drag interaction handlers
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -126,7 +140,10 @@ export function ClientsGlobeHero() {
 
     const canvas = canvasRef.current
     let width = 0
-    let globe: { update: (opts: Record<string, unknown>) => void; destroy: () => void } | null = null
+    let globe: {
+      update: (opts: Record<string, unknown>) => void
+      destroy: () => void
+    } | null = null
     let animId = 0
     let isInViewport = false
     let isPageVisible = !document.hidden
@@ -259,7 +276,7 @@ export function ClientsGlobeHero() {
               role="text"
             >
               <span aria-hidden="true" className="clients-hero__badge-pulse" />
-              <span>Strategic Partnerships &amp; Global Reach</span>
+              <span>{copy.heroBadge}</span>
             </motion.div>
 
             <motion.h1
@@ -267,42 +284,59 @@ export function ClientsGlobeHero() {
               className="clients-hero__title"
               initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                duration: 0.65,
+                delay: 0.1,
+                ease: [0.16, 1, 0.3, 1],
+              }}
             >
-              Powering Global Teams for{' '}
-              <span className="clients-hero__title-accent">Industry Leaders.</span>
+              {title === CLIENT_PAGE_DEFAULTS.title ? (
+                <>
+                  Powering Global Teams for{' '}
+                  <span className="clients-hero__title-accent">
+                    Industry Leaders.
+                  </span>
+                </>
+              ) : (
+                title
+              )}
             </motion.h1>
 
             <motion.p
               className="clients-hero__lead"
               initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: 0.18,
+                ease: [0.16, 1, 0.3, 1],
+              }}
             >
-              We collaborate with high-growth technology scaleups, healthcare
-              innovators, and multinational enterprises to deploy dedicated,
-              rigorously vetted offshore pods that deliver immediate impact and
-              sustainable ROI.
+              {summary}
             </motion.p>
 
             <motion.div
               className="clients-hero__actions"
               initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                duration: 0.55,
+                delay: 0.25,
+                ease: [0.16, 1, 0.3, 1],
+              }}
             >
               <ButtonLink
                 href="/contact"
                 variant="primary"
                 className="clients-hero__btn-primary"
               >
-                Partner with Us
+                {copy.heroCta}
               </ButtonLink>
               <a
                 href="#client-logos-heading"
                 className="clients-hero__btn-secondary"
               >
-                Explore Client Work ↓
+                {copy.heroSecondary}
               </a>
             </motion.div>
           </div>
@@ -343,7 +377,7 @@ export function ClientsGlobeHero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
         >
-          {CLIENT_CARDS_DATA.map((client) => (
+          {featuredCards.map((client) => (
             <a
               key={client.id}
               href={`#${client.id}`}

@@ -22,6 +22,13 @@ The UI-only foundation runs without Supabase credentials. Authentication, conten
 
 The visible Home page is a draft layout with dual audience paths. Navigation destinations are clearly marked, non-indexable placeholders for wireframe review. `SITE_INDEXABLE` defaults to `false`: do not enable it until the production content, legal, SEO, and conversion-flow acceptance checks are complete.
 
+### Administrator access
+
+- `recruitment@opglobal.com.hk` is the designated Super Admin identity. After Supabase Auth authenticates that address, the database trigger automatically creates or repairs its active `super_admin` profile.
+- Apply pending migrations to the development or staging database before testing a new administrator identity. The application also performs a server-only fallback provision when `SUPABASE_SECRET_KEY` is configured.
+- Authenticator verification is bypassed only when the app is running with `NODE_ENV=development`. Set `ADMIN_MFA_REQUIRED=true` to exercise MFA locally. Production and test builds always require AAL2 MFA.
+- The development bypass removes only the second-factor step. A valid Supabase password or Google session is still required.
+
 ## Quality checks
 
 Run the same checks used by continuous integration:
@@ -71,6 +78,7 @@ Versioned migrations are located in `supabase/migrations/`:
 - `20260916041717_consolidate_admin_profile_select_policy.sql` — Refined profile read policy.
 - `20260918060000_core_content_model.sql` — Core content schemas, publishing states, inquiries, and search.
 - `20260918061000_media_storage_buckets.sql` — `draft-media` (private) and `public-media` (public) buckets and RLS policies.
+- `20261007120000_recruitment_super_admin.sql` — Automatic Super Admin provisioning for the OPG recruitment mailbox.
 
 To verify migrations locally or against staging using pgTAP:
 

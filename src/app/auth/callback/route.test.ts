@@ -74,9 +74,13 @@ describe('GET /auth/callback', () => {
 
   it('redirects with unauthorized and signs out if user has no admin session', async () => {
     const exchangeCodeForSession = vi.fn().mockResolvedValue({ error: null })
+    const getClaims = vi.fn().mockResolvedValue({
+      data: { claims: { email: 'unknown@example.com' } },
+      error: null,
+    })
     const signOut = vi.fn().mockResolvedValue({ error: null })
     vi.mocked(createClient).mockResolvedValue({
-      auth: { exchangeCodeForSession, signOut },
+      auth: { exchangeCodeForSession, getClaims, signOut },
     } as unknown as Awaited<ReturnType<typeof createClient>>)
     vi.mocked(getAdminSession).mockResolvedValue(null)
 
@@ -91,6 +95,29 @@ describe('GET /auth/callback', () => {
     )
   })
 
+  it('reports missing provisioning for the designated OPG account', async () => {
+    const exchangeCodeForSession = vi.fn().mockResolvedValue({ error: null })
+    const getClaims = vi.fn().mockResolvedValue({
+      data: { claims: { email: 'recruitment@opglobal.com.hk' } },
+      error: null,
+    })
+    const signOut = vi.fn().mockResolvedValue({ error: null })
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { exchangeCodeForSession, getClaims, signOut },
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+    vi.mocked(getAdminSession).mockResolvedValue(null)
+
+    const request = new NextRequest(
+      'http://localhost:3000/auth/callback?code=valid-code',
+    )
+    const response = await GET(request)
+
+    expect(signOut).toHaveBeenCalled()
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/admin/sign-in?notice=super-admin-provisioning',
+    )
+  })
+
   it('redirects to /admin/mfa/enroll if session requires MFA enrollment', async () => {
     const exchangeCodeForSession = vi.fn().mockResolvedValue({ error: null })
     vi.mocked(createClient).mockResolvedValue({
@@ -101,8 +128,8 @@ describe('GET /auth/callback', () => {
       nextLevel: 'aal1',
       profile: {
         id: 'admin-1',
-        email: 'aki.zita@freedompropertyinvestors.com.au',
-        displayName: 'Aki Zita',
+        email: 'recruitment@opglobal.com.hk',
+        displayName: 'OPG',
         roleKey: 'super_admin',
         roleDisplayName: 'Super Admin',
         isActive: true,
@@ -129,8 +156,8 @@ describe('GET /auth/callback', () => {
       nextLevel: 'aal2',
       profile: {
         id: 'admin-1',
-        email: 'aki.zita@freedompropertyinvestors.com.au',
-        displayName: 'Aki Zita',
+        email: 'recruitment@opglobal.com.hk',
+        displayName: 'OPG',
         roleKey: 'super_admin',
         roleDisplayName: 'Super Admin',
         isActive: true,

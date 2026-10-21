@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { ButtonLink } from '@/components/ui/button-link'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -8,37 +9,58 @@ import {
   getPublishedJobOpenings,
   type WorkArrangement,
 } from '@/lib/content/careers'
+import { CAREERS_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
+import type { PageDocument } from '@/lib/content/page-documents'
+import { getPageVisualConfig } from '@/lib/content/page-visual'
+import { getVisiblePageDocument } from '@/lib/content/visible-page-document'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
+import { createClient } from '@/lib/supabase/server'
 
 export const revalidate = 3600 // 1 hour ISR
 
 type CareersPageProps = {
   searchParams: Promise<{
     arrangement?: string
+    opgPreview?: string
   }>
 }
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const { data: doc } = await supabase
+    .from('page_documents')
+    .select(
+      'title, seo_title, seo_description, canonical_url, og_image_url, status',
+    )
+    .eq('slug', 'careers')
+    .eq('status', 'published')
+    .maybeSingle<PageDocument>()
   const siteUrl = getSiteUrl()
   const pageUrl = new URL('/careers', siteUrl).toString()
 
   return {
-    title: `Careers & Opportunities | ${siteConfig.shortName}`,
+    title:
+      doc?.seo_title ||
+      doc?.title ||
+      `Careers & Opportunities | ${siteConfig.shortName}`,
     description:
+      doc?.seo_description ||
       'Join our global team of engineers, operations specialists, and consultants. Explore high-impact remote and flexible career opportunities with Outsourced Pro Global.',
     alternates: {
-      canonical: pageUrl,
+      canonical: doc?.canonical_url || pageUrl,
     },
     robots: {
       index: isSiteIndexable(),
       follow: isSiteIndexable(),
     },
     openGraph: {
-      title: `Careers at ${siteConfig.name}`,
+      title: doc?.seo_title || `Careers at ${siteConfig.name}`,
       description:
+        doc?.seo_description ||
         'Join our global distributed team. Competitive compensation, career growth, and flexible remote work.',
-      url: pageUrl,
+      url: doc?.canonical_url || pageUrl,
       type: 'website',
+      images: doc?.og_image_url ? [{ url: doc.og_image_url }] : undefined,
     },
   }
 }
@@ -47,47 +69,38 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
   const params = await searchParams
   const arrangement = (params.arrangement as WorkArrangement) || undefined
 
-  const openings = await getPublishedJobOpenings({
-    workArrangement: arrangement,
-  })
+  const supabase = await createClient()
+  const [doc, openings] = await Promise.all([
+    getVisiblePageDocument(supabase, 'careers', params.opgPreview === '1'),
+    getPublishedJobOpenings({ workArrangement: arrangement }),
+  ])
+  const copy = getPageCopy(doc?.content, CAREERS_COPY_SECTIONS)
 
   return (
     <main id="main-content" className="careers-page container">
+      <PageVisualRuntime page="careers" config={getPageVisualConfig(doc?.content)} />
       <header className="careers-hero">
-        <h1 className="careers-hero__title">Build Your Career with OPG</h1>
-        <p className="careers-hero__lead">
-          We connect high-performing professionals with forward-thinking global
-          enterprises. Enjoy remote flexibility, competitive compensation, and
-          meaningful career acceleration.
-        </p>
+        <h1 className="careers-hero__title">{copy.heroTitle}</h1>
+        <p className="careers-hero__lead">{copy.heroLead}</p>
       </header>
 
       {/* Benefits grid */}
       <section className="careers-benefits" aria-labelledby="why-join-title">
         <h2 id="why-join-title" className="sr-only">
-          Why Join OPG
+          {copy.benefitsTitle}
         </h2>
         <div className="careers-benefits__grid">
           <Card className="careers-benefit-card">
-            <h3>🌍 Truly Global & Flexible</h3>
-            <p>
-              Work from anywhere with asynchronous-friendly practices and
-              respect for work-life integration.
-            </p>
+            <h3>{copy.benefit1Title}</h3>
+            <p>{copy.benefit1Body}</p>
           </Card>
           <Card className="careers-benefit-card">
-            <h3>🚀 High-Impact Enterprise Projects</h3>
-            <p>
-              Collaborate directly with top-tier multinational clients on modern
-              tech stacks and mission-critical workflows.
-            </p>
+            <h3>{copy.benefit2Title}</h3>
+            <p>{copy.benefit2Body}</p>
           </Card>
           <Card className="careers-benefit-card">
-            <h3>📈 Accelerated Professional Growth</h3>
-            <p>
-              Continuous skill development, technical mentorship, and clear
-              pathways to leadership roles.
-            </p>
+            <h3>{copy.benefit3Title}</h3>
+            <p>{copy.benefit3Body}</p>
           </Card>
         </div>
       </section>
@@ -96,10 +109,11 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
       <section className="careers-openings" aria-labelledby="open-roles-title">
         <div className="section-heading">
           <div>
-            <h2 id="open-roles-title">Open Positions ({openings.length})</h2>
+            <h2 id="open-roles-title">
+              {copy.openingsTitle} ({openings.length})
+            </h2>
             <p style={{ color: 'var(--color-ink-soft)', marginTop: '0.5rem' }}>
-              All applications are processed securely via our official talent
-              channel.
+              {copy.openingsLead}
             </p>
           </div>
 
@@ -111,28 +125,25 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
               href="/careers"
               className={`articles-filter-chip ${!arrangement ? 'articles-filter-chip--active' : ''}`}
             >
-              All Roles
+              {copy.filterAll}
             </Link>
             <Link
               href="/careers?arrangement=remote"
               className={`articles-filter-chip ${arrangement === 'remote' ? 'articles-filter-chip--active' : ''}`}
             >
-              Remote
+              {copy.filterRemote}
             </Link>
             <Link
               href="/careers?arrangement=hybrid"
               className={`articles-filter-chip ${arrangement === 'hybrid' ? 'articles-filter-chip--active' : ''}`}
             >
-              Hybrid
+              {copy.filterHybrid}
             </Link>
           </nav>
         </div>
 
         {openings.length === 0 ? (
-          <EmptyState
-            title="No open positions right now"
-            message="We do not have active openings matching your criteria at this moment. You can still send your CV to recruitment@opglobal.com.hk."
-          />
+          <EmptyState title={copy.emptyTitle} message={copy.emptyMessage} />
         ) : (
           <div className="job-openings-list">
             {openings.map((job) => (
@@ -170,10 +181,10 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Apply Now ↗
+                    {copy.applyCta}
                   </ButtonLink>
                   <ButtonLink href={`/careers/${job.slug}`} variant="secondary">
-                    View Details
+                    {copy.detailsCta}
                   </ButtonLink>
                 </div>
               </Card>

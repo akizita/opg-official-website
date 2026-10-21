@@ -1,20 +1,31 @@
 'use client'
 
-import Link from 'next/link'
 import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
 
 import {
   type AboutActionState,
   saveAboutAction,
 } from '@/app/admin/pages/about/actions'
+import {
+  CharacterCounter,
+  MediaPicker,
+  PageEditorActions,
+  PageSectionNavigator,
+  PageDetailsCard,
+  PageEditorToast,
+  SearchSnippetPreview,
+  SectionCard,
+} from '@/components/admin/page-editor-ui'
+import { PageCopyFields } from '@/components/admin/page-copy-fields'
+import { usePageEditorForm } from '@/components/admin/use-page-editor-form'
 import { Input, TextArea } from '@/components/ui/form-controls'
 import { Notice } from '@/components/ui/notice'
-import { StatusBadge } from '@/components/ui/status-badge'
 import type { DocumentStatus } from '@/lib/content/page-documents'
+import { ABOUT_COPY_SECTIONS } from '@/lib/content/page-copy'
 
 type AboutFormProps = {
   initialData: {
+    copy: Record<string, string>
     body: string
     canonicalUrl: string
     ogImageUrl: string
@@ -23,6 +34,11 @@ type AboutFormProps = {
     status: DocumentStatus
     summary: string
     title: string
+    updatedAt: string | null
+    editorName: string
+    currentEditorName?: string
+    hasSavedDraft: boolean
+    publishedAt?: string | null
     version: number
   }
   permissions: {
@@ -31,32 +47,6 @@ type AboutFormProps = {
     canRequestChanges: boolean
     canSubmitReview: boolean
   }
-}
-
-function ActionButton({
-  children,
-  className = 'button',
-  intent,
-  pendingLabel,
-}: {
-  children: string
-  className?: string
-  intent: string
-  pendingLabel: string
-}) {
-  const { pending } = useFormStatus()
-
-  return (
-    <button
-      className={className}
-      disabled={pending}
-      name="intent"
-      type="submit"
-      value={intent}
-    >
-      {pending ? pendingLabel : children}
-    </button>
-  )
 }
 
 export function AboutForm({ initialData, permissions }: AboutFormProps) {
@@ -70,30 +60,80 @@ export function AboutForm({ initialData, permissions }: AboutFormProps) {
 
   const currentStatus = state.status ?? initialData.status
   const currentVersion = state.version ?? initialData.version
+  const {
+    dirty,
+    discard,
+    draft,
+    fieldErrors,
+    formRef,
+    handleBlur,
+    handleInput,
+    handleSubmit,
+    saveDraftRef,
+    saveState,
+  } = usePageEditorForm({
+    initialValues: {
+      ...initialData.copy,
+      body: initialData.body,
+      canonicalUrl: initialData.canonicalUrl,
+      ogImageUrl: initialData.ogImageUrl,
+      seoDescription: initialData.seoDescription,
+      seoTitle: initialData.seoTitle,
+      summary: initialData.summary,
+      title: initialData.title,
+    },
+    result: state,
+    status: currentStatus,
+    tab: 'about',
+    updatedAt: state.updatedAt ?? initialData.updatedAt,
+    version: currentVersion,
+  })
+
+  const successMessage =
+    state.status === 'published'
+      ? 'Page published'
+      : state.status === 'in_review'
+        ? 'Submitted for review'
+        : state.status === 'unpublished'
+          ? 'Page unpublished'
+          : 'Draft saved'
+  const copyNavigator = ABOUT_COPY_SECTIONS.map((section) => ({
+    id: section.id,
+    label: section.title,
+    status: section.fields.every((field) =>
+      (draft as Record<string, string>)[field.key]?.trim(),
+    )
+      ? ('complete' as const)
+      : ('incomplete' as const),
+  }))
 
   return (
-    <form action={formAction} className="content-form">
-      {/* Live Status Header */}
-      <div className="content-form__status-bar">
-        <div className="content-form__status-meta">
-          <span className="status-meta__label">Current Status:</span>
-          <StatusBadge status={currentStatus} />
-          <span className="status-meta__version">
-            Version <strong>{currentVersion}</strong>
-          </span>
-        </div>
-        <div className="content-form__status-actions">
-          <Link
-            className="button-link button-link--secondary"
-            href="/about"
-            target="_blank"
-          >
-            View Live Page ↗
-          </Link>
-        </div>
-      </div>
-
-      {state.message && (
+    <form
+      action={formAction}
+      className="content-form pages-content-form"
+      onBlurCapture={handleBlur}
+      onInput={handleInput}
+      onSubmit={handleSubmit}
+      ref={formRef}
+    >
+      <button
+        hidden
+        name="intent"
+        ref={saveDraftRef}
+        type="submit"
+        value="save_draft"
+      />
+      {state.success && state.updatedAt ? (
+        <PageEditorToast key={state.updatedAt} message={successMessage} />
+      ) : null}
+      {state.message && !state.success && (
+        <PageEditorToast
+          key={state.message}
+          message={state.message}
+          variant="error"
+        />
+      )}
+      {state.message && !state.success && (
         <Notice
           title={state.success ? 'Success' : 'Attention'}
           variant={state.success ? 'success' : 'error'}
@@ -102,155 +142,265 @@ export function AboutForm({ initialData, permissions }: AboutFormProps) {
         </Notice>
       )}
 
-      {/* Basic Page Info */}
-      <fieldset className="form-fieldset">
-        <legend className="form-legend">Page Title & Summary</legend>
-        <div className="form-group">
-          <Input
-            defaultValue={initialData.title}
-            id="title"
-            label="Page Title *"
-            maxLength={200}
-            name="title"
-            required
+      <div className="pages-content-form__layout">
+        <PageSectionNavigator
+          page="about"
+          sections={[
+            {
+              id: 'about-hero',
+              label: 'Hero',
+              status:
+                fieldErrors.title || fieldErrors.summary
+                  ? 'error'
+                  : draft.title.trim()
+                    ? 'complete'
+                    : 'incomplete',
+            },
+            copyNavigator[0],
+            {
+              id: 'about-narrative',
+              label: 'Who we are',
+              status: fieldErrors.body
+                ? 'error'
+                : draft.body.trim()
+                  ? 'complete'
+                  : 'incomplete',
+            },
+            ...copyNavigator.slice(1),
+            {
+              id: 'about-seo',
+              label: 'SEO & social',
+              status:
+                draft.seoTitle.trim() && draft.seoDescription.trim()
+                  ? 'complete'
+                  : 'optional',
+            },
+          ]}
+        />
+        <div className="pages-content-form__main">
+          <SectionCard
+            complete={Boolean(draft.title.trim())}
+            description="Set the title and introductory copy shown in the public About hero."
+            eyebrow="Page content"
+            icon="essentials"
+            id="about-hero"
+            errorCount={
+              Number(Boolean(fieldErrors.title || state.errors?.title)) +
+              Number(Boolean(fieldErrors.summary || state.errors?.summary))
+            }
+            summary={draft.title.trim() || 'Add a page title'}
+            title="Hero"
+          >
+            <div className="form-group">
+              <Input
+                defaultValue={initialData.title}
+                id="about-title"
+                label="Page title"
+                maxLength={200}
+                name="title"
+                required
+                aria-invalid={Boolean(fieldErrors.title || state.errors?.title)}
+              />
+              {(fieldErrors.title || state.errors?.title) && (
+                <p className="form-error" role="alert">
+                  {fieldErrors.title || state.errors?.title}
+                </p>
+              )}
+              <div className="field-meta">
+                <span>Primary page heading</span>
+                <CharacterCounter current={draft.title.length} maximum={200} />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <TextArea
+                defaultValue={initialData.summary}
+                id="about-summary"
+                label="Intro summary"
+                maxLength={500}
+                name="summary"
+                rows={3}
+                aria-invalid={Boolean(
+                  fieldErrors.summary || state.errors?.summary,
+                )}
+              />
+              {(fieldErrors.summary || state.errors?.summary) && (
+                <p className="form-error" role="alert">
+                  {fieldErrors.summary || state.errors?.summary}
+                </p>
+              )}
+              <div className="field-meta">
+                <span>Appears below the page heading</span>
+                <CharacterCounter
+                  current={draft.summary.length}
+                  maximum={500}
+                />
+              </div>
+            </div>
+          </SectionCard>
+          <PageCopyFields
+            section={ABOUT_COPY_SECTIONS[0]}
+            initial={initialData.copy}
+            draft={draft}
+            errors={{ ...state.errors, ...fieldErrors }}
           />
-          {state.errors?.title && (
-            <p className="form-error" role="alert">
-              {state.errors.title}
-            </p>
-          )}
-        </div>
 
-        <div className="form-group">
-          <TextArea
-            defaultValue={initialData.summary}
-            id="summary"
-            label="Executive Summary Deck"
-            maxLength={500}
-            name="summary"
-            rows={3}
-          />
-          {state.errors?.summary && (
-            <p className="form-error" role="alert">
-              {state.errors.summary}
-            </p>
-          )}
-        </div>
-      </fieldset>
-
-      {/* Narrative Body */}
-      <fieldset className="form-fieldset">
-        <legend className="form-legend">About Us Narrative</legend>
-        <div className="form-group">
-          <TextArea
-            defaultValue={initialData.body}
-            id="body"
-            label="Story & Capabilities (Paragraphs separated by blank lines)"
-            name="body"
-            required
-            rows={8}
-          />
-        </div>
-      </fieldset>
-
-      {/* SEO & Previews */}
-      <fieldset className="form-fieldset">
-        <legend className="form-legend">Search & Social Sharing</legend>
-        <div className="form-group">
-          <Input
-            defaultValue={initialData.seoTitle}
-            id="seoTitle"
-            label="SEO Meta Title"
-            maxLength={100}
-            name="seoTitle"
-          />
-        </div>
-
-        <div className="form-group">
-          <TextArea
-            defaultValue={initialData.seoDescription}
-            id="seoDescription"
-            label="SEO Meta Description"
-            maxLength={250}
-            name="seoDescription"
-            rows={2}
-          />
-        </div>
-
-        <div className="form-group">
-          <Input
-            defaultValue={initialData.ogImageUrl}
-            id="ogImageUrl"
-            label="OG Social Image URL"
-            name="ogImageUrl"
-          />
-        </div>
-
-        <div className="form-group">
-          <Input
-            defaultValue={initialData.canonicalUrl}
-            id="canonicalUrl"
-            label="Canonical URL Override"
-            name="canonicalUrl"
-          />
-        </div>
-      </fieldset>
-
-      {/* Action Bar */}
-      <div className="content-form__actions">
-        <div className="actions-left">
-          {permissions.canEditDraft && (
-            <ActionButton intent="save_draft" pendingLabel="Saving draft...">
-              Save Draft
-            </ActionButton>
-          )}
-
-          {permissions.canSubmitReview && currentStatus !== 'in_review' && (
-            <ActionButton
-              className="button button--secondary"
-              intent="submit_review"
-              pendingLabel="Submitting..."
-            >
-              Submit for Review
-            </ActionButton>
-          )}
-
-          {permissions.canRequestChanges && currentStatus === 'in_review' && (
-            <ActionButton
-              className="button button--secondary"
-              intent="request_changes"
-              pendingLabel="Returning..."
-            >
-              Request Changes
-            </ActionButton>
-          )}
-        </div>
-
-        <div className="actions-right">
-          {permissions.canPublish && (
-            <>
-              {currentStatus === 'published' ? (
-                <ActionButton
-                  className="button button--secondary"
-                  intent="unpublish"
-                  pendingLabel="Unpublishing..."
-                >
-                  Unpublish
-                </ActionButton>
+          <SectionCard
+            complete={Boolean(draft.body.trim())}
+            description="Maintain the company story and capabilities backed by the current About document."
+            eyebrow="Page content"
+            icon="content"
+            id="about-narrative"
+            errorCount={Number(Boolean(fieldErrors.body))}
+            summary={
+              draft.body.trim()
+                ? `${draft.body.trim().split(/\s+/).length} words of story`
+                : 'Story missing'
+            }
+            title="Who we are"
+          >
+            <div className="form-group">
+              <TextArea
+                defaultValue={initialData.body}
+                id="about-body"
+                label="Company story and capabilities"
+                name="body"
+                required
+                rows={3}
+                aria-invalid={Boolean(fieldErrors.body)}
+              />
+              {fieldErrors.body ? (
+                <p className="form-error" role="alert">
+                  {fieldErrors.body}
+                </p>
               ) : null}
+              <div className="field-meta">
+                <span>Separate paragraphs with a blank line</span>
+              </div>
+            </div>
+          </SectionCard>
 
-              <ActionButton
-                className="button button--primary"
-                intent="publish"
-                pendingLabel="Publishing..."
-              >
-                {currentStatus === 'published'
-                  ? 'Update Live Page'
-                  : 'Publish Page'}
-              </ActionButton>
-            </>
-          )}
+          {ABOUT_COPY_SECTIONS.slice(1).map((section) => (
+            <PageCopyFields
+              key={section.id}
+              section={section}
+              initial={initialData.copy}
+              draft={draft}
+              errors={{ ...state.errors, ...fieldErrors }}
+            />
+          ))}
+
+          <SectionCard
+            complete={Boolean(
+              draft.seoTitle.trim() && draft.seoDescription.trim(),
+            )}
+            description="Control optional search-result and social-sharing overrides."
+            eyebrow="Optional content"
+            icon="search"
+            id="about-seo"
+            summary={draft.seoTitle.trim() || 'Search title uses page title'}
+            title="SEO and social metadata"
+          >
+            <div className="content-form__field-grid">
+              <div className="form-group">
+                <Input
+                  defaultValue={initialData.seoTitle}
+                  id="about-seoTitle"
+                  label="SEO title"
+                  maxLength={100}
+                  name="seoTitle"
+                />
+                <div className="field-meta">
+                  <span>Recommended: 50–60 characters · Max 100</span>
+                  <CharacterCounter
+                    current={draft.seoTitle.length}
+                    maximum={100}
+                    recommended={60}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <TextArea
+                  defaultValue={initialData.seoDescription}
+                  id="about-seoDescription"
+                  label="SEO description"
+                  maxLength={250}
+                  name="seoDescription"
+                  rows={2}
+                />
+                <div className="field-meta">
+                  <span>Recommended: 140–155 characters · Max 250</span>
+                  <CharacterCounter
+                    current={draft.seoDescription.length}
+                    maximum={250}
+                    recommended={155}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <Input
+                  defaultValue={initialData.ogImageUrl}
+                  id="about-ogImageUrl"
+                  label="Social image URL"
+                  name="ogImageUrl"
+                />
+                <MediaPicker
+                  inputId="about-ogImageUrl"
+                  value={draft.ogImageUrl}
+                />
+              </div>
+
+              <div className="form-group">
+                <Input
+                  defaultValue={initialData.canonicalUrl}
+                  id="about-canonicalUrl"
+                  label="Canonical URL"
+                  name="canonicalUrl"
+                />
+              </div>
+            </div>
+            <SearchSnippetPreview
+              description={draft.seoDescription || draft.summary}
+              title={draft.seoTitle || draft.title}
+              url={draft.canonicalUrl || '/about'}
+            />
+          </SectionCard>
+          <PageEditorActions
+            dirty={dirty}
+            onDiscard={discard}
+            permissions={permissions}
+            status={currentStatus}
+          />
         </div>
+
+        <PageDetailsCard
+          dirty={dirty}
+          hasSavedDraft={
+            state.status ? state.status === 'draft' : initialData.hasSavedDraft
+          }
+          onRetry={() =>
+            window.dispatchEvent(
+              new CustomEvent('opg-editor-retry', { detail: { tab: 'about' } }),
+            )
+          }
+          saveState={saveState}
+          status={currentStatus}
+          version={currentVersion}
+          editorName={
+            state.success
+              ? (initialData.currentEditorName ?? initialData.editorName)
+              : initialData.editorName
+          }
+          publishedAt={
+            state.success && state.status === 'published'
+              ? (state.updatedAt ?? null)
+              : (initialData.publishedAt ?? null)
+          }
+          publishedUrl="/about"
+          updatedAt={state.updatedAt ?? initialData.updatedAt}
+        />
       </div>
     </form>
   )

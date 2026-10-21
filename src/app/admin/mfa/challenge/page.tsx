@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 
 import { signOutAction } from '@/app/admin/actions'
 import { AuthPanel } from '@/components/admin/auth-panel'
+import { isAdminMfaRequired } from '@/lib/auth/config'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 
 import { MfaChallengeForm } from './mfa-challenge-form'
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export default async function MfaChallengePage() {
   const session = await requireAdminSession()
 
+  if (!isAdminMfaRequired()) redirect('/admin')
   if (session.currentLevel === 'aal2') redirect('/admin')
   if (session.nextLevel !== 'aal2') redirect('/admin/mfa/enroll')
 

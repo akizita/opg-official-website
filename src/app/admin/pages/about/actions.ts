@@ -8,11 +8,18 @@ import {
   canRequestChanges,
   canSubmitReview,
 } from '@/lib/auth/permissions'
+import { isAdminMfaRequired } from '@/lib/auth/config'
 import { getAdminSession } from '@/lib/auth/admin-session'
 import {
   type DocumentStatus,
+  type RichTextBlock,
   validatePageDocumentInput,
 } from '@/lib/content/page-documents'
+import {
+  ABOUT_COPY_SECTIONS,
+  pageCopyBlocks,
+  readPageCopy,
+} from '@/lib/content/page-copy'
 import { logger } from '@/lib/logger'
 import { createClient } from '@/lib/supabase/server'
 
@@ -38,7 +45,7 @@ export async function saveAboutAction(
     }
   }
 
-  if (session.currentLevel !== 'aal2') {
+  if (isAdminMfaRequired() && session.currentLevel !== 'aal2') {
     return {
       success: false,
       message: 'Two-factor authentication (MFA) verification required.',
@@ -119,15 +126,24 @@ export async function saveAboutAction(
   const rawSeoDescription = formData.get('seoDescription')
   const rawOgImageUrl = formData.get('ogImageUrl')
   const rawCanonicalUrl = formData.get('canonicalUrl')
+  const pageCopy = readPageCopy(formData, ABOUT_COPY_SECTIONS)
+  if (Object.keys(pageCopy.errors).length) {
+    return {
+      success: false,
+      errors: pageCopy.errors,
+      message: Object.values(pageCopy.errors)[0],
+    }
+  }
 
   const paragraphs = rawBody
     .split(/\n\n+/)
     .map((p) => p.trim())
     .filter(Boolean)
-  const contentBlocks = paragraphs.map((p) => ({
+  const contentBlocks: RichTextBlock[] = paragraphs.map((p) => ({
     type: 'paragraph' as const,
     content: p,
   }))
+  contentBlocks.push(...pageCopyBlocks(pageCopy.values))
 
   const validation = validatePageDocumentInput({
     title: rawTitle,
@@ -227,6 +243,7 @@ export async function saveAboutAction(
   })
 
   revalidatePath('/about')
+  revalidatePath('/admin/pages')
   revalidatePath('/admin/pages/about')
   revalidatePath('/sitemap.xml')
 

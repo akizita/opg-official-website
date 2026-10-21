@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 
 import { AuthPanel } from '@/components/admin/auth-panel'
 import {
+  DESIGNATED_SUPER_ADMIN_EMAIL,
+  isAdminMfaRequired,
+} from '@/lib/auth/config'
+import {
   getAdminAuthDestination,
   getAdminSession,
 } from '@/lib/auth/admin-session'
@@ -24,10 +28,11 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   if (session) redirect(getAdminAuthDestination(session))
 
   const { notice } = await searchParams
+  const mfaRequired = isAdminMfaRequired()
 
   return (
     <AuthPanel
-      description="Use the account issued by an OPG Super Admin. Public registration is disabled."
+      description={`Use an approved OPG administrator account. The main OPG account (${DESIGNATED_SUPER_ADMIN_EMAIL}) is assigned the Super Admin role.`}
       eyebrow="OPG administration"
       title="Sign in"
     >
@@ -55,10 +60,17 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           This Google account does not have active OPG administrator access.
         </p>
       ) : null}
-      <SignInForm />
+      {notice === 'super-admin-provisioning' ? (
+        <p className="form-message form-message--error" role="alert">
+          The OPG Google account was authenticated, but its Super Admin profile
+          has not been provisioned in the connected Supabase project yet.
+        </p>
+      ) : null}
+      <SignInForm defaultEmail={DESIGNATED_SUPER_ADMIN_EMAIL} />
       <p className="auth-panel__note">
-        Access is restricted to invited OPG administrators and protected by an
-        authenticator app.
+        {mfaRequired
+          ? 'Access is restricted to approved OPG administrators and protected by an authenticator app.'
+          : 'Development mode: authenticator verification is temporarily bypassed. Password or Google authentication is still required.'}
       </p>
     </AuthPanel>
   )

@@ -8,6 +8,7 @@ import {
   canRequestChanges,
   canSubmitReview,
 } from '@/lib/auth/permissions'
+import { isAdminMfaRequired } from '@/lib/auth/config'
 import { getAdminSession } from '@/lib/auth/admin-session'
 import {
   buildMissionVisionBlocks,
@@ -39,7 +40,7 @@ export async function saveMissionVisionAction(
     }
   }
 
-  if (session.currentLevel !== 'aal2') {
+  if (isAdminMfaRequired() && session.currentLevel !== 'aal2') {
     return {
       success: false,
       message: 'Two-factor authentication (MFA) verification required.',
@@ -241,6 +242,7 @@ export async function saveMissionVisionAction(
 
   // Revalidate ISR cache for public pages and admin view
   revalidatePath('/mission-and-vision')
+  revalidatePath('/admin/pages')
   revalidatePath('/admin/pages/mission-and-vision')
   revalidatePath('/sitemap.xml')
 

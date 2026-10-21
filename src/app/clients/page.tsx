@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 
+import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { BlogShareButtons } from '@/components/ui/blog-share-buttons'
 import { ButtonLink } from '@/components/ui/button-link'
 import type { ClientLogoType } from '@/components/ui/client-logo'
@@ -18,7 +19,16 @@ import {
   getPublishedTestimonials,
   type Testimonial,
 } from '@/lib/content/clients'
+import {
+  CLIENT_PAGE_DEFAULTS,
+  extractClientPageContent,
+} from '@/lib/content/client-page'
+import type { PageDocument } from '@/lib/content/page-documents'
+import { CLIENTS_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
+import { getPageVisualConfig } from '@/lib/content/page-visual'
+import { getVisiblePageDocument } from '@/lib/content/visible-page-document'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
+import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -221,29 +231,54 @@ const clientTestimonials: readonly ClientTestimonialItem[] = [
   },
 ]
 
-export function generateMetadata(): Metadata {
+function ArticleListItem({ text }: { text: string }) {
+  const separator = text.indexOf(': ')
+  if (separator < 0) return <li>{text}</li>
+  return (
+    <li>
+      <strong>{text.slice(0, separator + 1)}</strong>{' '}
+      {text.slice(separator + 2)}
+    </li>
+  )
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const { data: doc } = await supabase
+    .from('page_documents')
+    .select(
+      'title, summary, seo_title, seo_description, canonical_url, og_image_url, status',
+    )
+    .eq('slug', 'clients')
+    .eq('status', 'published')
+    .maybeSingle<PageDocument>()
   const siteUrl = getSiteUrl()
   const pageUrl = new URL('/clients', siteUrl).toString()
-  const title = `Clients & Strategic Partnerships | ${siteConfig.shortName}`
+  const title =
+    doc?.seo_title ||
+    `Clients & Strategic Partnerships | ${siteConfig.shortName}`
   const description =
+    doc?.seo_description ||
     'Discover the forward-thinking organizations that partner with Outsource Pro Global to build dedicated offshore talent pods, scale operations, and accelerate sustainable growth.'
   const indexable = isSiteIndexable()
 
   return {
     title,
     description,
-    alternates: { canonical: pageUrl },
+    alternates: { canonical: doc?.canonical_url || pageUrl },
     openGraph: {
       title,
       description,
-      url: pageUrl,
+      url: doc?.canonical_url || pageUrl,
       siteName: siteConfig.name,
       type: 'website',
+      images: doc?.og_image_url ? [{ url: doc.og_image_url }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: doc?.og_image_url ? [doc.og_image_url] : undefined,
     },
     robots: {
       index: indexable,
@@ -252,7 +287,43 @@ export function generateMetadata(): Metadata {
   }
 }
 
-export default async function ClientsPage() {
+export default async function ClientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ opgPreview?: string }>
+}) {
+  const { opgPreview } = await searchParams
+  const supabase = await createClient()
+  const doc = await getVisiblePageDocument(supabase, 'clients', opgPreview === '1')
+  const editorial = extractClientPageContent(doc?.content)
+  const copy = getPageCopy(doc?.content, CLIENTS_COPY_SECTIONS)
+  const partnerProfiles = clientPartners.map((partner, index) => {
+    const key = `partner${index + 1}`
+    return {
+      ...partner,
+      name: copy[`${key}Name`],
+      badge: copy[`${key}Badge`],
+      industry: copy[`${key}Industry`],
+      region: copy[`${key}Region`],
+      podCapability: copy[`${key}PodCapability`],
+      talentCount: copy[`${key}TalentCount`],
+      tagline: copy[`${key}Tagline`],
+      description: copy[`${key}Description`],
+    }
+  })
+  const featuredTestimonials = clientTestimonials.map((testimonial, index) => {
+    const key = `testimonial${index + 1}`
+    return {
+      ...testimonial,
+      companyName: copy[`${key}CompanyName`],
+      headline: copy[`${key}Headline`],
+      authorName: copy[`${key}AuthorName`],
+      authorRole: copy[`${key}AuthorRole`],
+      metricBadge: copy[`${key}MetricBadge`],
+      industry: copy[`${key}Industry`],
+      quote: copy[`${key}Quote`],
+    }
+  })
   let dbTestimonials: Testimonial[] = []
   try {
     dbTestimonials = await getPublishedTestimonials()
@@ -261,7 +332,7 @@ export default async function ClientsPage() {
   }
 
   const combinedTestimonials: CarouselTestimonialItem[] = [
-    ...clientTestimonials,
+    ...featuredTestimonials,
     ...dbTestimonials.map((dbItem) => ({
       id: dbItem.id,
       companyName: dbItem.author_company || 'Partner Enterprise',
@@ -280,8 +351,13 @@ export default async function ClientsPage() {
 
   return (
     <div className="clients-page">
+      <PageVisualRuntime page="clients" config={getPageVisualConfig(doc?.content)} />
       {/* 1. Enhanced Modern Hero Section with Interactive 3D Dotted Network Globe & Featured Partner Cards Dock */}
-      <ClientsGlobeHero />
+      <ClientsGlobeHero
+        title={doc?.title || CLIENT_PAGE_DEFAULTS.title}
+        summary={doc?.summary || CLIENT_PAGE_DEFAULTS.summary}
+        copy={copy}
+      />
 
       {/* 2. Unified Showcase Band: Blog Playbooks + Client Testimonials + Partner Directory */}
       <div className="clients-showcase-band">
@@ -295,24 +371,19 @@ export default async function ClientsPage() {
             <header className="clients-blog-header">
               <div className="clients-blog-meta">
                 <span className="clients-blog-meta__date">
-                  Published Autumn 2026
+                  {copy.articleDate}
                 </span>
                 <span className="clients-blog-meta__sep">—</span>
-                <span className="clients-blog-meta__read-time">5 min read</span>
+                <span className="clients-blog-meta__read-time">
+                  {copy.articleReadTime}
+                </span>
               </div>
 
               <h2 id="clients-blog-heading" className="clients-blog-title">
-                How OPG Handles Client Partnerships: Inside Our High-Touch Pod
-                Governance &amp; Client Archetypes
+                {editorial.editorialTitle}
               </h2>
 
-              <p className="clients-blog-lead">
-                In the ever-evolving distributed economy, ambitious
-                organizations must move beyond transactional staffing to
-                captivate markets and drive sustainable growth. At the heart of
-                this transformation lies the power of dedicated, high-retention
-                offshore talent pods.
-              </p>
+              <p className="clients-blog-lead">{editorial.editorialLead}</p>
             </header>
 
             {/* Widescreen Hero Featured Image Showcase */}
@@ -348,10 +419,10 @@ export default async function ClientsPage() {
                     </div>
                     <div className="clients-blog-author-info">
                       <span className="clients-blog-author-name">
-                        OPG Strategic Advisory
+                        {copy.authorName}
                       </span>
                       <span className="clients-blog-author-role">
-                        Global Pod Operations
+                        {copy.authorRole}
                       </span>
                     </div>
                   </div>
@@ -377,17 +448,16 @@ export default async function ClientsPage() {
                   </div>
                   <div className="clients-blog-sidebar-card__body">
                     <span className="clients-blog-sidebar-card__date">
-                      OCTOBER 2026 — 4 MIN READ
+                      {copy.relatedDate}
                     </span>
                     <h4 className="clients-blog-sidebar-card__title">
-                      The Future of Dedicated Talent: Pod Economics &amp;
-                      Retention Playbooks
+                      {copy.relatedTitle}
                     </h4>
                     <Link
                       href="/articles"
                       className="clients-blog-sidebar-card__btn"
                     >
-                      Read Now
+                      {copy.relatedCta}
                     </Link>
                   </div>
                 </div>
@@ -395,21 +465,27 @@ export default async function ClientsPage() {
                 {/* At-a-Glance Partnership Stats */}
                 <div className="clients-blog-sidebar-stats">
                   <div className="clients-blog-stat-item">
-                    <span className="clients-blog-stat-val">98%</span>
+                    <span className="clients-blog-stat-val">
+                      {copy.stat1Value}
+                    </span>
                     <span className="clients-blog-stat-lbl">
-                      Partner Retention
+                      {copy.stat1Label}
                     </span>
                   </div>
                   <div className="clients-blog-stat-item">
-                    <span className="clients-blog-stat-val">4+ Hrs</span>
+                    <span className="clients-blog-stat-val">
+                      {copy.stat2Value}
+                    </span>
                     <span className="clients-blog-stat-lbl">
-                      Daily Timezone Overlap
+                      {copy.stat2Label}
                     </span>
                   </div>
                   <div className="clients-blog-stat-item">
-                    <span className="clients-blog-stat-val">14 Days</span>
+                    <span className="clients-blog-stat-val">
+                      {copy.stat3Value}
+                    </span>
                     <span className="clients-blog-stat-lbl">
-                      Zero-Friction Ramp
+                      {copy.stat3Label}
                     </span>
                   </div>
                 </div>
@@ -418,59 +494,21 @@ export default async function ClientsPage() {
               {/* Right Column: Editorial Article Body */}
               <div className="clients-blog-content">
                 <p className="clients-blog-paragraph clients-blog-paragraph--lead">
-                  In the modern digital landscape, businesses must stay ahead of
-                  the curve to captivate their target audience and drive
-                  operational expansion. Enter Outsource Pro Global—a dedicated
-                  operating partner that empowers founders and department
-                  leaders to scale their vision with unprecedented velocity and
-                  precision. In this playbook, we explore how our pod model is
-                  revolutionizing offshore management and why it has become the
-                  tool of choice for market leaders.
+                  {copy.articleIntro}
                 </p>
 
-                <h3 className="clients-blog-h3">
-                  The Power of OPG: Unleashing Operational Velocity
-                </h3>
+                <h3 className="clients-blog-h3">{copy.articleSection1Title}</h3>
                 <p className="clients-blog-paragraph">
-                  OPG is more than just a remote staffing agency; it is an
-                  integrated operational platform that merges rigorous vetting,
-                  hands-on governance, and culture alignment into a seamless
-                  workflow. Here is how Outsource Pro Global handles client
-                  partnerships:
+                  {copy.articleSection1Body}
                 </p>
 
                 <ol className="clients-blog-feature-list">
-                  <li>
-                    <strong>Dedicated Pod Delivery Leads:</strong> Every client
-                    is paired with an embedded Pod Delivery Lead who manages
-                    daily ceremonies, resolves logistical blockers, and
-                    guarantees continuous communication alignment between
-                    onshore stakeholders and offshore specialists.
-                  </li>
-                  <li>
-                    <strong>Synchronized Timezone Overlap:</strong> In a
-                    fast-paced market, real-time collaboration is
-                    non-negotiable. We configure a guaranteed 4-hour core
-                    overlap with your primary operating timezone (US, UK,
-                    Australasia, or EMEA), eliminating frustrating 24-hour
-                    feedback delays.
-                  </li>
-                  <li>
-                    <strong>Custom Workflows &amp; Tooling Integration:</strong>{' '}
-                    With OPG, adding high-caliber specialists to your existing
-                    stack is effortless. Our pods embed natively into your
-                    Slack, Jira, GitHub, Linear, and internal ERP systems
-                    without forcing you to adapt to rigid vendor software.
-                  </li>
-                  <li>
-                    <strong>
-                      Transparent Governance &amp; Bi-Weekly KPI Reviews:
-                    </strong>{' '}
-                    Real-time metric transparency allows for dynamic iteration.
-                    We provide bi-weekly sprint dashboards tracking velocity,
-                    accuracy, and SLA adherence, reinforced by quarterly
-                    executive reviews.
-                  </li>
+                  {copy.articleSection1Items
+                    .split(/\r?\n/)
+                    .filter(Boolean)
+                    .map((item, index) => (
+                      <ArticleListItem key={index} text={item} />
+                    ))}
                 </ol>
 
                 {/* Secondary Featured Visual Ribbon Banner */}
@@ -484,49 +522,18 @@ export default async function ClientsPage() {
                   />
                 </div>
 
-                <h3 className="clients-blog-h3">
-                  Who Are Our Clients? The Anatomy of an OPG Partner
-                </h3>
+                <h3 className="clients-blog-h3">{copy.articleSection2Title}</h3>
                 <p className="clients-blog-paragraph">
-                  We are deeply intentional about the organizations we partner
-                  with. OPG builds dedicated teams for businesses where talent
-                  quality, security discipline, and operational longevity
-                  directly impact enterprise valuation:
+                  {copy.articleSection2Body}
                 </p>
 
                 <ol className="clients-blog-feature-list">
-                  <li>
-                    <strong>High-Growth Technology &amp; SaaS:</strong>{' '}
-                    Venture-backed scaleups scaling distributed engineering
-                    pods, automated QA, cloud DevOps, and technical support
-                    without Silicon Valley burn rates.
-                  </li>
-                  <li>
-                    <strong>Digital Health &amp; Telehealth Innovators:</strong>{' '}
-                    Healthcare networks requiring HIPAA-compliant 24/7 care
-                    coordination, patient triage support, and compassionate
-                    clinical workflow management.
-                  </li>
-                  <li>
-                    <strong>Fintech &amp; Asset Management Platforms:</strong>{' '}
-                    Regulated financial firms that require strict SOC 2
-                    compliance, quantitative modeling, AML/KYC verification, and
-                    algorithmic settlement operations.
-                  </li>
-                  <li>
-                    <strong>Omnichannel E-Commerce &amp; Logistics:</strong>{' '}
-                    High-volume marketplace brands needing 24/7 catalog feeds,
-                    multi-hub vendor reconciliation, and global customer
-                    retention.
-                  </li>
-                  <li>
-                    <strong>
-                      Multinational Consultancies &amp; Shared Services:
-                    </strong>{' '}
-                    Corporate advisory firms seeking automated business
-                    intelligence, financial modeling, and resilient shared
-                    operating pipelines.
-                  </li>
+                  {copy.articleSection2Items
+                    .split(/\r?\n/)
+                    .filter(Boolean)
+                    .map((item, index) => (
+                      <ArticleListItem key={index} text={item} />
+                    ))}
                 </ol>
               </div>
             </div>
@@ -541,16 +548,12 @@ export default async function ClientsPage() {
           <div className="container">
             <div className="clients-section-heading clients-section-heading--centered clients-testimonials-heading">
               <p className="eyebrow eyebrow--gold">
-                Verified Executive Endorsements
+                {copy.testimonialsEyebrow}
               </p>
               <h2 id="clients-testimonials-heading">
-                Hear from Brands That Trust Us
+                {copy.testimonialsTitle}
               </h2>
-              <p>
-                Our clients&rsquo; success stories showcase the value we bring
-                to every project. Here&rsquo;s what they have to say about
-                working with us.
-              </p>
+              <p>{copy.testimonialsLead}</p>
             </div>
           </div>
         </section>
@@ -568,7 +571,7 @@ export default async function ClientsPage() {
           className="clients-directory"
           aria-labelledby="clients-directory-heading"
         >
-          <ClientsPartnerProfiles partners={clientPartners} />
+          <ClientsPartnerProfiles partners={partnerProfiles} copy={copy} />
         </section>
 
         {/* 3. Conversion CTA: Continuous dotted field with a soft transition */}
@@ -581,26 +584,22 @@ export default async function ClientsPage() {
               <div className="clients-cta__copy">
                 <div className="clients-cta__eyebrow-row">
                   <span aria-hidden="true" />
-                  <p className="eyebrow eyebrow--light">Build With OPG</p>
+                  <p className="eyebrow eyebrow--light">{copy.ctaEyebrow}</p>
                   <span aria-hidden="true" />
                 </div>
-                <h2>Ready to Build Your Dedicated Offshore Team?</h2>
-                <p>
-                  Whether you need specialized software engineers, 24/7 customer
-                  support champions, or compliance professionals, OPG designs
-                  bespoke offshore pods ready to deliver from day one.
-                </p>
+                <h2>{copy.ctaTitle}</h2>
+                <p>{copy.ctaBody}</p>
               </div>
               <div className="clients-cta__actions">
                 <ButtonLink href="/contact" className="clients-cta__button">
-                  Start a Conversation
+                  {copy.ctaPrimary}
                 </ButtonLink>
                 <ButtonLink
-                  href="/services"
+                  href="/about#what-we-offer"
                   variant="secondary"
                   className="clients-cta__button clients-cta__button--secondary"
                 >
-                  Explore Pod Services
+                  {copy.ctaSecondary}
                 </ButtonLink>
               </div>
             </div>

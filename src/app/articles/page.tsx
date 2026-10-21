@@ -2,12 +2,18 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 
+import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Pagination } from '@/components/ui/pagination'
 import type { Article } from '@/lib/content/articles'
 import { getPublishedArticles } from '@/lib/content/articles'
 import { featuredArticles } from '@/lib/content/featured-articles'
+import { ARTICLES_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
+import type { PageDocument } from '@/lib/content/page-documents'
+import { getPageVisualConfig } from '@/lib/content/page-visual'
+import { getVisiblePageDocument } from '@/lib/content/visible-page-document'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
+import { createClient } from '@/lib/supabase/server'
 
 export const revalidate = 3600
 
@@ -17,6 +23,7 @@ type ArticlesPageProps = {
   searchParams: Promise<{
     page?: string
     category?: string
+    opgPreview?: string
   }>
 }
 
@@ -86,25 +93,40 @@ function Engagement({
   )
 }
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const { data: doc } = await supabase
+    .from('page_documents')
+    .select(
+      'title, seo_title, seo_description, canonical_url, og_image_url, status',
+    )
+    .eq('slug', 'articles')
+    .eq('status', 'published')
+    .maybeSingle<PageDocument>()
   const siteUrl = getSiteUrl()
   const pageUrl = new URL('/articles', siteUrl).toString()
 
   return {
-    title: `Articles & Industry Insights | ${siteConfig.shortName}`,
+    title:
+      doc?.seo_title ||
+      doc?.title ||
+      `Articles & Industry Insights | ${siteConfig.shortName}`,
     description:
+      doc?.seo_description ||
       'People stories, leadership perspectives, and practical insights from Outsourced Pro Global.',
-    alternates: { canonical: pageUrl },
+    alternates: { canonical: doc?.canonical_url || pageUrl },
     robots: {
       index: isSiteIndexable(),
       follow: isSiteIndexable(),
     },
     openGraph: {
-      title: `Articles & Insights | ${siteConfig.name}`,
+      title: doc?.seo_title || `Articles & Insights | ${siteConfig.name}`,
       description:
+        doc?.seo_description ||
         'Stories and perspectives on talent, career growth, and building exceptional global teams.',
-      url: pageUrl,
+      url: doc?.canonical_url || pageUrl,
       type: 'website',
+      images: doc?.og_image_url ? [{ url: doc.og_image_url }] : undefined,
     },
   }
 }
@@ -116,11 +138,12 @@ export default async function ArticlesPage({
   const currentPage = Math.max(1, Number.parseInt(params.page || '1', 10) || 1)
   const categorySlug = params.category || undefined
 
-  const databaseData = await getPublishedArticles({
-    page: 1,
-    pageSize: 50,
-    categorySlug,
-  })
+  const supabase = await createClient()
+  const [doc, databaseData] = await Promise.all([
+    getVisiblePageDocument(supabase, 'articles', params.opgPreview === '1'),
+    getPublishedArticles({ page: 1, pageSize: 50, categorySlug }),
+  ])
+  const copy = getPageCopy(doc?.content, ARTICLES_COPY_SECTIONS)
 
   const editorialArticles = featuredArticles.filter(
     (article) =>
@@ -147,18 +170,15 @@ export default async function ArticlesPage({
 
   return (
     <div className="articles-page">
+      <PageVisualRuntime page="articles" config={getPageVisualConfig(doc?.content)} />
       <div className="articles-page__glow" aria-hidden="true" />
       <div className="articles-page__container">
-        <h1 className="sr-only">OPG articles and industry insights</h1>
+        <h1 className="sr-only">{copy.pageTitle}</h1>
 
         {articles.length === 0 ? (
           <EmptyState
-            title="No articles found"
-            message={
-              categorySlug
-                ? 'No articles match this category yet. Explore another topic or check back soon.'
-                : 'Our editorial team is preparing new stories. Please check back shortly.'
-            }
+            title={copy.emptyTitle}
+            message={categorySlug ? copy.emptyCategory : copy.emptyAll}
           />
         ) : (
           <>
@@ -180,7 +200,7 @@ export default async function ArticlesPage({
                   </div>
                   <div className="articles-feature-card__content">
                     <span className="articles-feature-card__label">
-                      Featured perspective
+                      {copy.featuredLabel}
                     </span>
                     <h2>{featuredArticle.title}</h2>
                     <p>{featuredArticle.excerpt}</p>
@@ -199,7 +219,7 @@ export default async function ArticlesPage({
                   aria-labelledby="latest-articles-title"
                 >
                   <div className="articles-latest__header">
-                    <h2 id="latest-articles-title">Latest stories</h2>
+                    <h2 id="latest-articles-title">{copy.latestTitle}</h2>
                   </div>
 
                   <div className="articles-latest__list">
@@ -235,13 +255,10 @@ export default async function ArticlesPage({
             >
               <div className="articles-collection__header">
                 <div>
-                  <p>People & perspectives</p>
-                  <h2 id="articles-collection-title">Stories worth sharing</h2>
+                  <p>{copy.collectionEyebrow}</p>
+                  <h2 id="articles-collection-title">{copy.collectionTitle}</h2>
                 </div>
-                <p>
-                  Real experiences, practical lessons, and the people shaping
-                  work at OPG.
-                </p>
+                <p>{copy.collectionLead}</p>
               </div>
 
               <div className="articles-grid">

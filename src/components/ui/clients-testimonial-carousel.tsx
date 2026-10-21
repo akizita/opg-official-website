@@ -55,8 +55,6 @@ export function ClientsTestimonialCarousel({
   const [enableTransition, setEnableTransition] = useState(false)
   const [containerWidth, setContainerWidth] = useState(0)
   const [isMounted, setIsMounted] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
-  const [isInViewport, setIsInViewport] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const isNavigatingRef = useRef(false)
@@ -94,38 +92,23 @@ export function ClientsTestimonialCarousel({
     }
   }, [])
 
-  // Avoid carousel updates and compositor work while the section is offscreen.
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container || typeof IntersectionObserver === 'undefined') {
-      setIsInViewport(true)
-      return
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsInViewport(entry.isIntersecting),
-      { rootMargin: '120px 0px', threshold: 0.05 },
-    )
-    observer.observe(container)
-    return () => observer.disconnect()
-  }, [])
-
   // Calculate card width and track translation offset
   const width = containerWidth || 1200
-  const isMobile = width < 768
-  const isTablet = width >= 768 && width < 1120
+  const isMobile = width < 640
+  const isTablet = width >= 640 && width < 1024
 
-  let cardWidth = 900
+  let cardWidth = 840
   if (isMobile) {
-    cardWidth = Math.min(width - 32, 460)
+    cardWidth = Math.max(300, width - 40)
   } else if (isTablet) {
-    cardWidth = Math.min(width * 0.84, 700)
+    cardWidth = Math.min(width * 0.78, 700)
   } else {
-    // Desktop: a more prominent editorial card with adjacent testimonials still visible.
-    cardWidth = Math.min(Math.max(780, width * 0.58), 920)
+    // Desktop: generous card size matching inspo
+    cardWidth = Math.min(width * 0.62, 860)
+    cardWidth = Math.max(720, cardWidth)
   }
 
-  const cardGap = isMobile ? 14 : isTablet ? 22 : 32
+  const cardGap = isMobile ? 16 : isTablet ? 24 : 32
 
   // Center the active card in the viewport
   const trackOffset =
@@ -157,15 +140,6 @@ export function ClientsTestimonialCarousel({
     },
     [total, virtualIndex],
   )
-
-  // Autoplay with pause on hover / focus
-  useEffect(() => {
-    if (isPaused || !isInViewport || total <= 1) return
-    const timer = setInterval(() => {
-      goToNext()
-    }, 6000)
-    return () => clearInterval(timer)
-  }, [isPaused, isInViewport, total, goToNext])
 
   // Handle transition end for seamless infinite loop
   const handleTransitionEnd = useCallback(() => {
@@ -238,10 +212,6 @@ export function ClientsTestimonialCarousel({
       className="clients-testimonial-carousel"
       ref={containerRef}
       onKeyDown={handleKeyDown}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onFocus={() => setIsPaused(true)}
-      onBlur={() => setIsPaused(false)}
       tabIndex={0}
       role="region"
       aria-roledescription="carousel"
@@ -250,12 +220,14 @@ export function ClientsTestimonialCarousel({
     >
       <p id="clients-carousel-instructions" className="sr-only">
         Use the previous and next buttons or the left and right arrow keys to
-        browse testimonials. Autoplay pauses when hovered or focused.
+        browse testimonials.
       </p>
       <p className="sr-only" aria-live="polite" aria-atomic="true">
         Testimonial {realIndex + 1} of {total}:{' '}
         {testimonials[realIndex].companyName}
       </p>
+      {/* Background ambient lighting */}
+      <div className="clients-testimonial-carousel__glow" aria-hidden="true" />
 
       {/* Viewport & Slide Track */}
       <div
@@ -271,7 +243,7 @@ export function ClientsTestimonialCarousel({
             transform: `translateX(${trackOffset}px)`,
             transition:
               enableTransition && isMounted
-                ? 'transform 500ms cubic-bezier(0.16, 1, 0.3, 1)'
+                ? 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)'
                 : 'none',
           }}
         >
@@ -302,117 +274,59 @@ export function ClientsTestimonialCarousel({
                 }}
               >
                 <div className="clients-testimonial-card-inner">
-                  {/* Left Column: Brand, Industry, Stars, Headline, Quote, Author */}
+                  {/* Left Column: Brand, Headline, Quote, Feedback Giver */}
                   <div className="clients-testimonial-card-col clients-testimonial-card-col--text">
-                    {/* 1. Company Logo + Company Name & Quote Glyph */}
-                    <div className="clients-testimonial-card__header-row">
-                      <div className="clients-testimonial-card__brand">
-                        {item.logoType && (
-                          <div className="clients-testimonial-card__logo-wrap">
-                            <ClientLogo
-                              type={item.logoType}
-                              className="clients-testimonial-card__logo-svg"
-                            />
-                          </div>
-                        )}
-                        <span className="clients-testimonial-card__company-name">
-                          {item.companyName}
-                        </span>
-                      </div>
-
-                      {/* Consistent, subtle gold quote icon */}
-                      <span
-                        className="clients-testimonial-card__quote-mark"
-                        aria-hidden="true"
-                      >
-                        &ldquo;
+                    {/* Brand row: Logo + Company name (Clean without yellow pill) */}
+                    <div className="clients-testimonial-card__brand-row">
+                      {item.logoType && (
+                        <div className="clients-testimonial-card__logo-wrap">
+                          <ClientLogo
+                            type={item.logoType}
+                            className="clients-testimonial-card__logo-svg"
+                          />
+                        </div>
+                      )}
+                      <span className="clients-testimonial-card__company-name">
+                        {item.companyName}
                       </span>
                     </div>
 
-                    {/* 2. Small Industry Label */}
-                    {item.industry && (
-                      <span className="clients-testimonial-card__industry">
-                        {item.industry}
-                      </span>
-                    )}
-
-                    {/* 3. Star Rating (5 gold stars) */}
-                    <div
-                      className="clients-testimonial-card__stars"
-                      aria-label={`${item.rating || 5} out of 5 stars`}
-                    >
-                      {[...Array(item.rating || 5)].map((_, i) => (
-                        <svg
-                          key={i}
-                          className="clients-testimonial-card__star-icon"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="#f5b301"
-                          aria-hidden="true"
-                        >
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
-                      ))}
-                    </div>
-
-                    {/* 4. Headline (bold, max 2 lines) */}
+                    {/* Headline / Title */}
                     <h3 className="clients-testimonial-card__headline">
                       {item.headline || 'Exceeded All Expectations!'}
                     </h3>
 
-                    {/* 5. Quote (readable size, 1.6+ line-height, max ~6 lines) */}
+                    {/* Feedback quote body */}
                     <blockquote className="clients-testimonial-card__quote">
                       &ldquo;{item.quote}&rdquo;
                     </blockquote>
 
-                    {/* 6. Divider & Author Signature */}
-                    <div
-                      className="clients-testimonial-card__divider"
-                      aria-hidden="true"
-                    />
-
+                    {/* Feedback giver signature: Name, Position, and Company */}
                     <div className="clients-testimonial-card__giver">
                       <span className="clients-testimonial-card__giver-name">
                         {item.authorName}
                       </span>
                       <span className="clients-testimonial-card__giver-role">
-                        {item.authorRole} •{' '}
-                        <span className="clients-testimonial-card__giver-company">
-                          {item.companyName}
-                        </span>
+                        {item.authorRole} • {item.companyName}
                       </span>
                     </div>
                   </div>
 
-                  {/* Right Column: Consistent B&W Portrait Photo + Prominent Floating Metric Badge */}
+                  {/* Right Column: Feedback Giver Photo (Full width and height) */}
                   <div className="clients-testimonial-card-col clients-testimonial-card-col--photo">
                     <div className="clients-testimonial-card__photo-frame">
                       <Image
                         src={item.photoUrl}
                         alt={`${item.authorName}, ${item.authorRole} at ${item.companyName}`}
-                        width={640}
-                        height={640}
-                        priority={index === total}
-                        sizes="(max-width: 48rem) 100vw, (max-width: 70rem) 42vw, 34vw"
+                        width={600}
+                        height={600}
+                        priority={item._origIndex === 0}
                         className="clients-testimonial-card__photo-img"
                       />
                       <div
                         className="clients-testimonial-card__photo-overlay"
                         aria-hidden="true"
                       />
-
-                      {/* Prominent Metric Badge Overlaid on Photo's Bottom */}
-                      {item.metricBadge && (
-                        <div className="clients-testimonial-card__metric-badge">
-                          <span className="clients-testimonial-card__metric-label">
-                            Key Outcome
-                          </span>
-                          <span className="clients-testimonial-card__metric-val">
-                            {item.metricBadge}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -422,7 +336,7 @@ export function ClientsTestimonialCarousel({
         </div>
       </div>
 
-      {/* Navigation Controls: Centered Prev / Next Buttons, Counter, and Dots */}
+      {/* Navigation Controls: Centered Prev / Next Buttons & Indicators */}
       <div className="clients-testimonial-carousel__controls">
         <button
           type="button"
@@ -432,8 +346,8 @@ export function ClientsTestimonialCarousel({
           title="Previous testimonial"
         >
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -446,34 +360,23 @@ export function ClientsTestimonialCarousel({
           </svg>
         </button>
 
-        {/* Executive 01 / 05 Counter + Interactive Dots */}
-        <div className="clients-carousel-indicator-group">
-          <span
-            className="clients-carousel-counter"
-            aria-label={`Slide ${realIndex + 1} of ${total}`}
-          >
-            {String(realIndex + 1).padStart(2, '0')}&nbsp;/&nbsp;{String(total).padStart(2, '0')}
-          </span>
-
-          <div
-            className="clients-carousel-dots"
-            role="tablist"
-            aria-label="Select testimonial slide"
-          >
-            {testimonials.map((item, idx) => (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={idx === realIndex}
-                aria-label={`Go to slide ${idx + 1}: ${item.companyName}`}
-                onClick={() => goToSlide(idx)}
-                className={`clients-carousel-dot ${
-                  idx === realIndex ? 'clients-carousel-dot--active' : ''
-                }`}
-              />
-            ))}
-          </div>
+        {/* Bullet Pagination Indicators */}
+        <div
+          className="clients-carousel-dots"
+          aria-label="Select testimonial slide"
+        >
+          {testimonials.map((item, idx) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-current={idx === realIndex ? 'true' : undefined}
+              aria-label={`Go to slide ${idx + 1}: ${item.companyName}`}
+              onClick={() => goToSlide(idx)}
+              className={`clients-carousel-dot ${
+                idx === realIndex ? 'clients-carousel-dot--active' : ''
+              }`}
+            />
+          ))}
         </div>
 
         <button
@@ -484,8 +387,8 @@ export function ClientsTestimonialCarousel({
           title="Next testimonial"
         >
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -501,5 +404,3 @@ export function ClientsTestimonialCarousel({
     </div>
   )
 }
-
-export default ClientsTestimonialCarousel

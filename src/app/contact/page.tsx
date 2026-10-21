@@ -1,17 +1,34 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { ContactForm } from '@/app/contact/contact-form'
 import { Card } from '@/components/ui/card'
+import { CONTACT_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
+import type { PageDocument } from '@/lib/content/page-documents'
+import { getPageVisualConfig } from '@/lib/content/page-visual'
+import { getVisiblePageDocument } from '@/lib/content/visible-page-document'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
+import { createClient } from '@/lib/supabase/server'
 
 export const revalidate = 3600 // 1 hour ISR
 
 export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const { data: doc } = await supabase
+    .from('page_documents')
+    .select(
+      'title, seo_title, seo_description, canonical_url, og_image_url, status',
+    )
+    .eq('slug', 'contact')
+    .eq('status', 'published')
+    .maybeSingle<PageDocument>()
   const siteUrl = getSiteUrl()
   const pageUrl = new URL('/contact', siteUrl).toString()
-  const title = `Contact Us | ${siteConfig.shortName}`
+  const title =
+    doc?.seo_title || doc?.title || `Contact Us | ${siteConfig.shortName}`
   const description =
+    doc?.seo_description ||
     'Connect with Outsourced Pro Global. Submit client staffing inquiries or reach our talent acquisition operations team.'
   const indexable = isSiteIndexable()
 
@@ -19,19 +36,21 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     alternates: {
-      canonical: pageUrl,
+      canonical: doc?.canonical_url || pageUrl,
     },
     openGraph: {
       title,
       description,
-      url: pageUrl,
+      url: doc?.canonical_url || pageUrl,
       siteName: siteConfig.name,
       type: 'website',
+      images: doc?.og_image_url ? [{ url: doc.og_image_url }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: doc?.og_image_url ? [doc.og_image_url] : undefined,
     },
     robots: {
       index: indexable,
@@ -40,17 +59,24 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function ContactPage() {
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ opgPreview?: string }>
+}) {
+  const { opgPreview } = await searchParams
+  const supabase = await createClient()
+  const doc = await getVisiblePageDocument(supabase, 'contact', opgPreview === '1')
+  const copy = getPageCopy(doc?.content, CONTACT_COPY_SECTIONS)
   const siteUrl = getSiteUrl()
   const pageUrl = new URL('/contact', siteUrl).toString()
 
   const contactSchema = {
     '@context': 'https://schema.org',
     '@type': 'ContactPage',
-    name: 'Contact Outsourced Pro Global',
+    name: copy.heroTitle,
     url: pageUrl,
-    description:
-      'Official contact channels and inquiry form for Outsourced Pro Global institutional clients and candidates.',
+    description: copy.heroLead,
     mainEntity: {
       '@type': 'Organization',
       name: siteConfig.name,
@@ -59,13 +85,13 @@ export default function ContactPage() {
         {
           '@type': 'ContactPoint',
           contactType: 'customer service',
-          email: 'inquiries@opglobal.com.hk',
+          email: copy.clientEmail,
           availableLanguage: ['English'],
         },
         {
           '@type': 'ContactPoint',
           contactType: 'human resources',
-          email: 'recruitment@opglobal.com.hk',
+          email: copy.talentEmail,
           availableLanguage: ['English'],
         },
       ],
@@ -74,9 +100,12 @@ export default function ContactPage() {
 
   return (
     <main className="contact-page">
+      <PageVisualRuntime page="contact" config={getPageVisualConfig(doc?.content)} />
       {/* Schema.org ContactPage JSON-LD */}
       <script
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(contactSchema).replace(/</g, '\\u003c'),
+        }}
         type="application/ld+json"
       />
 
@@ -94,101 +123,81 @@ export default function ContactPage() {
 
         {/* Hero Section */}
         <header className="contact-hero">
-          <p className="eyebrow">Get In Touch</p>
-          <h1 className="contact-hero__title">Start a Conversation with OPG</h1>
-          <p className="contact-hero__lead">
-            Whether you are evaluating dedicated cross-border pods or exploring
-            your next career move, our global team is ready to assist.
-          </p>
+          <p className="eyebrow">{copy.heroEyebrow}</p>
+          <h1 className="contact-hero__title">{copy.heroTitle}</h1>
+          <p className="contact-hero__lead">{copy.heroLead}</p>
         </header>
 
         {/* Two-Column Grid: Left Info / Right Interactive Form */}
         <div className="contact-layout-grid">
           <div className="contact-info-column">
-            <Card eyebrow="Official Channels" title="Direct Communication">
+            <Card eyebrow={copy.channelsEyebrow} title={copy.channelsTitle}>
               <div className="contact-channel-item">
                 <span className="contact-channel-label">
-                  Client & Institutional Inquiries:
+                  {copy.clientLabel}
                 </span>
                 <a
                   className="contact-channel-value"
-                  href="mailto:inquiries@opglobal.com.hk"
+                  href={`mailto:${copy.clientEmail}`}
                 >
-                  inquiries@opglobal.com.hk
+                  {copy.clientEmail}
                 </a>
-                <p className="contact-channel-desc">
-                  For staffing scopes, dedicated teams, and commercial
-                  agreements.
-                </p>
+                <p className="contact-channel-desc">{copy.clientDescription}</p>
               </div>
 
               <div className="contact-channel-item">
                 <span className="contact-channel-label">
-                  Talent & Recruitment:
+                  {copy.talentLabel}
                 </span>
                 <a
                   className="contact-channel-value"
-                  href="mailto:recruitment@opglobal.com.hk"
+                  href={`mailto:${copy.talentEmail}`}
                 >
-                  recruitment@opglobal.com.hk
+                  {copy.talentEmail}
                 </a>
-                <p className="contact-channel-desc">
-                  For candidate inquiries and application verifications.
-                </p>
+                <p className="contact-channel-desc">{copy.talentDescription}</p>
               </div>
             </Card>
 
-            <Card eyebrow="Headquarters & Presence" title="Global Operations">
+            <Card eyebrow={copy.operationsEyebrow} title={copy.operationsTitle}>
               <div className="contact-channel-item">
                 <span className="contact-channel-label">
-                  Registered Office:
+                  {copy.officeLabel}
                 </span>
                 <address className="contact-address">
-                  Outsourced Pro Global Ltd.
+                  {copy.officeName}
                   <br />
-                  Central, Hong Kong SAR
+                  {copy.officeLocation}
                 </address>
               </div>
 
               <div className="contact-channel-item">
                 <span className="contact-channel-label">
-                  Operational Coverage:
+                  {copy.coverageLabel}
                 </span>
-                <p className="contact-channel-desc">
-                  Active delivery centers across APAC, EMEA, and the Americas
-                  ensuring 24/5 cross-time-zone synchronization.
-                </p>
+                <p className="contact-channel-desc">{copy.coverageBody}</p>
               </div>
 
               <div className="contact-channel-item">
-                <span className="contact-channel-label">
-                  Service Level Agreement:
-                </span>
-                <p className="contact-channel-desc">
-                  All inquiries submitted through our verified portal are
-                  acknowledged and assigned within{' '}
-                  <strong>1 business day</strong>.
-                </p>
+                <span className="contact-channel-label">{copy.slaLabel}</span>
+                <p className="contact-channel-desc">{copy.slaBody}</p>
               </div>
             </Card>
 
             <div className="contact-faq-teaser">
-              <h3>Looking for more insight?</h3>
-              <p>
-                Explore practical perspectives on remote staffing, compliance,
-                onboarding, and building high-performing global teams.
-              </p>
+              <h3>{copy.teaserTitle}</h3>
+              <p>{copy.teaserBody}</p>
               <Link
                 className="button-link button-link--secondary"
                 href="/articles"
               >
-                Browse Articles →
+                {copy.teaserCta}
               </Link>
             </div>
           </div>
 
           <div className="contact-form-column">
-            <ContactForm />
+            <ContactForm copy={copy} />
           </div>
         </div>
       </div>

@@ -1,16 +1,25 @@
 'use client'
 
-import Link from 'next/link'
-import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useActionState, useEffect, useState } from 'react'
 
 import {
   type MissionVisionActionState,
   saveMissionVisionAction,
 } from '@/app/admin/pages/mission-and-vision/actions'
+import {
+  CharacterCounter,
+  InheritedSections,
+  MediaPicker,
+  PageEditorActions,
+  PageSectionNavigator,
+  PageDetailsCard,
+  PageEditorToast,
+  SearchSnippetPreview,
+  SectionCard,
+} from '@/components/admin/page-editor-ui'
+import { usePageEditorForm } from '@/components/admin/use-page-editor-form'
 import { Input, TextArea } from '@/components/ui/form-controls'
 import { Notice } from '@/components/ui/notice'
-import { StatusBadge } from '@/components/ui/status-badge'
 import type { DocumentStatus } from '@/lib/content/page-documents'
 
 type MissionVisionFormProps = {
@@ -26,6 +35,11 @@ type MissionVisionFormProps = {
     status: DocumentStatus
     summary: string
     title: string
+    updatedAt: string | null
+    editorName: string
+    currentEditorName?: string
+    hasSavedDraft: boolean
+    publishedAt?: string | null
     version: number
     visionBody: string
     visionTitle: string
@@ -36,32 +50,6 @@ type MissionVisionFormProps = {
     canRequestChanges: boolean
     canSubmitReview: boolean
   }
-}
-
-function ActionButton({
-  children,
-  className = 'button',
-  intent,
-  pendingLabel,
-}: {
-  children: string
-  className?: string
-  intent: string
-  pendingLabel: string
-}) {
-  const { pending } = useFormStatus()
-
-  return (
-    <button
-      className={className}
-      disabled={pending}
-      name="intent"
-      type="submit"
-      value={intent}
-    >
-      {pending ? pendingLabel : children}
-    </button>
-  )
 }
 
 export function MissionVisionForm({
@@ -78,31 +66,87 @@ export function MissionVisionForm({
 
   const currentStatus = state.status ?? initialData.status
   const currentVersion = state.version ?? initialData.version
+  const [purposeTab, setPurposeTab] = useState<'mission' | 'vision'>('mission')
+
+  useEffect(() => {
+    const revealPurpose = (event: Event) => {
+      const targetId = (event as CustomEvent<{ targetId: string }>).detail
+        ?.targetId
+      if (targetId?.startsWith('home-mission')) setPurposeTab('mission')
+      if (targetId?.startsWith('home-vision')) setPurposeTab('vision')
+    }
+    window.addEventListener('opg-editor-reveal', revealPurpose)
+    return () => window.removeEventListener('opg-editor-reveal', revealPurpose)
+  }, [])
+  const {
+    dirty,
+    discard,
+    draft,
+    fieldErrors,
+    formRef,
+    handleBlur,
+    handleInput,
+    handleSubmit,
+    saveDraftRef,
+    saveState,
+  } = usePageEditorForm({
+    initialValues: {
+      calloutText: initialData.calloutText,
+      calloutVariant: initialData.calloutVariant,
+      canonicalUrl: initialData.canonicalUrl,
+      missionBody: initialData.missionBody,
+      missionTitle: initialData.missionTitle,
+      ogImageUrl: initialData.ogImageUrl,
+      seoDescription: initialData.seoDescription,
+      seoTitle: initialData.seoTitle,
+      summary: initialData.summary,
+      title: initialData.title,
+      visionBody: initialData.visionBody,
+      visionTitle: initialData.visionTitle,
+    },
+    result: state,
+    status: currentStatus,
+    tab: 'home',
+    updatedAt: state.updatedAt ?? initialData.updatedAt,
+    version: currentVersion,
+  })
+
+  const successMessage =
+    state.status === 'published'
+      ? 'Page published'
+      : state.status === 'in_review'
+        ? 'Submitted for review'
+        : state.status === 'unpublished'
+          ? 'Page unpublished'
+          : 'Draft saved'
 
   return (
-    <form action={formAction} className="content-form">
-      {/* Live Status Header */}
-      <div className="content-form__status-bar">
-        <div className="content-form__status-meta">
-          <span className="status-meta__label">Current Status:</span>
-          <StatusBadge status={currentStatus} />
-          <span className="status-meta__version">
-            Version <strong>{currentVersion}</strong>
-          </span>
-        </div>
-        <div className="content-form__status-actions">
-          <Link
-            className="button-link button-link--secondary"
-            href="/mission-and-vision"
-            target="_blank"
-          >
-            View Live Page ↗
-          </Link>
-        </div>
-      </div>
-
-      {/* Notifications */}
-      {state.message && (
+    <form
+      action={formAction}
+      className="content-form pages-content-form"
+      onBlurCapture={handleBlur}
+      onInput={handleInput}
+      onSubmit={handleSubmit}
+      ref={formRef}
+    >
+      <button
+        hidden
+        name="intent"
+        ref={saveDraftRef}
+        type="submit"
+        value="save_draft"
+      />
+      {state.success && state.updatedAt ? (
+        <PageEditorToast key={state.updatedAt} message={successMessage} />
+      ) : null}
+      {state.message && !state.success && (
+        <PageEditorToast
+          key={state.message}
+          message={state.message}
+          variant="error"
+        />
+      )}
+      {state.message && !state.success && (
         <Notice
           title={state.success ? 'Success' : 'Attention'}
           variant={state.success ? 'success' : 'error'}
@@ -111,257 +155,417 @@ export function MissionVisionForm({
         </Notice>
       )}
 
-      {/* Section 1: Basic Page Info */}
-      <fieldset className="form-fieldset">
-        <legend className="form-legend">Basic Page Information</legend>
-        <p className="form-fieldset__desc">
-          Sets the main header and executive summary displayed on the public
-          page.
-        </p>
-
-        <div className="form-group">
-          <Input
-            aria-describedby="title-help"
-            defaultValue={initialData.title}
-            id="title"
-            label="Page Title *"
-            maxLength={200}
-            name="title"
-            required
-          />
-          <p className="form-help" id="title-help">
-            The primary H1 title displayed on the public page (1–200
-            characters).
-          </p>
-          {state.errors?.title && (
-            <p className="form-error" role="alert">
-              {state.errors.title}
-            </p>
-          )}
-        </div>
-
-        <div className="form-group">
-          <TextArea
-            aria-describedby="summary-help"
-            defaultValue={initialData.summary}
-            id="summary"
-            label="Summary Deck / Lead Paragraph"
-            maxLength={500}
-            name="summary"
-            rows={3}
-          />
-          <p className="form-help" id="summary-help">
-            A concise lead paragraph introducing the purpose of the organization
-            (max 500 characters).
-          </p>
-          {state.errors?.summary && (
-            <p className="form-error" role="alert">
-              {state.errors.summary}
-            </p>
-          )}
-        </div>
-      </fieldset>
-
-      {/* Section 2: Core Mission & Vision */}
-      <fieldset className="form-fieldset">
-        <legend className="form-legend">Mission & Vision Statements</legend>
-        <p className="form-fieldset__desc">
-          Define the formal mission and vision declarations. Paragraphs will be
-          formatted cleanly on the public page.
-        </p>
-
-        <div className="form-grid">
-          <div className="form-panel">
-            <h3 className="form-panel__title">Mission Declaration</h3>
+      <div className="pages-content-form__layout">
+        <PageSectionNavigator
+          page="home"
+          sections={[
+            {
+              id: 'home-hero',
+              label: 'Hero',
+              status:
+                fieldErrors.title || fieldErrors.summary
+                  ? 'error'
+                  : draft.title.trim()
+                    ? 'complete'
+                    : 'incomplete',
+            },
+            {
+              id: 'home-purpose',
+              label: 'Mission & vision',
+              status:
+                fieldErrors.missionBody || fieldErrors.visionBody
+                  ? 'error'
+                  : draft.missionBody.trim() && draft.visionBody.trim()
+                    ? 'complete'
+                    : 'incomplete',
+            },
+            {
+              id: 'home-inherited',
+              label: 'Managed elsewhere',
+              status: 'optional',
+            },
+            {
+              id: 'home-values',
+              label: 'Core values',
+              status: draft.calloutText.trim() ? 'complete' : 'optional',
+            },
+            {
+              id: 'home-seo',
+              label: 'SEO & social',
+              status:
+                draft.seoTitle.trim() && draft.seoDescription.trim()
+                  ? 'complete'
+                  : 'optional',
+            },
+          ]}
+        />
+        <div className="pages-content-form__main">
+          <SectionCard
+            complete={Boolean(draft.title.trim())}
+            description="Edit the title and summary stored by the current page document."
+            eyebrow="Page content"
+            icon="essentials"
+            id="home-hero"
+            errorCount={
+              Number(Boolean(fieldErrors.title || state.errors?.title)) +
+              Number(Boolean(fieldErrors.summary || state.errors?.summary))
+            }
+            summary={draft.title.trim() || 'Add a page title'}
+            title="Hero"
+          >
             <div className="form-group">
               <Input
-                defaultValue={initialData.missionTitle}
-                id="missionTitle"
-                label="Mission Heading"
-                name="missionTitle"
+                aria-invalid={Boolean(fieldErrors.title || state.errors?.title)}
+                defaultValue={initialData.title}
+                id="home-title"
+                label="Page title"
+                maxLength={200}
+                name="title"
+                required
               />
+              {(fieldErrors.title || state.errors?.title) && (
+                <p className="form-error" role="alert">
+                  {fieldErrors.title || state.errors?.title}
+                </p>
+              )}
+              <div className="field-meta">
+                <span>Primary heading shown on the public page</span>
+                <CharacterCounter current={draft.title.length} maximum={200} />
+              </div>
             </div>
+
             <div className="form-group">
               <TextArea
-                defaultValue={initialData.missionBody}
-                id="missionBody"
-                label="Mission Statement *"
-                name="missionBody"
-                required
-                rows={6}
+                aria-invalid={Boolean(
+                  fieldErrors.summary || state.errors?.summary,
+                )}
+                defaultValue={initialData.summary}
+                id="home-summary"
+                label="Intro summary"
+                maxLength={500}
+                name="summary"
+                rows={3}
               />
+              {(fieldErrors.summary || state.errors?.summary) && (
+                <p className="form-error" role="alert">
+                  {fieldErrors.summary || state.errors?.summary}
+                </p>
+              )}
+              <div className="field-meta">
+                <span>Appears below the page heading</span>
+                <CharacterCounter
+                  current={draft.summary.length}
+                  maximum={500}
+                />
+              </div>
             </div>
-          </div>
+          </SectionCard>
 
-          <div className="form-panel">
-            <h3 className="form-panel__title">Vision Declaration</h3>
-            <div className="form-group">
-              <Input
-                defaultValue={initialData.visionTitle}
-                id="visionTitle"
-                label="Vision Heading"
-                name="visionTitle"
-              />
-            </div>
-            <div className="form-group">
-              <TextArea
-                defaultValue={initialData.visionBody}
-                id="visionBody"
-                label="Vision Statement *"
-                name="visionBody"
-                required
-                rows={6}
-              />
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
-      {/* Section 3: Values Callout */}
-      <fieldset className="form-fieldset">
-        <legend className="form-legend">Core Values & Highlights</legend>
-        <p className="form-fieldset__desc">
-          Highlight key commitments or organizational values shown in an
-          accented callout box.
-        </p>
-
-        <div className="form-group">
-          <TextArea
-            defaultValue={initialData.calloutText}
-            id="calloutText"
-            label="Values Highlight Callout"
-            name="calloutText"
-            rows={3}
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="field" htmlFor="calloutVariant">
-            <span>Callout Style</span>
-            <select
-              defaultValue={initialData.calloutVariant}
-              id="calloutVariant"
-              name="calloutVariant"
+          <SectionCard
+            complete={Boolean(
+              draft.missionBody.trim() && draft.visionBody.trim(),
+            )}
+            description="Define the formal mission and vision declarations."
+            eyebrow="Page content"
+            icon="content"
+            id="home-purpose"
+            errorCount={
+              Number(
+                Boolean(fieldErrors.missionBody || state.errors?.missionBody),
+              ) +
+              Number(
+                Boolean(fieldErrors.visionBody || state.errors?.visionBody),
+              )
+            }
+            summary={
+              draft.missionBody.trim() && draft.visionBody.trim()
+                ? 'Mission and vision added'
+                : `${Number(!draft.missionBody.trim()) + Number(!draft.visionBody.trim())} fields missing`
+            }
+            title="Mission and vision"
+          >
+            <div
+              aria-label="Mission and vision editor"
+              className="cms-purpose-tabs"
+              role="tablist"
             >
-              <option value="info">Info (Brand Accent)</option>
-              <option value="warning">Warning / Notice</option>
-            </select>
-          </label>
-        </div>
-      </fieldset>
-
-      {/* Section 4: SEO & Social Previews */}
-      <fieldset className="form-fieldset">
-        <legend className="form-legend">Search Engine & Social Sharing</legend>
-        <p className="form-fieldset__desc">
-          Optional overrides for Google search snippets and social media cards
-          (OpenGraph).
-        </p>
-
-        <div className="form-group">
-          <Input
-            defaultValue={initialData.seoTitle}
-            id="seoTitle"
-            label="SEO Meta Title"
-            maxLength={100}
-            name="seoTitle"
-          />
-          <p className="form-help">
-            Defaults to &quot;{initialData.title} | Outsourced Pro Global&quot;
-            if blank.
-          </p>
-        </div>
-
-        <div className="form-group">
-          <TextArea
-            defaultValue={initialData.seoDescription}
-            id="seoDescription"
-            label="SEO Meta Description"
-            maxLength={250}
-            name="seoDescription"
-            rows={2}
-          />
-          <p className="form-help">
-            Defaults to the summary deck if left empty.
-          </p>
-        </div>
-
-        <div className="form-group">
-          <Input
-            defaultValue={initialData.ogImageUrl}
-            id="ogImageUrl"
-            label="OpenGraph Social Image URL"
-            name="ogImageUrl"
-            placeholder="https://example.com/og-image.jpg or /images/..."
-          />
-        </div>
-
-        <div className="form-group">
-          <Input
-            defaultValue={initialData.canonicalUrl}
-            id="canonicalUrl"
-            label="Canonical URL Override"
-            name="canonicalUrl"
-            placeholder="https://opglobal.com.hk/mission-and-vision"
-          />
-        </div>
-      </fieldset>
-
-      {/* Action Bar */}
-      <div className="content-form__actions">
-        <div className="actions-left">
-          {permissions.canEditDraft && (
-            <ActionButton intent="save_draft" pendingLabel="Saving draft...">
-              Save Draft
-            </ActionButton>
-          )}
-
-          {permissions.canSubmitReview && currentStatus !== 'in_review' && (
-            <ActionButton
-              className="button button--secondary"
-              intent="submit_review"
-              pendingLabel="Submitting..."
-            >
-              Submit for Review
-            </ActionButton>
-          )}
-
-          {permissions.canRequestChanges && currentStatus === 'in_review' && (
-            <ActionButton
-              className="button button--secondary"
-              intent="request_changes"
-              pendingLabel="Returning..."
-            >
-              Request Changes
-            </ActionButton>
-          )}
-        </div>
-
-        <div className="actions-right">
-          {permissions.canPublish && (
-            <>
-              {currentStatus === 'published' ? (
-                <ActionButton
-                  className="button button--secondary"
-                  intent="unpublish"
-                  pendingLabel="Unpublishing..."
+              {(['mission', 'vision'] as const).map((tab) => (
+                <button
+                  aria-controls={`home-${tab}-panel`}
+                  aria-selected={purposeTab === tab}
+                  id={`home-${tab}-tab`}
+                  key={tab}
+                  onClick={() => setPurposeTab(tab)}
+                  onKeyDown={(event) => {
+                    if (
+                      !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(
+                        event.key,
+                      )
+                    )
+                      return
+                    event.preventDefault()
+                    const next =
+                      event.key === 'Home'
+                        ? 'mission'
+                        : event.key === 'End'
+                          ? 'vision'
+                          : purposeTab === 'mission'
+                            ? 'vision'
+                            : 'mission'
+                    setPurposeTab(next)
+                    document.getElementById(`home-${next}-tab`)?.focus()
+                  }}
+                  role="tab"
+                  tabIndex={purposeTab === tab ? 0 : -1}
+                  type="button"
                 >
-                  Unpublish
-                </ActionButton>
-              ) : null}
+                  {tab === 'mission' ? 'Mission' : 'Vision'}
+                  <span>
+                    {tab === 'mission'
+                      ? draft.missionBody.trim()
+                        ? 'Complete'
+                        : 'Needs content'
+                      : draft.visionBody.trim()
+                        ? 'Complete'
+                        : 'Needs content'}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div
+              className="cms-purpose-panel"
+              hidden={purposeTab !== 'mission'}
+              id="home-mission-panel"
+              role="tabpanel"
+              aria-labelledby="home-mission-tab"
+            >
+              <div className="content-form__column">
+                <h3>Mission declaration</h3>
+                <div className="form-group">
+                  <Input
+                    defaultValue={initialData.missionTitle}
+                    id="home-missionTitle"
+                    label="Mission heading"
+                    name="missionTitle"
+                  />
+                </div>
+                <div className="form-group">
+                  <TextArea
+                    defaultValue={initialData.missionBody}
+                    id="home-missionBody"
+                    label="Mission statement"
+                    aria-invalid={Boolean(
+                      fieldErrors.missionBody || state.errors?.missionBody,
+                    )}
+                    name="missionBody"
+                    required={purposeTab === 'mission'}
+                    rows={3}
+                  />
+                  {fieldErrors.missionBody || state.errors?.missionBody ? (
+                    <p className="form-error" role="alert">
+                      {fieldErrors.missionBody || state.errors?.missionBody}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            <div
+              className="cms-purpose-panel"
+              hidden={purposeTab !== 'vision'}
+              id="home-vision-panel"
+              role="tabpanel"
+              aria-labelledby="home-vision-tab"
+            >
+              <div className="content-form__column">
+                <h3>Vision declaration</h3>
+                <div className="form-group">
+                  <Input
+                    defaultValue={initialData.visionTitle}
+                    id="home-visionTitle"
+                    label="Vision heading"
+                    name="visionTitle"
+                  />
+                </div>
+                <div className="form-group">
+                  <TextArea
+                    defaultValue={initialData.visionBody}
+                    id="home-visionBody"
+                    label="Vision statement"
+                    aria-invalid={Boolean(
+                      fieldErrors.visionBody || state.errors?.visionBody,
+                    )}
+                    name="visionBody"
+                    required={purposeTab === 'vision'}
+                    rows={3}
+                  />
+                  {fieldErrors.visionBody || state.errors?.visionBody ? (
+                    <p className="form-error" role="alert">
+                      {fieldErrors.visionBody || state.errors?.visionBody}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </SectionCard>
 
-              <ActionButton
-                className="button button--primary"
-                intent="publish"
-                pendingLabel="Publishing..."
-              >
-                {currentStatus === 'published'
-                  ? 'Update Live Page'
-                  : 'Publish Page'}
-              </ActionButton>
-            </>
-          )}
+          <InheritedSections
+            id="home-inherited"
+            sections={[
+              'Key highlights and statistics',
+              'About preview',
+              'Global offshore network',
+              'Client stories and testimonials',
+              'Final call to action',
+            ]}
+          />
+
+          <SectionCard
+            complete={Boolean(draft.calloutText.trim())}
+            description="Maintain the values callout stored with this page document."
+            eyebrow="Optional content"
+            icon="values"
+            id="home-values"
+            summary={draft.calloutText.trim() || 'No values highlight yet'}
+            title="Core values and callout"
+          >
+            <div className="form-group">
+              <TextArea
+                defaultValue={initialData.calloutText}
+                id="home-calloutText"
+                label="Values highlight"
+                name="calloutText"
+                rows={3}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="field" htmlFor="home-calloutVariant">
+                <span>Highlight style</span>
+                <select
+                  defaultValue={initialData.calloutVariant}
+                  id="home-calloutVariant"
+                  name="calloutVariant"
+                >
+                  <option value="info">Info (Brand Accent)</option>
+                  <option value="warning">Warning / Notice</option>
+                </select>
+              </label>
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            complete={Boolean(
+              draft.seoTitle.trim() && draft.seoDescription.trim(),
+            )}
+            description="Control optional search-result and social-sharing overrides."
+            eyebrow="Optional content"
+            icon="search"
+            id="home-seo"
+            summary={draft.seoTitle.trim() || 'Search title uses page title'}
+            title="SEO and social metadata"
+          >
+            <div className="content-form__field-grid">
+              <div className="form-group">
+                <Input
+                  defaultValue={initialData.seoTitle}
+                  id="home-seoTitle"
+                  label="SEO title"
+                  maxLength={100}
+                  name="seoTitle"
+                />
+                <div className="field-meta">
+                  <span>Recommended: 50–60 characters · Max 100</span>
+                  <CharacterCounter
+                    current={draft.seoTitle.length}
+                    maximum={100}
+                    recommended={60}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <TextArea
+                  defaultValue={initialData.seoDescription}
+                  id="home-seoDescription"
+                  label="SEO description"
+                  maxLength={250}
+                  name="seoDescription"
+                  rows={2}
+                />
+                <div className="field-meta">
+                  <span>Recommended: 140–155 characters · Max 250</span>
+                  <CharacterCounter
+                    current={draft.seoDescription.length}
+                    maximum={250}
+                    recommended={155}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <Input
+                  defaultValue={initialData.ogImageUrl}
+                  id="home-ogImageUrl"
+                  label="Social image URL"
+                  name="ogImageUrl"
+                  placeholder="https://example.com/og-image.jpg or /images/..."
+                />
+                <MediaPicker
+                  inputId="home-ogImageUrl"
+                  value={draft.ogImageUrl}
+                />
+              </div>
+
+              <div className="form-group">
+                <Input
+                  defaultValue={initialData.canonicalUrl}
+                  id="home-canonicalUrl"
+                  label="Canonical URL"
+                  name="canonicalUrl"
+                  placeholder="https://opglobal.com.hk/mission-and-vision"
+                />
+              </div>
+            </div>
+            <SearchSnippetPreview
+              description={draft.seoDescription || draft.summary}
+              title={draft.seoTitle || draft.title}
+              url={draft.canonicalUrl || '/mission-and-vision'}
+            />
+          </SectionCard>
+          <PageEditorActions
+            dirty={dirty}
+            onDiscard={discard}
+            permissions={permissions}
+            status={currentStatus}
+          />
         </div>
+
+        <PageDetailsCard
+          dirty={dirty}
+          hasSavedDraft={
+            state.status ? state.status === 'draft' : initialData.hasSavedDraft
+          }
+          onRetry={() =>
+            window.dispatchEvent(
+              new CustomEvent('opg-editor-retry', { detail: { tab: 'home' } }),
+            )
+          }
+          saveState={saveState}
+          status={currentStatus}
+          version={currentVersion}
+          editorName={
+            state.success
+              ? (initialData.currentEditorName ?? initialData.editorName)
+              : initialData.editorName
+          }
+          publishedAt={
+            state.success && state.status === 'published'
+              ? (state.updatedAt ?? null)
+              : (initialData.publishedAt ?? null)
+          }
+          publishedUrl="/mission-and-vision"
+          updatedAt={state.updatedAt ?? initialData.updatedAt}
+        />
       </div>
     </form>
   )

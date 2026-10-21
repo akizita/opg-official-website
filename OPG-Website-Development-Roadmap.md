@@ -3,7 +3,7 @@
 **Document status:** Approved architecture baseline; execution tracking in progress  
 **Source:** `OPG-Website-Roadmap-Architecture.md`  
 **Current stage:** Phases 0, 1, 2, and 3 completed; Phase 4 (Publishing, Discovery, Administration, and Inquiries) ready for execution  
-**Initial Super Admin / production owner:** Aki Zita (`aki.zita@freedompropertyinvestors.com.au`, requested login address)  
+**Initial Super Admin / production owner:** OPG (`recruitment@opglobal.com.hk`)
 **Planning assumption:** One developer with part-time input from the product owner, designer/brand owner, content owners, and production owner. The expanded launch scope is estimated at 16–20 weeks and must be converted to ticket estimates after wireframes.
 
 ---
@@ -71,7 +71,7 @@ The architecture document remains the source for the proposed system shape. This
 - [x] **SEO migration:** URL inventory, redirect map, canonical/sitemap controls, launch verification, and six-week monitoring are defined.
 - [x] **Quality targets:** Responsive, accessibility, Core Web Vitals, security, reliability, monitoring, and recovery measures are defined.
 - [x] **Release ownership:** Aki Zita manages production configuration, analytics, email, deployments, and secrets.
-- [x] **Initial Super Admin:** Aki Zita will be bootstrapped first and can invite users and assign admin roles.
+- [x] **Initial Super Admin:** The main OPG mailbox (`recruitment@opglobal.com.hk`) is bootstrapped automatically and can invite users and assign admin roles.
 - [x] **Requested initial login address:** `aki.zita@freedompropertyinvestors.com.au` supplied by Aki on 2026-09-15. Aki's 2026-09-15 screenshot shows this account signed in to the OPGlobal Supabase organization; company ownership and website-project Auth invitation remain to be verified.
 - [x] **Wireframe review requirement:** Aki reports the roadmap was reviewed by IT and web developers and waives a separate Armi wireframe review before development. Draft screens still need task-based acceptance during demos/UAT; this does not approve unseen wireframes.
 - [x] **Existing public domain:** `https://opglobal.com.hk` is the provisional canonical; DNS ownership and the `www` redirect still require verification.
@@ -665,7 +665,7 @@ One person may hold multiple responsibilities, but company accounts require a ba
 | Brand/design approver | Visual direction, assets, responsive designs, brand consistency |
 | Content owner(s) — TBD by content group | Complete and accurate copy/media, content approvals, ongoing governance |
 | Privacy/security reviewer | Privacy notice, inquiry handling, retention, access, security review |
-| Initial Super Admin and production/release owner — Aki Zita | User invitations/roles, hosting, deployment, production configuration, analytics, email, and secrets |
+| Initial Super Admin and production/release owner — OPG (`recruitment@opglobal.com.hk`) | User invitations/roles, hosting, deployment, production configuration, analytics, email, and secrets |
 | Infrastructure/domain owner | DNS, SSL, company vendor accounts, billing, and recovery contacts |
 | Editors | Draft creation, CMS user testing, and content updates |
 | Publishers | Review, approval, publication, unpublication, and archive |

@@ -69,12 +69,6 @@ const MOCK_DRIFT_ITEMS: DriftWallItem[] = [
 
 type StatementTab = 'mission' | 'vision'
 
-const MISSION_TEXT =
-  'To empower businesses to scale with confidence by delivering exceptional outsourced solutions through skilled professionals, innovative strategies, and a culture of integrity and continuous improvement.'
-
-const VISION_TEXT =
-  'To become a trusted outsourcing partner of choice, recognised for delivering consistent reliability, adaptability, and measurable growth for the businesses we serve.'
-
 const CORE_VALUES = [
   {
     name: 'Integrity',
@@ -185,8 +179,17 @@ const CORE_VALUES = [
   },
 ]
 
-export function MissionVisionSection() {
+export function MissionVisionSection({
+  copy,
+}: {
+  copy: Record<string, string>
+}) {
   const [activeTab, setActiveTab] = useState<StatementTab>('mission')
+  const coreValues = CORE_VALUES.map((value, index) => ({
+    ...value,
+    name: copy[`value${index + 1}Name`],
+    description: copy[`value${index + 1}Description`],
+  }))
 
   return (
     <section
@@ -196,16 +199,15 @@ export function MissionVisionSection() {
       <div className="container mission-vision__container">
         {/* Centered Header & Tab Switcher (Mission & Vision only) */}
         <div className="mission-vision__top-header">
-          <span className="eyebrow">OUR PURPOSE & DIRECTION</span>
-          <h2 id="mission-vision-heading" className="mission-vision__title">
-            Guided by Purpose.
-            <br />
-            Driven by Impact.
+          <span className="eyebrow">{copy.purposeEyebrow}</span>
+          <h2
+            id="mission-vision-heading"
+            className="mission-vision__title"
+            style={{ whiteSpace: 'pre-line' }}
+          >
+            {copy.purposeTitle}
           </h2>
-          <p className="mission-vision__subtitle">
-            The foundational commitments and forward-looking vision shaping how
-            we empower businesses and build high-performing global teams.
-          </p>
+          <p className="mission-vision__subtitle">{copy.purposeLead}</p>
 
           {/* Centered Tab Switcher */}
           <div
@@ -314,8 +316,12 @@ export function MissionVisionSection() {
                 aria-labelledby="tab-mission"
                 className="mission-vision__panel"
               >
-                <h3 className="mission-vision__statement-title">Mission</h3>
-                <p className="mission-vision__statement-text">{MISSION_TEXT}</p>
+                <h3 className="mission-vision__statement-title">
+                  {copy.missionTitle}
+                </h3>
+                <p className="mission-vision__statement-text">
+                  {copy.missionBody}
+                </p>
                 <div className="mission-vision__footer">
                   <Link
                     href="/about#our-purpose"
@@ -349,8 +355,12 @@ export function MissionVisionSection() {
                 aria-labelledby="tab-vision"
                 className="mission-vision__panel"
               >
-                <h3 className="mission-vision__statement-title">Vision</h3>
-                <p className="mission-vision__statement-text">{VISION_TEXT}</p>
+                <h3 className="mission-vision__statement-title">
+                  {copy.visionTitle}
+                </h3>
+                <p className="mission-vision__statement-text">
+                  {copy.visionBody}
+                </p>
                 <div className="mission-vision__footer">
                   <Link
                     href="/about#our-purpose"
@@ -381,12 +391,9 @@ export function MissionVisionSection() {
         {/* 3. Core Values Glassmorphism Section (Interactive Accordion List) */}
         <div className="mission-vision__values-section">
           <div className="mission-vision__values-header">
-            <span className="eyebrow">THE FOUNDATION</span>
-            <h3 className="mission-vision__values-title">Our Core Values</h3>
-            <p className="mission-vision__values-desc">
-              The non-negotiable principles that guide our people, culture, and
-              partnerships every day.
-            </p>
+            <span className="eyebrow">{copy.valuesEyebrow}</span>
+            <h3 className="mission-vision__values-title">{copy.valuesTitle}</h3>
+            <p className="mission-vision__values-desc">{copy.valuesLead}</p>
           </div>
 
           <div
@@ -394,7 +401,7 @@ export function MissionVisionSection() {
             role="region"
             aria-label="Core Values"
           >
-            {CORE_VALUES.map((val) => (
+            {coreValues.map((val) => (
               <div
                 key={val.name}
                 className="mission-vision__accordion-item mission-vision__accordion-item--static"
