@@ -59,16 +59,6 @@ const tabs: Array<{
     id: 'careers',
     label: 'Careers',
   },
-  {
-    description: 'Edit article index sections and search appearance.',
-    id: 'articles',
-    label: 'Articles',
-  },
-  {
-    description: 'Edit contact page sections and search appearance.',
-    id: 'contact',
-    label: 'Contact',
-  },
 ]
 
 function WorkspaceIcon({ name }: { name: PagesWorkspaceTab }) {

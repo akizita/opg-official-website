@@ -4,6 +4,7 @@ import { Suspense, type ReactNode } from 'react'
 
 import { signOutAction } from '@/app/admin/actions'
 import { AdminNavigation } from '@/components/admin/admin-navigation'
+import { AdminSidebarToggle } from '@/components/admin/admin-sidebar-toggle'
 import type { AdminProfile } from '@/lib/auth/admin-session'
 
 const ADMIN_LOGO_URL =
@@ -33,26 +34,28 @@ export function AdminShell({ children, profile }: AdminShellProps) {
   return (
     <div className="admin-shell">
       <aside className="admin-shell__sidebar">
-        <Link className="admin-shell__brand" href="/admin">
-          <Image
-            alt=""
-            aria-hidden="true"
-            className="admin-shell__brand-logo"
-            height={150}
-            priority
-            src={ADMIN_LOGO_URL}
-            width={150}
-          />
-          <span className="admin-shell__brand-copy">
-            <strong>OutPro Global</strong>
-            <small>Website CMS</small>
-          </span>
-        </Link>
-
-        <Link className="admin-shell__site-link" href="/" target="_blank">
-          View public website
-          <span aria-hidden="true">↗</span>
-        </Link>
+        <div className="admin-shell__header">
+          <Link
+            aria-label="OutPro Global admin overview"
+            className="admin-shell__brand"
+            href="/admin"
+          >
+            <Image
+              alt=""
+              aria-hidden="true"
+              className="admin-shell__brand-logo"
+              height={150}
+              priority
+              src={ADMIN_LOGO_URL}
+              width={150}
+            />
+            <span className="admin-shell__brand-copy">
+              <strong>OutPro Global</strong>
+              <small>Website CMS</small>
+            </span>
+          </Link>
+          <AdminSidebarToggle />
+        </div>
 
         <Suspense fallback={null}>
           <AdminNavigation roleKey={profile.roleKey} />

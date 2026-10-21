@@ -1,25 +1,22 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { uploadMediaAction } from '@/app/admin/media/actions'
 import {
+  deleteVisualRevisionAction,
   saveVisualPageAction,
+  type VisualRevision,
   type VisualSaveInput,
 } from '@/app/admin/pages/visual-actions'
-import { applyPageVisualOverrides } from '@/components/site/page-visual-runtime'
+import {
+  applyPageVisualOverrides,
+  setAnchorLabel,
+} from '@/components/site/page-visual-runtime'
 import {
   ABOUT_COPY_SECTIONS,
-  ARTICLES_COPY_SECTIONS,
   CAREERS_COPY_SECTIONS,
   CLIENTS_COPY_SECTIONS,
-  CONTACT_COPY_SECTIONS,
   HOME_COPY_SECTIONS,
   type CopySection,
 } from '@/lib/content/page-copy'
@@ -28,44 +25,52 @@ import type { MediaAsset } from '@/lib/content/media'
 import {
   PAGE_LINK_DIRECTORY,
   type PageVisualConfig,
-  type VisualPage,
-  VISUAL_PAGES,
-  VISUAL_SECTION_GROUPS,
-  isValidVisualUrl,
+  type VisualEditorPage,
+  VISUAL_EDITOR_PAGES,
 } from '@/lib/content/page-visual'
 
-export type VisualPageDraft = Omit<VisualSaveInput, 'page' | 'intent' | 'expectedVersion'> & {
+export type VisualPageDraft = Omit<
+  VisualSaveInput,
+  'page' | 'intent' | 'expectedVersion' | 'versionTitle'
+> & {
   status: DocumentStatus
   version: number
   updatedAt: string | null
 }
 
 type Selection =
-  | { kind: 'text'; key: string; selector: string; linkSelector?: string; linkHref?: string }
+  | { kind: 'text'; key: string; selector: string }
   | { kind: 'image'; selector: string; baseSrc: string; baseAlt: string }
-  | { kind: 'section'; id: string; selector: string }
+  | { kind: 'button'; selector: string; key?: string }
 
-const SCHEMAS: Record<VisualPage, readonly CopySection[]> = {
+type ImageDraft = { src: string; alt: string; position: string }
+type ButtonDraft = { title: string; href: string }
+type SeoDraft = Pick<
+  VisualPageDraft,
+  'seoTitle' | 'seoDescription' | 'ogImageUrl' | 'canonicalUrl'
+>
+
+const SCHEMAS: Record<VisualEditorPage, readonly CopySection[]> = {
   home: HOME_COPY_SECTIONS,
   about: ABOUT_COPY_SECTIONS,
   clients: CLIENTS_COPY_SECTIONS,
   careers: CAREERS_COPY_SECTIONS,
-  articles: ARTICLES_COPY_SECTIONS,
-  contact: CONTACT_COPY_SECTIONS,
 }
-
-const DESIGN_COLORS = [
-  { label: 'Brand gold', value: 'var(--color-brand)' },
-  { label: 'Brand yellow', value: 'var(--color-brand-secondary)' },
-  { label: 'Ink', value: 'var(--color-ink)' },
-  { label: 'Muted ink', value: 'var(--color-ink-soft)' },
-  { label: 'White', value: '#ffffff' },
-  { label: 'Black', value: '#0d0d0d' },
-] as const
-const SPACING = ['0rem', '0.5rem', '1rem', '1.5rem', '2rem', '3rem', '4rem', '6rem', '8rem']
 
 function normalized(value: string) {
   return value.replace(/\s+/g, ' ').trim()
+}
+
+function originalImageSource(image: HTMLImageElement): string {
+  const src = image.getAttribute('src') || ''
+  try {
+    const url = new URL(src, image.ownerDocument.location?.href)
+    if (url.pathname === '/_next/image')
+      return url.searchParams.get('url') || src
+  } catch {
+    // Keep the original attribute when the image URL cannot be parsed.
+  }
+  return src
 }
 
 function elementSelector(element: Element, root: Element): string {
@@ -74,7 +79,9 @@ function elementSelector(element: Element, root: Element): string {
   while (current && current !== root) {
     const parent: Element | null = current.parentElement
     if (!parent) break
-    const sameTag = Array.from(parent.children).filter((child) => child.tagName === current?.tagName)
+    const sameTag = Array.from(parent.children).filter(
+      (child) => child.tagName === current?.tagName,
+    )
     const position = sameTag.indexOf(current) + 1
     parts.unshift(`${current.tagName.toLowerCase()}:nth-of-type(${position})`)
     current = parent
@@ -99,7 +106,11 @@ function findFieldElement(root: Element, value: string): HTMLElement | null {
   return null
 }
 
-function decorateCanvas(doc: Document, page: VisualPage, draft: VisualPageDraft) {
+function decorateCanvas(
+  doc: Document,
+  page: VisualEditorPage,
+  draft: VisualPageDraft,
+) {
   const root = doc.querySelector('#main-content')
   if (!root) return
   const fields: Record<string, string> =
@@ -126,31 +137,46 @@ function decorateCanvas(doc: Document, page: VisualPage, draft: VisualPageDraft)
   }
 }
 
-function fieldLabel(page: VisualPage, key: string): string {
+function fieldLabel(page: VisualEditorPage, key: string): string {
   if (key === 'title') return 'Page heading'
   if (key === 'summary') return 'Hero introduction'
   if (key === 'editorialTitle') return 'Featured story heading'
   if (key === 'editorialLead') return 'Featured story introduction'
-  if (key.startsWith('body:')) return `Who We Are paragraph ${Number(key.split(':')[1]) + 1}`
+  if (key.startsWith('body:'))
+    return `Who We Are paragraph ${Number(key.split(':')[1]) + 1}`
   if (key.startsWith('line:')) {
     const [, base, index] = key.split(':')
     return `${fieldLabel(page, base)} · line ${Number(index) + 1}`
   }
-  return SCHEMAS[page].flatMap((section) => section.fields).find((field) => field.key === key)?.label ?? key
+  return (
+    SCHEMAS[page]
+      .flatMap((section) => section.fields)
+      .find((field) => field.key === key)?.label ?? key
+  )
 }
 
 function fieldValue(draft: VisualPageDraft, key: string): string {
-  if (key.startsWith('body:')) return draft.body?.split(/\n\n+/)[Number(key.split(':')[1])] ?? ''
+  if (key.startsWith('body:'))
+    return draft.body?.split(/\n\n+/)[Number(key.split(':')[1])] ?? ''
   if (key.startsWith('line:')) {
     const [, base, index] = key.split(':')
     return draft.copy[base]?.split(/\r?\n/)[Number(index)] ?? ''
   }
-  if (key === 'title' || key === 'summary' || key === 'editorialTitle' || key === 'editorialLead')
+  if (
+    key === 'title' ||
+    key === 'summary' ||
+    key === 'editorialTitle' ||
+    key === 'editorialLead'
+  )
     return draft[key] ?? ''
   return draft.copy[key] ?? ''
 }
 
-function updateFieldValue(draft: VisualPageDraft, key: string, value: string): VisualPageDraft {
+function updateFieldValue(
+  draft: VisualPageDraft,
+  key: string,
+  value: string,
+): VisualPageDraft {
   if (key.startsWith('body:')) {
     const paragraphs = (draft.body || '').split(/\n\n+/)
     paragraphs[Number(key.split(':')[1])] = value
@@ -162,7 +188,12 @@ function updateFieldValue(draft: VisualPageDraft, key: string, value: string): V
     lines[Number(index)] = value
     return { ...draft, copy: { ...draft.copy, [base]: lines.join('\n') } }
   }
-  if (key === 'title' || key === 'summary' || key === 'editorialTitle' || key === 'editorialLead')
+  if (
+    key === 'title' ||
+    key === 'summary' ||
+    key === 'editorialTitle' ||
+    key === 'editorialLead'
+  )
     return { ...draft, [key]: value }
   return { ...draft, copy: { ...draft.copy, [key]: value } }
 }
@@ -171,6 +202,7 @@ function cloneConfig(config: PageVisualConfig): PageVisualConfig {
   return {
     images: { ...config.images },
     links: { ...config.links },
+    labels: { ...config.labels },
     styles: { ...config.styles },
     sectionOrder: { ...config.sectionOrder },
   }
@@ -180,57 +212,113 @@ function setCanvasMode(doc: Document, mode: 'edit' | 'preview') {
   doc.documentElement.dataset.opgEditorMode = mode
 }
 
-function setCanvasPage(doc: Document, page: VisualPage) {
+function setCanvasPage(doc: Document, page: VisualEditorPage) {
   doc.documentElement.dataset.opgEditorPage = page
 }
 
 export function VisualPagesEditor({
   initialPage,
   initialPages,
+  initialRevisions,
   media,
   permissions,
+  revisionsUnavailable,
 }: {
-  initialPage: VisualPage
-  initialPages: Record<VisualPage, VisualPageDraft>
+  initialPage: VisualEditorPage
+  initialPages: Record<VisualEditorPage, VisualPageDraft>
+  initialRevisions: Record<VisualEditorPage, VisualRevision[]>
   media: MediaAsset[]
-  permissions: { canEditDraft: boolean; canPublish: boolean; canManageMedia: boolean }
+  permissions: {
+    canEditDraft: boolean
+    canPublish: boolean
+    canManageMedia: boolean
+  }
+  revisionsUnavailable: boolean
 }) {
-  const [page, setPage] = useState<VisualPage>(initialPage)
+  const [page, setPage] = useState<VisualEditorPage>(initialPage)
   const [drafts, setDrafts] = useState(initialPages)
-  const [dirtyPages, setDirtyPages] = useState<Set<VisualPage>>(new Set())
+  const [dirtyPages, setDirtyPages] = useState<Set<VisualEditorPage>>(new Set())
   const [selection, setSelection] = useState<Selection | null>(null)
-  const [mode, setMode] = useState<'edit' | 'preview'>('edit')
-  const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop')
-  const [zoom, setZoom] = useState<'fit' | 'actual'>('fit')
+  const [mode, setMode] = useState<'edit' | 'preview'>('preview')
+  const [versionTitles, setVersionTitles] = useState<
+    Partial<Record<VisualEditorPage, string>>
+  >({})
+  const [titleRequired, setTitleRequired] = useState(false)
+  const [revisions, setRevisions] = useState(initialRevisions)
+  const [deletingRevisionId, setDeletingRevisionId] = useState<string | null>(
+    null,
+  )
   const [stageWidth, setStageWidth] = useState(900)
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
   const [refresh, setRefresh] = useState(0)
   const [mediaSearch, setMediaSearch] = useState('')
-  const [linkSearch, setLinkSearch] = useState('')
-  const [customUrl, setCustomUrl] = useState('')
+  const [mediaCategory, setMediaCategory] = useState('all')
+  const [visibleMediaCount, setVisibleMediaCount] = useState(18)
+  const [libraryOpen, setLibraryOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [canUndo, setCanUndo] = useState(false)
-  const [dragging, setDragging] = useState<{ group: string; id: string } | null>(null)
+  const [modal, setModal] = useState<
+    'image' | 'button' | 'text' | 'seo' | null
+  >(null)
+  const [modalError, setModalError] = useState('')
+  const [imageDraft, setImageDraft] = useState<ImageDraft>({
+    src: '',
+    alt: '',
+    position: '50% 50%',
+  })
+  const [buttonDraft, setButtonDraft] = useState<ButtonDraft>({
+    title: '',
+    href: '',
+  })
+  const [textDraft, setTextDraft] = useState('')
+  const [seoDraft, setSeoDraft] = useState<SeoDraft>({
+    seoTitle: '',
+    seoDescription: '',
+    ogImageUrl: '',
+    canonicalUrl: '',
+  })
   const frameRef = useRef<HTMLIFrameElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
-  const historyRef = useRef<Array<{ page: VisualPage; draft: VisualPageDraft }>>([])
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const libraryDialogRef = useRef<HTMLDialogElement>(null)
+  const versionTitleRef = useRef<HTMLInputElement>(null)
+  const historyRef = useRef<
+    Array<{ page: VisualEditorPage; draft: VisualPageDraft }>
+  >([])
   const latestRef = useRef({ page, drafts, mode })
   useEffect(() => {
     latestRef.current = { page, drafts, mode }
   }, [page, drafts, mode])
   const draft = drafts[page]
   const dirty = dirtyPages.has(page)
-  const virtualWidth = device === 'desktop' ? 1280 : 390
-  const virtualHeight = device === 'desktop' ? 850 : 844
-  const scale = zoom === 'actual' ? 1 : Math.min(1, stageWidth / virtualWidth)
-  const pageUrl = VISUAL_PAGES[page].path
+  const versionTitle = versionTitles[page] ?? ''
+  const virtualWidth = 1280
+  const virtualHeight = 850
+  const scale = Math.min(1, stageWidth / virtualWidth)
+  const pageUrl = VISUAL_EDITOR_PAGES[page].path
   const frameUrl = `${pageUrl}?opgPreview=1&editorRefresh=${refresh}`
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (modal && !dialog.open) dialog.showModal()
+    if (!modal && dialog.open) dialog.close()
+  }, [modal])
+
+  useEffect(() => {
+    const dialog = libraryDialogRef.current
+    if (!dialog) return
+    if (libraryOpen && !dialog.open) dialog.showModal()
+    if (!libraryOpen && dialog.open) dialog.close()
+  }, [libraryOpen])
 
   useEffect(() => {
     const element = stageRef.current
     if (!element) return
-    const observer = new ResizeObserver(([entry]) => setStageWidth(entry.contentRect.width))
+    const observer = new ResizeObserver(([entry]) =>
+      setStageWidth(entry.contentRect.width),
+    )
     observer.observe(element)
     return () => observer.disconnect()
   }, [])
@@ -248,64 +336,118 @@ export function VisualPagesEditor({
     const doc = frameRef.current?.contentDocument
     if (!doc) return
     setCanvasMode(doc, mode)
-    doc.querySelectorAll<HTMLElement>('[data-cms-selected]').forEach((element) => {
-      delete element.dataset.cmsSelected
-      element.contentEditable = 'false'
-    })
+    doc
+      .querySelectorAll<HTMLElement>('[data-cms-selected]')
+      .forEach((element) => {
+        delete element.dataset.cmsSelected
+        if (element.dataset.opgInlineEdit) {
+          delete element.dataset.opgInlineEdit
+          element.removeAttribute('contenteditable')
+          element.removeAttribute('role')
+          element.removeAttribute('aria-label')
+        }
+      })
     if (mode !== 'edit' || !selection) return
     try {
       const element = selection.selector
         ? doc.querySelector<HTMLElement>(`#main-content ${selection.selector}`)
         : selection.kind === 'text'
-          ? Array.from(doc.querySelectorAll<HTMLElement>('[data-cms-field]')).find(
-              (item) => item.dataset.cmsField === selection.key,
-            )
+          ? Array.from(
+              doc.querySelectorAll<HTMLElement>('[data-cms-field]'),
+            ).find((item) => item.dataset.cmsField === selection.key)
           : null
-      if (element) element.dataset.cmsSelected = 'true'
+      if (element) {
+        element.dataset.cmsSelected = 'true'
+        if (
+          selection.kind === 'text' &&
+          element.childElementCount === 0 &&
+          !['A', 'BUTTON'].includes(element.tagName)
+        ) {
+          element.dataset.opgInlineEdit = 'true'
+          element.contentEditable = 'true'
+          element.setAttribute('role', 'textbox')
+          element.setAttribute(
+            'aria-label',
+            `Edit ${fieldLabel(page, selection.key)}`,
+          )
+          element.focus()
+        }
+      }
     } catch {
       // A selected element may disappear when a carousel changes slides.
     }
   }, [mode, selection, page, refresh])
 
-  const updateDraft = useCallback((updater: (current: VisualPageDraft) => VisualPageDraft) => {
-    historyRef.current.push({ page, draft: structuredClone(latestRef.current.drafts[page]) })
-    if (historyRef.current.length > 40) historyRef.current.shift()
-    setCanUndo(true)
-    setDrafts((current) => ({ ...current, [page]: updater(current[page]) }))
-    setDirtyPages((current) => new Set(current).add(page))
-    setMessage('Unsaved changes')
-  }, [page])
+  const updateDraft = useCallback(
+    (updater: (current: VisualPageDraft) => VisualPageDraft) => {
+      historyRef.current.push({
+        page,
+        draft: structuredClone(latestRef.current.drafts[page]),
+      })
+      if (historyRef.current.length > 40) historyRef.current.shift()
+      setCanUndo(true)
+      setDrafts((current) => ({ ...current, [page]: updater(current[page]) }))
+      setDirtyPages((current) => new Set(current).add(page))
+    },
+    [page],
+  )
 
-  const applyFrame = useCallback((next: VisualPageDraft) => {
-    const doc = frameRef.current?.contentDocument
-    if (doc) applyPageVisualOverrides(page, next.visual, doc)
-  }, [page])
+  const applyFrame = useCallback(
+    (next: VisualPageDraft) => {
+      const doc = frameRef.current?.contentDocument
+      if (doc) applyPageVisualOverrides(page, next.visual, doc)
+    },
+    [page],
+  )
 
-  const setText = useCallback((key: string, value: string, source?: HTMLElement) => {
-    updateDraft((current) => updateFieldValue(current, key, value))
-    const doc = frameRef.current?.contentDocument
-    if (doc) {
-      for (const element of doc.querySelectorAll<HTMLElement>('[data-cms-field]')) {
-        if (element.dataset.cmsField !== key || element === source) continue
-        if (key === 'title' && element.classList.contains('about-hero-banner__title')) {
-          const prefix = element.querySelector<HTMLElement>('.about-hero-banner__title-prefix')
-          const accent = element.querySelector<HTMLElement>('.about-hero-banner__title-accent')
-          if (prefix && accent && value.toLowerCase().startsWith('about ')) {
-            prefix.textContent = 'About'
-            accent.textContent = value.slice(6)
-            continue
+  const syncCanvasText = useCallback(
+    (key: string, value: string, source?: HTMLElement) => {
+      const doc = frameRef.current?.contentDocument
+      if (doc) {
+        for (const element of doc.querySelectorAll<HTMLElement>(
+          '[data-cms-field]',
+        )) {
+          if (element.dataset.cmsField !== key || element === source) continue
+          if (
+            key === 'title' &&
+            element.classList.contains('about-hero-banner__title')
+          ) {
+            const prefix = element.querySelector<HTMLElement>(
+              '.about-hero-banner__title-prefix',
+            )
+            const accent = element.querySelector<HTMLElement>(
+              '.about-hero-banner__title-accent',
+            )
+            if (prefix && accent && value.toLowerCase().startsWith('about ')) {
+              prefix.textContent = 'About'
+              accent.textContent = value.slice(6)
+              continue
+            }
           }
+          if (element.tagName === 'A')
+            setAnchorLabel(element as HTMLAnchorElement, value)
+          else element.textContent = value
         }
-        element.textContent = value
       }
-    }
-  }, [updateDraft])
+    },
+    [],
+  )
+
+  const setText = useCallback(
+    (key: string, value: string, source?: HTMLElement) => {
+      updateDraft((current) => updateFieldValue(current, key, value))
+      syncCanvasText(key, value, source)
+    },
+    [updateDraft, syncCanvasText],
+  )
 
   const handleFrameLoad = useCallback(() => {
     const iframe = frameRef.current
     const doc = iframe?.contentDocument
     if (!doc || !iframe?.contentWindow) {
-      setMessage('The preview could not be inspected. Check that the local site is running.')
+      setMessage(
+        'The preview could not be inspected. Check that the local site is running.',
+      )
       return
     }
     const current = latestRef.current
@@ -319,12 +461,13 @@ export function VisualPagesEditor({
       editorStyle.id = 'opg-visual-editor-style'
       editorStyle.textContent = `
         html[data-opg-editor-mode="edit"] [data-cms-field]:hover,
-        html[data-opg-editor-mode="edit"] [data-cms-section]:hover,
+        html[data-opg-editor-mode="edit"] #main-content a.button-link:hover,
         html[data-opg-editor-mode="edit"] #main-content img:hover {
           outline: 2px dashed #f2b705 !important;
           outline-offset: 4px;
         }
         html[data-opg-editor-mode="edit"] [data-cms-field]:hover { cursor: text; }
+        html[data-opg-editor-mode="edit"] #main-content a.button-link:hover { cursor: pointer; }
         html[data-opg-editor-mode="edit"] #main-content img:hover { cursor: pointer; }
         html[data-opg-editor-mode="edit"] [data-cms-selected] {
           outline: 3px solid #f29f04 !important;
@@ -368,17 +511,55 @@ export function VisualPagesEditor({
     imageAction.id = 'opg-visual-image-action'
     imageAction.type = 'button'
     imageAction.setAttribute('aria-label', 'Change this photo')
-    imageAction.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h-4l-2 3H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2-3Z"/><circle cx="12" cy="13" r="3"/></svg><span>Change photo</span>'
+    imageAction.innerHTML =
+      '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h-4l-2 3H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2-3Z"/><circle cx="12" cy="13" r="3"/></svg><span>Change photo</span>'
     doc.body.append(imageAction)
     let hoveredImage: HTMLImageElement | null = null
     const selectImage = (image: HTMLImageElement) => {
-      setSelection({
+      const selected: Selection = {
         kind: 'image',
         selector: elementSelector(image, root),
-        baseSrc: image.getAttribute('src') || '',
+        baseSrc: originalImageSource(image),
         baseAlt: image.getAttribute('alt') || '',
+      }
+      const saved =
+        latestRef.current.drafts[latestRef.current.page].visual.images[
+          selected.selector
+        ]
+      setSelection(selected)
+      setImageDraft({
+        src: saved?.src ?? selected.baseSrc,
+        alt: saved?.alt ?? selected.baseAlt,
+        position: saved?.position ?? '50% 50%',
       })
+      setMediaSearch('')
+      setModalError('')
+      setModal('image')
     }
+    const selectButton = (anchor: HTMLAnchorElement, target: Element) => {
+      const field =
+        target.closest<HTMLElement>('[data-cms-field]') ??
+        anchor.querySelector<HTMLElement>('[data-cms-field]')
+      const key = field?.dataset.cmsField
+      const selector = elementSelector(anchor, root)
+      const currentDraft = latestRef.current.drafts[latestRef.current.page]
+      setSelection({ kind: 'button', selector, key })
+      setButtonDraft({
+        title: key
+          ? fieldValue(currentDraft, key)
+          : (currentDraft.visual.labels[selector] ??
+            normalized(anchor.textContent || '')),
+        href:
+          currentDraft.visual.links[selector] ??
+          anchor.getAttribute('href') ??
+          '',
+      })
+      setModalError('')
+      setModal('button')
+    }
+    const isEditableButton = (anchor: HTMLAnchorElement) =>
+      anchor.matches('.button-link, [role="button"], [data-cms-field]') ||
+      Boolean(anchor.querySelector('[data-cms-field]'))
     const showImageAction = (image: HTMLImageElement) => {
       if (latestRef.current.mode !== 'edit') return
       const rect = image.getBoundingClientRect()
@@ -393,44 +574,54 @@ export function VisualPagesEditor({
     }
     const pointerMove = (event: PointerEvent) => {
       const target = event.target as Element | null
-      if (!target || target.nodeType !== 1 || imageAction.contains(target)) return
+      if (!target || target.nodeType !== 1 || imageAction.contains(target))
+        return
       const image = target.closest('img')
-      if (image?.tagName === 'IMG' && root.contains(image)) showImageAction(image)
+      if (image?.tagName === 'IMG' && root.contains(image))
+        showImageAction(image)
       else hideImageAction()
     }
     const click = (event: MouseEvent) => {
       if (latestRef.current.mode === 'preview') return
       const target = event.target as Element | null
       if (!target || target.nodeType !== 1) return
+      if (target.closest('[data-opg-inline-edit]')) {
+        event.stopPropagation()
+        return
+      }
       event.preventDefault()
       event.stopPropagation()
-      const image = target.closest('img') ?? (imageAction.contains(target) ? hoveredImage : null)
+      const image =
+        target.closest('img') ??
+        (imageAction.contains(target) ? hoveredImage : null)
       if (image?.tagName === 'IMG') {
         selectImage(image)
         return
       }
+      const anchor = target.closest<HTMLAnchorElement>('a')
+      if (anchor && root.contains(anchor) && isEditableButton(anchor)) {
+        selectButton(anchor, target)
+        return
+      }
       const text = target.closest<HTMLElement>('[data-cms-field]')
       if (text?.dataset.cmsField) {
-        const anchor = text.closest('a')
         const item = {
           kind: 'text' as const,
           key: text.dataset.cmsField,
           selector: elementSelector(text, root),
-          linkSelector: anchor ? elementSelector(anchor, root) : undefined,
-          linkHref: anchor?.getAttribute('href') || undefined,
         }
         setSelection(item)
-        if (text.childElementCount === 0 && !['A', 'BUTTON'].includes(text.tagName)) {
-          text.contentEditable = 'true'
-          text.setAttribute('role', 'textbox')
-          text.setAttribute('aria-label', `Edit ${fieldLabel(current.page, item.key)}`)
-          text.focus()
+        if (
+          text.childElementCount > 0 ||
+          ['A', 'BUTTON'].includes(text.tagName)
+        ) {
+          const active = latestRef.current
+          setTextDraft(fieldValue(active.drafts[active.page], item.key))
+          setModalError('')
+          setModal('text')
         }
         return
       }
-      const section = target.closest<HTMLElement>('[data-cms-section]')
-      if (section?.dataset.cmsSection)
-        setSelection({ kind: 'section', id: section.dataset.cmsSection, selector: elementSelector(section, root) })
     }
     const input = (event: Event) => {
       const element = event.target as HTMLElement | null
@@ -446,17 +637,29 @@ export function VisualPagesEditor({
       iframe.contentWindow?.document.execCommand('insertText', false, plain)
     }
     const keydown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLImageElement | null
-      if (latestRef.current.mode !== 'edit' || target?.tagName !== 'IMG') return
+      const target = event.target as HTMLElement | null
+      if (latestRef.current.mode !== 'edit' || !target) return
       if (event.key !== 'Enter' && event.key !== ' ') return
-      event.preventDefault()
-      selectImage(target)
+      if (target.tagName === 'IMG') {
+        event.preventDefault()
+        selectImage(target as HTMLImageElement)
+      } else if (
+        target.tagName === 'A' &&
+        root.contains(target) &&
+        isEditableButton(target as HTMLAnchorElement)
+      ) {
+        event.preventDefault()
+        selectButton(target as HTMLAnchorElement, target)
+      }
     }
     const makeImagesFocusable = () => {
       root.querySelectorAll<HTMLImageElement>('img').forEach((image) => {
         image.tabIndex = 0
         image.setAttribute('role', 'button')
-        image.setAttribute('aria-label', `Change photo: ${image.alt || 'untitled image'}`)
+        image.setAttribute(
+          'aria-label',
+          `Change photo: ${image.alt || 'untitled image'}`,
+        )
       })
     }
     makeImagesFocusable()
@@ -485,33 +688,50 @@ export function VisualPagesEditor({
     iframe.addEventListener('load', cleanup, { once: true })
   }, [setText])
 
-  const selectPage = (next: VisualPage) => {
+  const selectPage = (next: VisualEditorPage) => {
     if (next === page) return
-    if (dirty && !window.confirm('This page has unsaved changes. Switch pages and keep the unsaved draft in this session?'))
+    if (
+      dirty &&
+      !window.confirm(
+        'This page has unsaved changes. Switch pages and keep the unsaved draft in this session?',
+      )
+    )
       return
     setPage(next)
+    setMode('preview')
+    setCanUndo(historyRef.current.some((entry) => entry.page === next))
     setSelection(null)
     setMessage('')
+    setTitleRequired(false)
     const url = new URL(window.location.href)
     url.searchParams.set('tab', next)
     window.history.pushState(null, '', url)
   }
 
   const undo = () => {
-    const entry = historyRef.current.pop()
-    if (!entry) return
-    setCanUndo(historyRef.current.length > 0)
+    const index = historyRef.current.findLastIndex(
+      (entry) => entry.page === page,
+    )
+    if (index < 0) return
+    const [entry] = historyRef.current.splice(index, 1)
+    setCanUndo(historyRef.current.some((item) => item.page === page))
     setDrafts((current) => ({ ...current, [entry.page]: entry.draft }))
     setDirtyPages((current) => new Set(current).add(entry.page))
-    if (entry.page === page) {
-      applyFrame(entry.draft)
-      setRefresh((value) => value + 1)
-    }
+    applyFrame(entry.draft)
+    setRefresh((value) => value + 1)
     setMessage('Last edit undone')
   }
 
   const save = async (intent: VisualSaveInput['intent']) => {
     if (saving) return
+    const title = versionTitle.trim()
+    if (!title || title.length > 120) {
+      setMessage('')
+      setTitleRequired(true)
+      versionTitleRef.current?.focus()
+      return
+    }
+    setTitleRequired(false)
     setSaving(true)
     setMessage('Saving…')
     const current = latestRef.current.drafts[page]
@@ -520,10 +740,18 @@ export function VisualPagesEditor({
         ...current,
         page,
         intent,
+        versionTitle: title,
         expectedVersion: current.version,
       })
       setMessage(result.message)
       if (result.success && result.version && result.status) {
+        if (result.revision)
+          setRevisions((all) => ({
+            ...all,
+            [page]: [result.revision!, ...all[page]],
+          }))
+        setVersionTitles((all) => ({ ...all, [page]: '' }))
+        setMode('preview')
         setDrafts((all) => ({
           ...all,
           [page]: {
@@ -538,87 +766,169 @@ export function VisualPagesEditor({
           next.delete(page)
           return next
         })
-        historyRef.current = historyRef.current.filter((entry) => entry.page !== page)
-        setCanUndo(historyRef.current.length > 0)
+        historyRef.current = historyRef.current.filter(
+          (entry) => entry.page !== page,
+        )
+        setCanUndo(false)
         setRefresh((value) => value + 1)
       }
     } catch {
-      setMessage('The save request failed. Your edits are still in this browser session.')
+      setMessage(
+        'The save request failed. Your edits are still in this browser session.',
+      )
     } finally {
       setSaving(false)
     }
   }
 
-  const updateVisual = (updater: (config: PageVisualConfig) => PageVisualConfig) => {
-    const next = { ...draft, visual: updater(cloneConfig(draft.visual)) }
+  const updateVisual = (
+    updater: (config: PageVisualConfig) => PageVisualConfig,
+  ) => {
+    const current = latestRef.current.drafts[page]
+    const next = { ...current, visual: updater(cloneConfig(current.visual)) }
     updateDraft(() => next)
     applyFrame(next)
   }
 
-  const image = selection?.kind === 'image'
-    ? draft.visual.images[selection.selector]
-    : undefined
-  const imageSrc = image?.src ?? (selection?.kind === 'image' ? selection.baseSrc : '')
-  const imageAlt = image?.alt ?? (selection?.kind === 'image' ? selection.baseAlt : '')
-  const imagePosition = image?.position ?? '50% 50%'
-  const style = selection ? draft.visual.styles[selection.selector] ?? {} : {}
-  const linkSelector = selection?.kind === 'text' ? selection.linkSelector : undefined
-  const currentLink = linkSelector
-    ? draft.visual.links[linkSelector] ??
-      (selection?.kind === 'text' ? selection.linkHref || '' : '')
-    : ''
-  const filteredMedia = useMemo(
-    () => media.filter((asset) => `${asset.file_name} ${asset.alt_text}`.toLowerCase().includes(mediaSearch.toLowerCase())).slice(0, 30),
-    [media, mediaSearch],
+  const mediaCategories = useMemo(
+    () =>
+      [...new Set(media.map((asset) => asset.category).filter(Boolean))].sort(),
+    [media],
   )
-  const filteredLinks = PAGE_LINK_DIRECTORY.filter((item) =>
-    `${item.label} ${item.href}`.toLowerCase().includes(linkSearch.toLowerCase()),
-  )
-  const selectedGroup = selection?.kind === 'section'
-    ? VISUAL_SECTION_GROUPS[page].find((group) => group.sections.some((section) => section.id === selection.id))
-    : undefined
+  const filteredMedia = useMemo(() => {
+    const query = mediaSearch.trim().toLowerCase()
+    return media.filter(
+      (asset) =>
+        (mediaCategory === 'all' || asset.category === mediaCategory) &&
+        `${asset.file_name} ${asset.alt_text} ${asset.category}`
+          .toLowerCase()
+          .includes(query),
+    )
+  }, [media, mediaCategory, mediaSearch])
+  const visibleMedia = filteredMedia.slice(0, visibleMediaCount)
+  const closeModal = () => {
+    if (uploading) return
+    setLibraryOpen(false)
+    setModal(null)
+    setModalError('')
+  }
 
-  const setImage = (next: { src: string; alt: string; position: string }) => {
+  const openLibrary = () => {
+    setMediaSearch('')
+    setMediaCategory('all')
+    setVisibleMediaCount(18)
+    setLibraryOpen(true)
+  }
+
+  const applyImage = () => {
     if (selection?.kind !== 'image') return
+    if (
+      !/^(https?:\/\/|\/[^/])/.test(imageDraft.src) ||
+      !imageDraft.alt.trim()
+    ) {
+      setModalError('Choose a photo and enter descriptive alternative text.')
+      return
+    }
     updateVisual((config) => ({
       ...config,
-      images: { ...config.images, [selection.selector]: next },
-    }))
-  }
-
-  const setLink = (href: string) => {
-    if (!linkSelector || !isValidVisualUrl(href)) return
-    updateVisual((config) => ({
-      ...config,
-      links: { ...config.links, [linkSelector]: href },
-    }))
-    setCustomUrl('')
-  }
-
-  const setStyle = (name: 'color' | 'backgroundColor' | 'textAlign' | 'paddingTop' | 'paddingBottom', value: string) => {
-    if (!selection) return
-    updateVisual((config) => ({
-      ...config,
-      styles: {
-        ...config.styles,
-        [selection.selector]: { ...(config.styles[selection.selector] ?? {}), [name]: value },
+      images: {
+        ...config.images,
+        [selection.selector]: { ...imageDraft, alt: imageDraft.alt.trim() },
       },
     }))
+    closeModal()
   }
 
-  const reorder = (groupId: string, sourceId: string, targetId: string) => {
-    const group = VISUAL_SECTION_GROUPS[page].find((item) => item.id === groupId)
-    if (!group || sourceId === targetId) return
-    const order = [...(draft.visual.sectionOrder[groupId] ?? group.sections.map((item) => item.id))]
-    const from = order.indexOf(sourceId)
-    const to = order.indexOf(targetId)
-    if (from < 0 || to < 0) return
-    order.splice(from, 1)
-    order.splice(to, 0, sourceId)
-    updateVisual((config) => ({
-      ...config,
-      sectionOrder: { ...config.sectionOrder, [groupId]: order },
-    }))
+  const applyButton = () => {
+    if (selection?.kind !== 'button') return
+    const title = buttonDraft.title.trim()
+    const href = buttonDraft.href.trim()
+    if (
+      !title ||
+      title.length > 200 ||
+      !PAGE_LINK_DIRECTORY.some((item) => item.href === href)
+    ) {
+      setModalError('Enter a button title and choose a directory destination.')
+      return
+    }
+    const current = latestRef.current.drafts[page]
+    const next = selection.key
+      ? updateFieldValue(current, selection.key, title)
+      : { ...current }
+    const visual = cloneConfig(next.visual)
+    visual.links[selection.selector] = href
+    if (selection.key) delete visual.labels[selection.selector]
+    else visual.labels[selection.selector] = title
+    const updated = { ...next, visual }
+    updateDraft(() => updated)
+    if (selection.key) syncCanvasText(selection.key, title)
+    applyFrame(updated)
+    closeModal()
+  }
+
+  const applyText = () => {
+    if (selection?.kind !== 'text' || !textDraft.trim()) {
+      setModalError('Enter text before applying this change.')
+      return
+    }
+    setText(selection.key, textDraft)
+    closeModal()
+  }
+
+  const openSeo = () => {
+    if (mode !== 'edit') {
+      setMessage('Choose Edit before changing SEO.')
+      return
+    }
+    setSelection(null)
+    setSeoDraft({
+      seoTitle: draft.seoTitle,
+      seoDescription: draft.seoDescription,
+      ogImageUrl: draft.ogImageUrl,
+      canonicalUrl: draft.canonicalUrl,
+    })
+    setModalError('')
+    setModal('seo')
+  }
+
+  const applySeo = () => {
+    updateDraft((current) => ({ ...current, ...seoDraft }))
+    closeModal()
+  }
+
+  const enterEditMode = () => {
+    if (!permissions.canEditDraft) return
+    setMessage('')
+    setMode('edit')
+  }
+
+  const deleteRevision = async (revision: VisualRevision) => {
+    if (
+      deletingRevisionId ||
+      revision.status !== 'draft' ||
+      revision.page_version >= draft.version
+    )
+      return
+    if (
+      !window.confirm(
+        `Delete draft version “${revision.version_title}”? This cannot be undone.`,
+      )
+    )
+      return
+    setDeletingRevisionId(revision.id)
+    try {
+      const result = await deleteVisualRevisionAction(page, revision.id)
+      setMessage(result.message)
+      if (result.success)
+        setRevisions((all) => ({
+          ...all,
+          [page]: all[page].filter((item) => item.id !== revision.id),
+        }))
+    } catch {
+      setMessage('Could not delete this draft version. Please try again.')
+    } finally {
+      setDeletingRevisionId(null)
+    }
   }
 
   return (
@@ -626,218 +936,646 @@ export function VisualPagesEditor({
       <header className="visual-editor__top">
         <div>
           <p className="visual-editor__eyebrow">Website CMS · Visual editor</p>
-          <h1>{VISUAL_PAGES[page].label}</h1>
-          <p>Click page content to edit it in context. Preview uses the live marketing components.</p>
+          <h1>{VISUAL_EDITOR_PAGES[page].label}</h1>
+          <p>
+            Click text to edit it, a button to change its title and destination,
+            or Change photo to replace an image.
+          </p>
         </div>
-        <div className="visual-editor__savebar">
-          <span className={dirty ? 'is-dirty' : 'is-saved'} role="status">
-            {saving ? 'Saving…' : dirty ? 'Unsaved changes' : `Saved · ${draft.status}`}
-          </span>
-          <button disabled={!canUndo || saving} onClick={undo} type="button">Undo</button>
-          <button disabled={!permissions.canEditDraft || saving} onClick={() => save('save_draft')} type="button">Save draft</button>
-          {permissions.canPublish && (
-            <button className="visual-editor__publish" disabled={saving} onClick={() => save('publish')} type="button">Publish page</button>
+        <span
+          className={`visual-editor__save-status ${saving ? 'is-saving' : dirty ? 'is-dirty' : 'is-saved'}`}
+          role="status"
+        >
+          {saving
+            ? 'Saving…'
+            : dirty
+              ? 'Unsaved changes'
+              : `Saved · ${draft.status}`}
+        </span>
+      </header>
+      {message && (
+        <p className="visual-editor__message" role="status">
+          {message}
+        </p>
+      )}
+      <div className="visual-editor__savebar">
+        <div className="visual-editor__version-bar">
+          <details className="visual-editor__versions">
+            <summary>Version history ({revisions[page].length})</summary>
+            <div className="visual-editor__version-list">
+              {revisionsUnavailable && (
+                <p>
+                  Version history is unavailable until the database migration is
+                  applied.
+                </p>
+              )}
+              {!revisionsUnavailable && revisions[page].length === 0 && (
+                <p>
+                  No named versions yet. Save a draft to create the first one.
+                </p>
+              )}
+              {revisions[page].map((revision) => (
+                <div className="visual-editor__version-item" key={revision.id}>
+                  <div>
+                    <strong>{revision.version_title}</strong>
+                    <span>
+                      v{revision.page_version} · {revision.status} ·{' '}
+                      {revision.created_by_name}
+                    </span>
+                    <time dateTime={revision.created_at}>
+                      {revision.created_at.slice(0, 16).replace('T', ' ')} UTC
+                    </time>
+                  </div>
+                  {revision.status === 'draft' && (
+                    <button
+                      aria-label={`Delete draft version ${revision.version_title}`}
+                      disabled={
+                        deletingRevisionId !== null ||
+                        revision.page_version >= draft.version ||
+                        !permissions.canEditDraft
+                      }
+                      onClick={() => deleteRevision(revision)}
+                      title={
+                        revision.page_version >= draft.version
+                          ? 'The current version cannot be deleted'
+                          : 'Delete this older draft version'
+                      }
+                      type="button"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        fill="none"
+                        height="18"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.8"
+                        viewBox="0 0 24 24"
+                        width="18"
+                      >
+                        <path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </details>
+          <input
+            aria-describedby={
+              titleRequired ? 'visual-editor-version-title-error' : undefined
+            }
+            aria-invalid={titleRequired}
+            aria-label="Version title (required to save or publish)"
+            className={`visual-editor__version-title${titleRequired ? ' is-invalid' : ''}`}
+            id="visual-editor-version-title"
+            maxLength={120}
+            onChange={(event) => {
+              setVersionTitles((all) => ({
+                ...all,
+                [page]: event.target.value,
+              }))
+              if (event.target.value.trim()) setTitleRequired(false)
+            }}
+            placeholder={
+              titleRequired ? 'Version title required' : 'Version title *'
+            }
+            ref={versionTitleRef}
+            required
+            title="Describe this edit for other admins"
+            value={versionTitle}
+          />
+          {titleRequired && (
+            <span className="sr-only" id="visual-editor-version-title-error">
+              Enter a version title before saving or publishing.
+            </span>
           )}
         </div>
-      </header>
-      {message && <p className="visual-editor__message" role="status">{message}</p>}
-      <nav aria-label="Marketing pages" className="visual-editor__page-tabs">
-        <span className="visual-editor__page-tabs-label">Pages</span>
-        {Object.entries(VISUAL_PAGES).map(([id, item]) => (
+        <div className="visual-editor__action-controls">
+          <button disabled={!canUndo || saving} onClick={undo} type="button">
+            Undo
+          </button>
           <button
-            aria-current={page === id ? 'page' : undefined}
-            className={page === id ? 'is-active' : ''}
-            key={id}
-            onClick={() => selectPage(id as VisualPage)}
+            disabled={!permissions.canEditDraft || saving}
+            onClick={() => save('save_draft')}
             type="button"
           >
-            {item.label}
-            {dirtyPages.has(id as VisualPage) && <span aria-label="Unsaved changes" className="visual-editor__dirty-dot" />}
+            Save draft
           </button>
-        ))}
-      </nav>
+          {permissions.canPublish && (
+            <button
+              className="visual-editor__publish"
+              disabled={saving}
+              onClick={() => save('publish')}
+              type="button"
+            >
+              Publish page
+            </button>
+          )}
+        </div>
+      </div>
       <div className="visual-editor__layout">
         <section aria-label="Page canvas" className="visual-editor__canvas">
           <div className="visual-editor__toolbar">
-            <div aria-label="Editor mode" role="group">
-              <button aria-pressed={mode === 'edit'} onClick={() => setMode('edit')} type="button">Edit</button>
-              <button aria-pressed={mode === 'preview'} onClick={() => setMode('preview')} type="button">Preview</button>
-            </div>
-            <div aria-label="Preview size" role="group">
-              <button aria-pressed={device === 'desktop'} onClick={() => setDevice('desktop')} type="button">Desktop</button>
-              <button aria-pressed={device === 'mobile'} onClick={() => setDevice('mobile')} type="button">Mobile</button>
-              <button aria-pressed={zoom === 'actual'} onClick={() => setZoom(zoom === 'actual' ? 'fit' : 'actual')} type="button">{zoom === 'actual' ? 'Fit' : '100%'}</button>
+            <div className="visual-editor__toolbar-navigation">
+              <div aria-label="Editor mode" role="group">
+                <button
+                  aria-pressed={mode === 'edit'}
+                  onClick={enterEditMode}
+                  type="button"
+                >
+                  Edit
+                </button>
+                <button
+                  aria-pressed={mode === 'preview'}
+                  onClick={() => setMode('preview')}
+                  type="button"
+                >
+                  Preview
+                </button>
+              </div>
+              <nav
+                aria-label="Marketing pages"
+                className="visual-editor__page-tabs"
+              >
+                {Object.entries(VISUAL_EDITOR_PAGES).map(([id, item]) => (
+                  <button
+                    aria-current={page === id ? 'page' : undefined}
+                    className={page === id ? 'is-active' : ''}
+                    disabled={saving}
+                    key={id}
+                    onClick={() => selectPage(id as VisualEditorPage)}
+                    type="button"
+                  >
+                    {item.label}
+                    {dirtyPages.has(id as VisualEditorPage) && (
+                      <span
+                        aria-label="Unsaved changes"
+                        className="visual-editor__dirty-dot"
+                      />
+                    )}
+                  </button>
+                ))}
+              </nav>
+              <button onClick={openSeo} type="button">
+                SEO settings
+              </button>
             </div>
           </div>
           <div className="visual-editor__stage" ref={stageRef}>
-            <div className="visual-editor__frame-shell" style={{ width: virtualWidth * scale, height: virtualHeight * scale }}>
+            <div
+              className="visual-editor__frame-shell"
+              style={{
+                width: virtualWidth * scale,
+                height: virtualHeight * scale,
+              }}
+            >
               <iframe
-                aria-label={`${VISUAL_PAGES[page].label} ${device} ${mode} canvas`}
+                aria-label={`${VISUAL_EDITOR_PAGES[page].label} ${mode} canvas`}
                 key={page}
                 onLoad={handleFrameLoad}
                 ref={frameRef}
                 src={frameUrl}
-                style={{ width: virtualWidth, height: virtualHeight, transform: `scale(${scale})` }}
-                title={`${VISUAL_PAGES[page].label} page preview`}
+                style={{
+                  width: virtualWidth,
+                  height: virtualHeight,
+                  transform: `scale(${scale})`,
+                }}
+                title={`${VISUAL_EDITOR_PAGES[page].label} page preview`}
               />
             </div>
           </div>
-          <p className="visual-editor__hint">{mode === 'edit' ? 'Click text, images, or sections on the page to edit them. Links will not navigate in Edit mode.' : 'Preview mode keeps buttons, tabs, and carousels interactive.'}</p>
+          <p className="visual-editor__hint">
+            {mode === 'edit'
+              ? 'Edit text in place. Click a button or Change photo to open its editor. Links do not navigate in Edit mode.'
+              : 'Preview mode keeps buttons, tabs, and carousels interactive.'}
+          </p>
         </section>
 
-        <aside aria-label="Selected element settings" className="visual-editor__inspector">
-          <h2>Inspector</h2>
-          {!selection && <p>Select text, an image, or a section on the canvas. The controls for that element will appear here.</p>}
-          {selection?.kind === 'text' && (
-            <div className="visual-editor__controls">
-              <h3>{fieldLabel(page, selection.key)}</h3>
-              <label htmlFor="visual-editor-text">Text</label>
-              <textarea id="visual-editor-text" onChange={(event) => setText(selection.key, event.target.value)} rows={Math.min(8, Math.max(2, Math.ceil(fieldValue(draft, selection.key).length / 55)))} value={fieldValue(draft, selection.key)} />
-              {selection.linkSelector && (
-                <div className="visual-editor__link-picker">
-                  <h3>Button or link destination</h3>
-                  <p>Current: <code>{currentLink}</code></p>
-                  <label htmlFor="visual-editor-link-search">Find a site page or section</label>
-                  <input id="visual-editor-link-search" onChange={(event) => setLinkSearch(event.target.value)} placeholder="Search pages and sections" value={linkSearch} />
-                  <div className="visual-editor__choices">
-                    {filteredLinks.map((item) => <button key={item.href} onClick={() => setLink(item.href)} type="button"><span>{item.label}</span><small>{item.href}</small></button>)}
-                  </div>
-                  <label htmlFor="visual-editor-custom-url">Custom or external URL</label>
-                  <input id="visual-editor-custom-url" onChange={(event) => setCustomUrl(event.target.value)} placeholder="https://example.com/page" value={customUrl} />
-                  <button disabled={!isValidVisualUrl(customUrl)} onClick={() => setLink(customUrl)} type="button">Use URL</button>
-                  {customUrl && !isValidVisualUrl(customUrl) && <p role="alert">Use a listed internal page or a valid http, https, mailto, or tel URL.</p>}
-                </div>
-              )}
-            </div>
-          )}
-          {selection?.kind === 'image' && (
-            <div className="visual-editor__controls">
-              <h3>Image</h3>
-              {imageSrc && (
-                // Library previews can include uploaded and external URLs outside Next Image's allowlist.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img alt={imageAlt || 'Selected image preview'} className="visual-editor__image-preview" src={imageSrc} />
-              )}
-              <label htmlFor="visual-editor-alt">Alternative text</label>
-              <input id="visual-editor-alt" onChange={(event) => setImage({ src: imageSrc, alt: event.target.value, position: imagePosition })} value={imageAlt} />
-              <label htmlFor="visual-editor-focal-x">Horizontal focal point: {imagePosition.split(' ')[0]}</label>
-              <input id="visual-editor-focal-x" max="100" min="0" onChange={(event) => setImage({ src: imageSrc, alt: imageAlt, position: `${event.target.value}% ${imagePosition.split(' ')[1]}` })} type="range" value={Number.parseInt(imagePosition, 10)} />
-              <label htmlFor="visual-editor-focal-y">Vertical focal point: {imagePosition.split(' ')[1]}</label>
-              <input id="visual-editor-focal-y" max="100" min="0" onChange={(event) => setImage({ src: imageSrc, alt: imageAlt, position: `${imagePosition.split(' ')[0]} ${event.target.value}%` })} type="range" value={Number.parseInt(imagePosition.split(' ')[1], 10)} />
-              <label htmlFor="visual-editor-media-search">Choose from media library</label>
-              <input id="visual-editor-media-search" onChange={(event) => setMediaSearch(event.target.value)} placeholder="Search uploaded images" value={mediaSearch} />
-              <div className="visual-editor__media-grid">
-                {filteredMedia.map((asset) => (
-                  <button aria-label={`Use ${asset.alt_text || asset.file_name}`} key={asset.id} onClick={() => setImage({ src: asset.public_url, alt: asset.alt_text || imageAlt, position: imagePosition })} type="button">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img alt="" src={asset.public_url} /><span>{asset.file_name}</span>
-                  </button>
-                ))}
+        <dialog
+          aria-labelledby="visual-editor-dialog-title"
+          className="visual-editor__dialog"
+          onCancel={(event) => {
+            if (uploading) event.preventDefault()
+          }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) closeModal()
+          }}
+          onClose={() => {
+            setModal(null)
+            setModalError('')
+          }}
+          ref={dialogRef}
+        >
+          <div className="visual-editor__dialog-content">
+            <header className="visual-editor__dialog-header">
+              <div>
+                <p className="visual-editor__eyebrow">Page editor</p>
+                <h2 id="visual-editor-dialog-title">
+                  {modal === 'image'
+                    ? 'Change photo'
+                    : modal === 'button'
+                      ? 'Edit button'
+                      : modal === 'text'
+                        ? selection?.kind === 'text'
+                          ? fieldLabel(page, selection.key)
+                          : 'Edit text'
+                        : 'SEO and social settings'}
+                </h2>
               </div>
-              {permissions.canManageMedia && (
-                <div>
-                  <label htmlFor="visual-editor-upload">Upload a new image (max 5 MB)</label>
-                  <input accept="image/jpeg,image/png,image/webp,image/avif,image/svg+xml" disabled={uploading} id="visual-editor-upload" onChange={async (event) => {
-                    const file = event.target.files?.[0]
+              <button
+                aria-label="Close editor"
+                disabled={uploading}
+                onClick={closeModal}
+                type="button"
+              >
+                ×
+              </button>
+            </header>
+            {modalError && (
+              <p className="visual-editor__dialog-error" role="alert">
+                {modalError}
+              </p>
+            )}
+            {modal === 'image' && (
+              <div className="visual-editor__dialog-body">
+                {imageDraft.src && (
+                  // Library previews may use uploaded or external URLs outside Next Image's allowlist.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt={imageDraft.alt || 'Selected photo preview'}
+                    className="visual-editor__image-preview"
+                    src={imageDraft.src}
+                  />
+                )}
+                <label htmlFor="visual-editor-alt">Alternative text</label>
+                <input
+                  id="visual-editor-alt"
+                  maxLength={300}
+                  onChange={(event) =>
+                    setImageDraft((current) => ({
+                      ...current,
+                      alt: event.target.value,
+                    }))
+                  }
+                  value={imageDraft.alt}
+                />
+                <label htmlFor="visual-editor-upload">
+                  Upload a new photo (max 5 MB)
+                </label>
+                <input
+                  accept="image/jpeg,image/png,image/webp,image/avif,image/svg+xml"
+                  disabled={!permissions.canManageMedia || uploading}
+                  id="visual-editor-upload"
+                  onChange={async (event) => {
+                    const input = event.currentTarget
+                    const file = input.files?.[0]
                     if (!file) return
-                    if (!imageAlt.trim()) { setMessage('Add descriptive alt text before uploading.'); return }
+                    if (!imageDraft.alt.trim()) {
+                      setModalError(
+                        'Add descriptive alternative text before uploading.',
+                      )
+                      input.value = ''
+                      return
+                    }
                     const data = new FormData()
                     data.set('file', file)
-                    data.set('altText', imageAlt)
+                    data.set('altText', imageDraft.alt.trim())
                     data.set('category', 'pages')
                     setUploading(true)
+                    setModalError('')
                     try {
                       const result = await uploadMediaAction(data)
-                      if (result.success && result.url) setImage({ src: result.url, alt: result.altText || imageAlt, position: imagePosition })
-                      else setMessage(result.error || 'Upload failed.')
-                    } finally { setUploading(false) }
-                  }} type="file" />
-                  {uploading && <p role="status">Uploading image…</p>}
+                      if (result.success && result.url) {
+                        setImageDraft((current) => ({
+                          ...current,
+                          src: result.url!,
+                          alt: result.altText || current.alt,
+                        }))
+                      } else {
+                        setModalError(result.error || 'Upload failed.')
+                      }
+                    } catch {
+                      setModalError('Upload failed. Please try again.')
+                    } finally {
+                      setUploading(false)
+                      input.value = ''
+                    }
+                  }}
+                  type="file"
+                />
+                {uploading && <p role="status">Uploading photo…</p>}
+                <button
+                  className="visual-editor__library-trigger visual-editor__shine-button"
+                  disabled={uploading}
+                  onClick={openLibrary}
+                  type="button"
+                >
+                  Choose from library
+                </button>
+                <div className="visual-editor__focal-controls">
+                  <label htmlFor="visual-editor-focal-x">
+                    Horizontal focal point: {imageDraft.position.split(' ')[0]}
+                  </label>
+                  <input
+                    id="visual-editor-focal-x"
+                    max="100"
+                    min="0"
+                    onChange={(event) =>
+                      setImageDraft((current) => ({
+                        ...current,
+                        position:
+                          event.target.value +
+                          '% ' +
+                          current.position.split(' ')[1],
+                      }))
+                    }
+                    type="range"
+                    value={Number.parseInt(imageDraft.position, 10)}
+                  />
+                  <label htmlFor="visual-editor-focal-y">
+                    Vertical focal point: {imageDraft.position.split(' ')[1]}
+                  </label>
+                  <input
+                    id="visual-editor-focal-y"
+                    max="100"
+                    min="0"
+                    onChange={(event) =>
+                      setImageDraft((current) => ({
+                        ...current,
+                        position:
+                          current.position.split(' ')[0] +
+                          ' ' +
+                          event.target.value +
+                          '%',
+                      }))
+                    }
+                    type="range"
+                    value={Number.parseInt(
+                      imageDraft.position.split(' ')[1],
+                      10,
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+            {modal === 'button' && (
+              <div className="visual-editor__dialog-body">
+                <label htmlFor="visual-editor-button-title">Button title</label>
+                <input
+                  autoFocus
+                  id="visual-editor-button-title"
+                  maxLength={200}
+                  onChange={(event) =>
+                    setButtonDraft((current) => ({
+                      ...current,
+                      title: event.target.value,
+                    }))
+                  }
+                  value={buttonDraft.title}
+                />
+                <label htmlFor="visual-editor-button-directory">
+                  Choose a directory destination
+                </label>
+                <select
+                  id="visual-editor-button-directory"
+                  onChange={(event) =>
+                    setButtonDraft((current) => ({
+                      ...current,
+                      href: event.target.value,
+                    }))
+                  }
+                  value={
+                    PAGE_LINK_DIRECTORY.some(
+                      (item) => item.href === buttonDraft.href,
+                    )
+                      ? buttonDraft.href
+                      : ''
+                  }
+                >
+                  <option disabled value="">
+                    Select a page or section
+                  </option>
+                  {PAGE_LINK_DIRECTORY.map((item) => (
+                    <option key={item.href} value={item.href}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {modal === 'text' && (
+              <div className="visual-editor__dialog-body">
+                <label htmlFor="visual-editor-text">Text</label>
+                <textarea
+                  autoFocus
+                  id="visual-editor-text"
+                  onChange={(event) => setTextDraft(event.target.value)}
+                  rows={7}
+                  value={textDraft}
+                />
+              </div>
+            )}
+            {modal === 'seo' && (
+              <div className="visual-editor__dialog-body">
+                <label htmlFor="visual-editor-seo-title">SEO title</label>
+                <input
+                  id="visual-editor-seo-title"
+                  maxLength={100}
+                  onChange={(event) =>
+                    setSeoDraft((current) => ({
+                      ...current,
+                      seoTitle: event.target.value,
+                    }))
+                  }
+                  value={seoDraft.seoTitle}
+                />
+                <label htmlFor="visual-editor-seo-description">
+                  SEO description
+                </label>
+                <textarea
+                  id="visual-editor-seo-description"
+                  maxLength={250}
+                  onChange={(event) =>
+                    setSeoDraft((current) => ({
+                      ...current,
+                      seoDescription: event.target.value,
+                    }))
+                  }
+                  value={seoDraft.seoDescription}
+                />
+                <label htmlFor="visual-editor-og-image">Social image URL</label>
+                <input
+                  id="visual-editor-og-image"
+                  onChange={(event) =>
+                    setSeoDraft((current) => ({
+                      ...current,
+                      ogImageUrl: event.target.value,
+                    }))
+                  }
+                  value={seoDraft.ogImageUrl}
+                />
+                <label htmlFor="visual-editor-canonical">Canonical URL</label>
+                <input
+                  id="visual-editor-canonical"
+                  onChange={(event) =>
+                    setSeoDraft((current) => ({
+                      ...current,
+                      canonicalUrl: event.target.value,
+                    }))
+                  }
+                  value={seoDraft.canonicalUrl}
+                />
+              </div>
+            )}
+            <footer className="visual-editor__dialog-actions">
+              <button disabled={uploading} onClick={closeModal} type="button">
+                Cancel
+              </button>
+              <button
+                className="visual-editor__dialog-primary"
+                disabled={!permissions.canEditDraft || uploading}
+                onClick={
+                  modal === 'image'
+                    ? applyImage
+                    : modal === 'button'
+                      ? applyButton
+                      : modal === 'text'
+                        ? applyText
+                        : applySeo
+                }
+                type="button"
+              >
+                {modal === 'image' ? 'Use photo' : 'Apply changes'}
+              </button>
+            </footer>
+          </div>
+        </dialog>
+        <dialog
+          aria-labelledby="visual-editor-library-title"
+          className="visual-editor__dialog visual-editor__library-dialog"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setLibraryOpen(false)
+          }}
+          onClose={() => setLibraryOpen(false)}
+          ref={libraryDialogRef}
+        >
+          <div className="visual-editor__dialog-content">
+            <header className="visual-editor__dialog-header">
+              <div>
+                <p className="visual-editor__eyebrow">Media library</p>
+                <h2 id="visual-editor-library-title">Choose a photo</h2>
+              </div>
+              <button
+                aria-label="Close media library"
+                onClick={() => setLibraryOpen(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </header>
+            <div className="visual-editor__dialog-body">
+              <label htmlFor="visual-editor-media-search">Search photos</label>
+              <div className="visual-editor__library-search">
+                <input
+                  id="visual-editor-media-search"
+                  onChange={(event) => {
+                    setMediaSearch(event.target.value)
+                    setVisibleMediaCount(18)
+                  }}
+                  placeholder="Search by name, description, or category"
+                  type="search"
+                  value={mediaSearch}
+                />
+                {mediaSearch && (
+                  <button
+                    className="visual-editor__shine-button"
+                    onClick={() => {
+                      setMediaSearch('')
+                      setVisibleMediaCount(18)
+                    }}
+                    type="button"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              {mediaCategories.length > 1 && (
+                <div
+                  aria-label="Photo categories"
+                  className="visual-editor__library-categories"
+                >
+                  {['all', ...mediaCategories].map((category) => (
+                    <button
+                      aria-pressed={mediaCategory === category}
+                      className="visual-editor__shine-button"
+                      key={category}
+                      onClick={() => {
+                        setMediaCategory(category)
+                        setVisibleMediaCount(18)
+                      }}
+                      type="button"
+                    >
+                      {category === 'all'
+                        ? 'All photos'
+                        : category.replace(/[-_]/g, ' ')}
+                    </button>
+                  ))}
                 </div>
               )}
-            </div>
-          )}
-          {selection?.kind === 'section' && (
-            <div className="visual-editor__controls">
-              <h3>{selectedGroup?.sections.find((section) => section.id === selection.id)?.label ?? selection.id.replace(/-/g, ' ')}</h3>
-              {selectedGroup && (
-                <details className="visual-editor__section-order">
-                  <summary>Reorder {selectedGroup.label.toLowerCase()}</summary>
-                  <p className="visual-editor__hint">Drag a section or use the arrow buttons.</p>
-                  {(draft.visual.sectionOrder[selectedGroup.id] ?? selectedGroup.sections.map((section) => section.id)).map((id, index, ordered) => {
-                    const section = selectedGroup.sections.find((item) => item.id === id)
-                    if (!section) return null
-                    return (
-                      <div
-                        className="visual-editor__section-row"
-                        draggable={mode === 'edit'}
-                        key={id}
-                        onDragStart={() => setDragging({ group: selectedGroup.id, id })}
-                        onDragOver={(event) => event.preventDefault()}
-                        onDrop={(event) => {
-                          event.preventDefault()
-                          if (dragging?.group === selectedGroup.id) reorder(selectedGroup.id, dragging.id, id)
-                          setDragging(null)
-                        }}
-                      >
-                        <span>{section.label}</span>
-                        <div>
-                          <button aria-label={`Move ${section.label} up`} disabled={index === 0 || mode === 'preview'} onClick={() => reorder(selectedGroup.id, id, ordered[index - 1])} type="button">↑</button>
-                          <button aria-label={`Move ${section.label} down`} disabled={index === ordered.length - 1 || mode === 'preview'} onClick={() => reorder(selectedGroup.id, id, ordered[index + 1])} type="button">↓</button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </details>
+              <p className="visual-editor__library-count" role="status">
+                {filteredMedia.length === 0
+                  ? 'No matching photos'
+                  : `Showing ${visibleMedia.length} of ${filteredMedia.length} photos`}
+              </p>
+              {filteredMedia.length === 0 ? (
+                <p className="visual-editor__library-empty">
+                  Try another search or category.
+                </p>
+              ) : (
+                <div className="visual-editor__media-grid">
+                  {visibleMedia.map((asset) => (
+                    <button
+                      aria-label={
+                        'Choose ' + (asset.alt_text || asset.file_name)
+                      }
+                      aria-pressed={imageDraft.src === asset.public_url}
+                      key={asset.id}
+                      onClick={() => {
+                        setImageDraft((current) => ({
+                          ...current,
+                          src: asset.public_url,
+                          alt: asset.alt_text || current.alt,
+                        }))
+                        setModalError('')
+                        setLibraryOpen(false)
+                      }}
+                      type="button"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img alt="" loading="lazy" src={asset.public_url} />
+                      <span title={asset.file_name}>{asset.file_name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {visibleMediaCount < filteredMedia.length && (
+                <button
+                  className="visual-editor__library-more visual-editor__shine-button"
+                  onClick={() => setVisibleMediaCount((count) => count + 18)}
+                  type="button"
+                >
+                  Show more photos
+                </button>
               )}
             </div>
-          )}
-          {selection && (
-            <div className="visual-editor__controls">
-              <h3>Appearance</h3>
-              <label htmlFor="visual-editor-color">Text color</label>
-              <select id="visual-editor-color" onChange={(event) => setStyle('color', event.target.value)} value={style.color || ''}>
-                <option value="">Site default</option>
-                {DESIGN_COLORS.map((color) => <option key={color.value} value={color.value}>{color.label}</option>)}
-              </select>
-              <label htmlFor="visual-editor-custom-color">Custom text color</label>
-              <input id="visual-editor-custom-color" onChange={(event) => setStyle('color', event.target.value)} type="color" value={style.color?.startsWith('#') ? style.color : '#0d0d0d'} />
-              <label htmlFor="visual-editor-background">Background color</label>
-              <select id="visual-editor-background" onChange={(event) => setStyle('backgroundColor', event.target.value)} value={style.backgroundColor || ''}>
-                <option value="">Site default</option>
-                {DESIGN_COLORS.map((color) => <option key={color.value} value={color.value}>{color.label}</option>)}
-              </select>
-              <label htmlFor="visual-editor-align">Alignment</label>
-              <select id="visual-editor-align" onChange={(event) => setStyle('textAlign', event.target.value)} value={style.textAlign || ''}>
-                <option value="">Site default</option>
-                <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
-              </select>
-              {selection.kind === 'section' && (
-                <>
-                  <label htmlFor="visual-editor-space-top">Top spacing</label>
-                  <select id="visual-editor-space-top" onChange={(event) => setStyle('paddingTop', event.target.value)} value={style.paddingTop || ''}>
-                    <option value="">Site default</option>{SPACING.map((value) => <option key={value} value={value}>{value}</option>)}
-                  </select>
-                  <label htmlFor="visual-editor-space-bottom">Bottom spacing</label>
-                  <select id="visual-editor-space-bottom" onChange={(event) => setStyle('paddingBottom', event.target.value)} value={style.paddingBottom || ''}>
-                    <option value="">Site default</option>{SPACING.map((value) => <option key={value} value={value}>{value}</option>)}
-                  </select>
-                </>
-              )}
-            </div>
-          )}
-          <details className="visual-editor__seo">
-            <summary>SEO and social settings</summary>
-            <label htmlFor="visual-editor-seo-title">SEO title</label>
-            <input id="visual-editor-seo-title" maxLength={100} onChange={(event) => updateDraft((current) => ({ ...current, seoTitle: event.target.value }))} value={draft.seoTitle} />
-            <label htmlFor="visual-editor-seo-description">SEO description</label>
-            <textarea id="visual-editor-seo-description" maxLength={250} onChange={(event) => updateDraft((current) => ({ ...current, seoDescription: event.target.value }))} value={draft.seoDescription} />
-            <label htmlFor="visual-editor-og-image">Social image URL</label>
-            <input id="visual-editor-og-image" onChange={(event) => updateDraft((current) => ({ ...current, ogImageUrl: event.target.value }))} value={draft.ogImageUrl} />
-            <label htmlFor="visual-editor-canonical">Canonical URL</label>
-            <input id="visual-editor-canonical" onChange={(event) => updateDraft((current) => ({ ...current, canonicalUrl: event.target.value }))} value={draft.canonicalUrl} />
-          </details>
-        </aside>
+            <footer className="visual-editor__dialog-actions">
+              <button onClick={() => setLibraryOpen(false)} type="button">
+                Back to photo editor
+              </button>
+            </footer>
+          </div>
+        </dialog>
       </div>
     </div>
   )

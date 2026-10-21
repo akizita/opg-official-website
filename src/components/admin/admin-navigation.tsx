@@ -175,10 +175,11 @@ export function AdminNavigation({ roleKey }: { roleKey: string }) {
 
             return (
               <Link
+                aria-label={item.label}
                 aria-current={isCurrent ? 'page' : undefined}
+                data-label={item.label}
                 href={item.href}
                 key={item.href}
-                title={item.label}
               >
                 <Icon name={item.icon} />
                 <span>{item.label}</span>

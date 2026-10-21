@@ -8,6 +8,26 @@ import {
   VISUAL_SECTION_GROUPS,
 } from '@/lib/content/page-visual'
 
+export function setAnchorLabel(anchor: HTMLAnchorElement, label: string) {
+  const walker = anchor.ownerDocument.createTreeWalker(
+    anchor,
+    NodeFilter.SHOW_TEXT,
+  )
+  let textNode = walker.nextNode()
+  while (textNode) {
+    const parent = textNode.parentElement
+    if (
+      textNode.textContent?.trim() &&
+      !parent?.closest('[aria-hidden="true"], svg')
+    ) {
+      if (textNode.textContent !== label) textNode.textContent = label
+      return
+    }
+    textNode = walker.nextNode()
+  }
+  anchor.append(anchor.ownerDocument.createTextNode(label))
+}
+
 export function applyPageVisualOverrides(
   page: VisualPage,
   config: PageVisualConfig,
@@ -17,7 +37,9 @@ export function applyPageVisualOverrides(
   if (!root) return
 
   for (const group of VISUAL_SECTION_GROUPS[page]) {
-    const order = config.sectionOrder[group.id] ?? group.sections.map((section) => section.id)
+    const order =
+      config.sectionOrder[group.id] ??
+      group.sections.map((section) => section.id)
     for (const section of group.sections) {
       const element = root.querySelector<HTMLElement>(section.selector)
       if (!element) continue
@@ -57,6 +79,16 @@ export function applyPageVisualOverrides(
     }
   }
 
+  for (const [selector, label] of Object.entries(config.labels)) {
+    try {
+      const element = root.querySelector<HTMLAnchorElement>(selector)
+      if (element?.tagName !== 'A') continue
+      setAnchorLabel(element, label)
+    } catch {
+      // Ignore a button that no longer exists on the page.
+    }
+  }
+
   for (const [selector, style] of Object.entries(config.styles)) {
     try {
       const element = root.querySelector<HTMLElement>(selector)
@@ -84,6 +116,7 @@ export function PageVisualRuntime({
     let queued = false
     const apply = () => {
       queued = false
+      if (document.documentElement.dataset.opgEditorPage) return
       applyPageVisualOverrides(page, config)
     }
     const observer = new MutationObserver(() => {

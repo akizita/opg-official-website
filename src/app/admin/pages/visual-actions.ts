@@ -12,10 +12,8 @@ import {
 } from '@/lib/auth/permissions'
 import {
   ABOUT_COPY_SECTIONS,
-  ARTICLES_COPY_SECTIONS,
   CAREERS_COPY_SECTIONS,
   CLIENTS_COPY_SECTIONS,
-  CONTACT_COPY_SECTIONS,
   HOME_COPY_SECTIONS,
   pageCopyBlocks,
   readPageCopy,
@@ -30,9 +28,9 @@ import {
   isValidVisualUrl,
   pageVisualBlock,
   type PageVisualConfig,
-  type VisualPage,
+  type VisualEditorPage,
   VISUAL_BLOCK_KEY,
-  VISUAL_PAGES,
+  VISUAL_EDITOR_PAGES,
   VISUAL_SECTION_GROUPS,
 } from '@/lib/content/page-visual'
 import { logger } from '@/lib/logger'
@@ -43,14 +41,14 @@ const SCHEMAS = {
   about: ABOUT_COPY_SECTIONS,
   clients: CLIENTS_COPY_SECTIONS,
   careers: CAREERS_COPY_SECTIONS,
-  articles: ARTICLES_COPY_SECTIONS,
-  contact: CONTACT_COPY_SECTIONS,
 } as const
 
 export type VisualSaveInput = {
-  page: VisualPage
-  intent: 'save_draft' | 'publish' | 'unpublish' | 'submit_review' | 'request_changes'
+  page: VisualEditorPage
+  intent:
+    'save_draft' | 'publish' | 'unpublish' | 'submit_review' | 'request_changes'
   expectedVersion: number
+  versionTitle: string
   title: string
   summary: string
   body?: string
@@ -64,12 +62,23 @@ export type VisualSaveInput = {
   canonicalUrl: string
 }
 
+export type VisualRevision = {
+  id: string
+  page_slug: VisualEditorPage
+  page_version: number
+  version_title: string
+  status: DocumentStatus
+  created_by_name: string
+  created_at: string
+}
+
 export type VisualSaveResult = {
   success: boolean
   message: string
   status?: DocumentStatus
   version?: number
   updatedAt?: string
+  revision?: VisualRevision
 }
 
 const validSelector = (selector: string) =>
@@ -77,30 +86,65 @@ const validSelector = (selector: string) =>
   selector.length < 500 &&
   /^[.#>:a-zA-Z0-9_() -]+$/.test(selector)
 
-function validateVisualConfig(page: VisualPage, config: PageVisualConfig): string | null {
-  if (!config || typeof config !== 'object') return 'Visual settings are invalid.'
+function validateVisualConfig(
+  page: VisualEditorPage,
+  config: PageVisualConfig,
+): string | null {
+  if (!config || typeof config !== 'object')
+    return 'Visual settings are invalid.'
   if (
-    !config.images || typeof config.images !== 'object' ||
-    !config.links || typeof config.links !== 'object' ||
-    !config.styles || typeof config.styles !== 'object' ||
-    !config.sectionOrder || typeof config.sectionOrder !== 'object'
-  ) return 'Visual settings are incomplete.'
-  if (JSON.stringify(config).length > 50000) return 'Visual settings are too large.'
+    !config.images ||
+    typeof config.images !== 'object' ||
+    !config.links ||
+    typeof config.links !== 'object' ||
+    !config.labels ||
+    typeof config.labels !== 'object' ||
+    !config.styles ||
+    typeof config.styles !== 'object' ||
+    !config.sectionOrder ||
+    typeof config.sectionOrder !== 'object'
+  )
+    return 'Visual settings are incomplete.'
+  if (JSON.stringify(config).length > 50000)
+    return 'Visual settings are too large.'
 
   for (const [selector, image] of Object.entries(config.images)) {
     if (!validSelector(selector)) return 'An image selector is invalid.'
-    if (!image || typeof image.src !== 'string' || !/^(https?:\/\/|\/[^/])/.test(image.src))
+    if (
+      !image ||
+      typeof image.src !== 'string' ||
+      !/^(https?:\/\/|\/[^/])/.test(image.src)
+    )
       return 'Choose an uploaded or valid external image.'
-    if (typeof image.alt !== 'string' || !image.alt.trim() || image.alt.length > 300)
+    if (
+      typeof image.alt !== 'string' ||
+      !image.alt.trim() ||
+      image.alt.length > 300
+    )
       return 'Every replacement image needs descriptive alt text.'
-    if (typeof image.position !== 'string' || !/^\d{1,3}% \d{1,3}%$/.test(image.position))
+    if (
+      typeof image.position !== 'string' ||
+      !/^\d{1,3}% \d{1,3}%$/.test(image.position)
+    )
       return 'Image focal point is invalid.'
-    const [x, y] = image.position.split(' ').map((part) => Number.parseInt(part, 10))
-    if (x > 100 || y > 100) return 'Image focal point must be between 0% and 100%.'
+    const [x, y] = image.position
+      .split(' ')
+      .map((part) => Number.parseInt(part, 10))
+    if (x > 100 || y > 100)
+      return 'Image focal point must be between 0% and 100%.'
   }
   for (const [selector, href] of Object.entries(config.links)) {
     if (!validSelector(selector) || !isValidVisualUrl(href))
       return 'Choose a listed site destination or a valid external URL.'
+  }
+  for (const [selector, label] of Object.entries(config.labels)) {
+    if (
+      !validSelector(selector) ||
+      typeof label !== 'string' ||
+      !label.trim() ||
+      label.length > 200
+    )
+      return 'Button titles must be between 1 and 200 characters.'
   }
   for (const [selector, style] of Object.entries(config.styles)) {
     if (!validSelector(selector)) return 'A style target is invalid.'
@@ -108,7 +152,10 @@ function validateVisualConfig(page: VisualPage, config: PageVisualConfig): strin
       if (color && !/^#[0-9a-fA-F]{6}$|^var\(--[a-z-]+\)$/.test(color))
         return 'Choose a design color or a six-digit custom color.'
     }
-    if (style.textAlign && !['left', 'center', 'right'].includes(style.textAlign))
+    if (
+      style.textAlign &&
+      !['left', 'center', 'right'].includes(style.textAlign)
+    )
       return 'Alignment is invalid.'
     for (const spacing of [style.paddingTop, style.paddingBottom]) {
       if (spacing && !/^(0|0\.5|1|1\.5|2|3|4|6|8)rem$/.test(spacing))
@@ -119,15 +166,23 @@ function validateVisualConfig(page: VisualPage, config: PageVisualConfig): strin
     const order = config.sectionOrder[group.id]
     if (!order) continue
     const expected = group.sections.map((section) => section.id)
-    if (order.length !== expected.length || new Set(order).size !== expected.length ||
-        order.some((id) => !expected.includes(id)))
+    if (
+      order.length !== expected.length ||
+      new Set(order).size !== expected.length ||
+      order.some((id) => !expected.includes(id))
+    )
       return 'Section order is invalid.'
   }
   return null
 }
 
-export async function saveVisualPageAction(input: VisualSaveInput): Promise<VisualSaveResult> {
-  if (!input || !Object.prototype.hasOwnProperty.call(VISUAL_PAGES, input.page))
+export async function saveVisualPageAction(
+  input: VisualSaveInput,
+): Promise<VisualSaveResult> {
+  if (
+    !input ||
+    !Object.prototype.hasOwnProperty.call(VISUAL_EDITOR_PAGES, input.page)
+  )
     return { success: false, message: 'Unknown marketing page.' }
   const session = await getAdminSession()
   if (!session) return { success: false, message: 'Sign in to save this page.' }
@@ -135,19 +190,31 @@ export async function saveVisualPageAction(input: VisualSaveInput): Promise<Visu
     return { success: false, message: 'Two-factor authentication is required.' }
 
   const role = session.profile.roleKey
+  const versionTitle =
+    typeof input.versionTitle === 'string' ? input.versionTitle.trim() : ''
+  if (!versionTitle || versionTitle.length > 120)
+    return {
+      success: false,
+      message: 'Enter a version title of 1 to 120 characters before saving.',
+    }
   let status: DocumentStatus
   switch (input.intent) {
     case 'publish':
-      if (!canPublish(role)) return { success: false, message: 'You cannot publish pages.' }
+      if (!canPublish(role))
+        return { success: false, message: 'You cannot publish pages.' }
       status = 'published'
       break
     case 'unpublish':
-      if (!canPublish(role)) return { success: false, message: 'You cannot unpublish pages.' }
+      if (!canPublish(role))
+        return { success: false, message: 'You cannot unpublish pages.' }
       status = 'unpublished'
       break
     case 'submit_review':
       if (!canSubmitReview(role) || role === 'super_admin')
-        return { success: false, message: 'You cannot submit this page for review.' }
+        return {
+          success: false,
+          message: 'You cannot submit this page for review.',
+        }
       status = 'in_review'
       break
     case 'request_changes':
@@ -156,7 +223,8 @@ export async function saveVisualPageAction(input: VisualSaveInput): Promise<Visu
       status = 'changes_requested'
       break
     case 'save_draft':
-      if (!canEditDraft(role)) return { success: false, message: 'You cannot edit pages.' }
+      if (!canEditDraft(role))
+        return { success: false, message: 'You cannot edit pages.' }
       status = 'draft'
       break
     default:
@@ -182,12 +250,22 @@ export async function saveVisualPageAction(input: VisualSaveInput): Promise<Visu
     .select('*')
     .eq('slug', input.page)
     .maybeSingle<PageDocument>()
-  if (fetchError) return { success: false, message: 'Could not load the current page version.' }
+  if (fetchError)
+    return {
+      success: false,
+      message: 'Could not load the current page version.',
+    }
   const currentVersion = existing?.version ?? 0
   if (input.expectedVersion !== currentVersion)
-    return { success: false, message: 'This page changed since you opened it. Refresh before saving to avoid overwriting another editor.' }
+    return {
+      success: false,
+      message:
+        'This page changed since you opened it. Refresh before saving to avoid overwriting another editor.',
+    }
 
-  const knownKeys = new Set(schema.flatMap((section) => section.fields.map((field) => field.key)))
+  const knownKeys = new Set(
+    schema.flatMap((section) => section.fields.map((field) => field.key)),
+  )
   const previous = Array.isArray(existing?.content) ? existing.content : []
   let replacedClientHeading = false
   let replacedClientParagraph = false
@@ -195,11 +273,19 @@ export async function saveVisualPageAction(input: VisualSaveInput): Promise<Visu
     if (block.type === 'paragraph' && block.key)
       return block.key !== VISUAL_BLOCK_KEY && !knownKeys.has(block.key)
     if (input.page === 'about' && block.type === 'paragraph') return false
-    if (input.page === 'clients' && block.type === 'heading' && !replacedClientHeading) {
+    if (
+      input.page === 'clients' &&
+      block.type === 'heading' &&
+      !replacedClientHeading
+    ) {
       replacedClientHeading = true
       return false
     }
-    if (input.page === 'clients' && block.type === 'paragraph' && !replacedClientParagraph) {
+    if (
+      input.page === 'clients' &&
+      block.type === 'paragraph' &&
+      !replacedClientParagraph
+    ) {
       replacedClientParagraph = true
       return false
     }
@@ -207,15 +293,27 @@ export async function saveVisualPageAction(input: VisualSaveInput): Promise<Visu
   })
   const content: RichTextBlock[] = [...preserved]
   if (input.page === 'about') {
-    const paragraphs = (input.body || '').split(/\n\n+/).map((value) => value.trim()).filter(Boolean)
-    if (!paragraphs.length) return { success: false, message: 'Who We Are story cannot be empty.' }
-    content.push(...paragraphs.map((paragraph): RichTextBlock => ({ type: 'paragraph', content: paragraph })))
+    const paragraphs = (input.body || '')
+      .split(/\n\n+/)
+      .map((value) => value.trim())
+      .filter(Boolean)
+    if (!paragraphs.length)
+      return { success: false, message: 'Who We Are story cannot be empty.' }
+    content.push(
+      ...paragraphs.map((paragraph): RichTextBlock => ({
+        type: 'paragraph',
+        content: paragraph,
+      })),
+    )
   }
   if (input.page === 'clients') {
     const editorialTitle = input.editorialTitle?.trim()
     const editorialLead = input.editorialLead?.trim()
     if (!editorialTitle || !editorialLead)
-      return { success: false, message: 'The Clients featured story needs a heading and introduction.' }
+      return {
+        success: false,
+        message: 'The Clients featured story needs a heading and introduction.',
+      }
     content.push(
       { type: 'heading', level: 2, content: editorialTitle },
       { type: 'paragraph', content: editorialLead },
@@ -223,13 +321,10 @@ export async function saveVisualPageAction(input: VisualSaveInput): Promise<Visu
   }
   content.push(...pageCopyBlocks(copy.values), pageVisualBlock(input.visual))
 
-  const primary = input.page === 'careers'
-    ? { title: copy.values.heroTitle, summary: copy.values.heroLead }
-    : input.page === 'articles'
-      ? { title: copy.values.pageTitle, summary: copy.values.collectionLead }
-      : input.page === 'contact'
-        ? { title: copy.values.heroTitle, summary: copy.values.heroLead }
-        : { title: input.title, summary: input.summary }
+  const primary =
+    input.page === 'careers'
+      ? { title: copy.values.heroTitle, summary: copy.values.heroLead }
+      : { title: input.title, summary: input.summary }
   const validation = validatePageDocumentInput({
     ...primary,
     content,
@@ -244,6 +339,7 @@ export async function saveVisualPageAction(input: VisualSaveInput): Promise<Visu
 
   const now = new Date().toISOString()
   const version = currentVersion + 1
+  const revisionId = crypto.randomUUID()
   const record = {
     slug: input.page,
     ...validation.data,
@@ -251,7 +347,11 @@ export async function saveVisualPageAction(input: VisualSaveInput): Promise<Visu
     version,
     updated_at: now,
     updated_by: session.profile.id,
-    ...(status === 'published' ? { published_at: now, published_by: session.profile.id } : {}),
+    visual_revision_id: revisionId,
+    visual_revision_title: versionTitle,
+    ...(status === 'published'
+      ? { published_at: now, published_by: session.profile.id }
+      : {}),
   }
   const { data: saved, error } = existing
     ? await supabase
@@ -267,19 +367,103 @@ export async function saveVisualPageAction(input: VisualSaveInput): Promise<Visu
         .select('id')
         .maybeSingle()
   if (error) {
-    logger.error('Failed to save visual marketing page', { page: input.page, error: error.message })
+    logger.error('Failed to save visual marketing page', {
+      page: input.page,
+      error: error.message,
+    })
     return { success: false, message: 'Could not save the page. Please retry.' }
   }
   if (!saved)
-    return { success: false, message: 'This page was updated by another editor. Refresh before saving.' }
-  revalidatePath(VISUAL_PAGES[input.page].path)
+    return {
+      success: false,
+      message:
+        'This page was updated by another editor. Refresh before saving.',
+    }
+  revalidatePath(VISUAL_EDITOR_PAGES[input.page].path)
   revalidatePath('/admin/pages')
   revalidatePath('/sitemap.xml')
   return {
     success: true,
-    message: status === 'published' ? 'Page published. The public page has been refreshed.' : 'Page saved.',
+    message:
+      status === 'published'
+        ? 'Page published. The public page has been refreshed.'
+        : 'Page saved.',
     status,
     version,
     updatedAt: now,
+    revision: {
+      id: revisionId,
+      page_slug: input.page,
+      page_version: version,
+      version_title: versionTitle,
+      status,
+      created_by_name: session.profile.displayName,
+      created_at: now,
+    },
   }
+}
+
+export async function deleteVisualRevisionAction(
+  page: VisualEditorPage,
+  revisionId: string,
+): Promise<{ success: boolean; message: string }> {
+  if (!Object.prototype.hasOwnProperty.call(VISUAL_EDITOR_PAGES, page))
+    return { success: false, message: 'Unknown marketing page.' }
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      revisionId,
+    )
+  )
+    return { success: false, message: 'Invalid version ID.' }
+
+  const session = await getAdminSession()
+  if (!session)
+    return { success: false, message: 'Sign in to manage versions.' }
+  if (isAdminMfaRequired() && session.currentLevel !== 'aal2')
+    return { success: false, message: 'Two-factor authentication is required.' }
+  if (!canEditDraft(session.profile.roleKey))
+    return { success: false, message: 'You cannot delete draft versions.' }
+
+  const supabase = await createClient()
+  const { data: revision, error: readError } = await supabase
+    .from('page_visual_versions')
+    .select('id, page_version, status')
+    .eq('id', revisionId)
+    .eq('page_slug', page)
+    .maybeSingle<{ id: string; page_version: number; status: DocumentStatus }>()
+  if (readError || !revision)
+    return { success: false, message: 'This version is no longer available.' }
+
+  const { data: current, error: pageError } = await supabase
+    .from('page_documents')
+    .select('version')
+    .eq('slug', page)
+    .maybeSingle<{ version: number }>()
+  if (pageError || !current)
+    return { success: false, message: 'Could not verify the current page.' }
+  if (revision.status !== 'draft' || revision.page_version >= current.version)
+    return {
+      success: false,
+      message: 'Only older draft versions can be deleted.',
+    }
+
+  const { data: deleted, error: deleteError } = await supabase
+    .from('page_visual_versions')
+    .delete()
+    .eq('id', revisionId)
+    .eq('page_slug', page)
+    .eq('status', 'draft')
+    .select('id')
+    .maybeSingle()
+  if (deleteError || !deleted) {
+    if (deleteError)
+      logger.error('Failed to delete visual page version', {
+        page,
+        revisionId,
+        error: deleteError.message,
+      })
+    return { success: false, message: 'Could not delete this draft version.' }
+  }
+  revalidatePath('/admin/pages')
+  return { success: true, message: 'Draft version deleted.' }
 }
