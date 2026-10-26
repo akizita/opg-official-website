@@ -22,6 +22,7 @@ type NavigationIcon =
   | 'pages'
   | 'services'
   | 'subscribers'
+  | 'testimonials'
 
 type NavigationItem = {
   href: string
@@ -100,6 +101,12 @@ function Icon({ name }: { name: NavigationIcon }) {
         <path d="M5 21c0-4.5 2.3-7 7-7s7 2.5 7 7" />
       </>
     ),
+    testimonials: (
+      <>
+        <path d="M5 5h14v12H9l-4 3z" />
+        <path d="M8 9h3v3H8zM13 9h3v3h-3z" />
+      </>
+    ),
   }
 
   return (
@@ -127,6 +134,11 @@ export function AdminNavigation({ roleKey }: { roleKey: string }) {
     ? [
         { href: '/admin/services', icon: 'services', label: 'Services' },
         { href: '/admin/clients', icon: 'clients', label: 'Clients' },
+        {
+          href: '/admin/testimonials',
+          icon: 'testimonials',
+          label: 'Testimonials',
+        },
         { href: '/admin/careers', icon: 'briefcase', label: 'Careers' },
         { href: '/admin/faqs', icon: 'faqs', label: 'FAQs' },
       ]

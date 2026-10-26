@@ -32,6 +32,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       changeFrequency: 'monthly',
       priority: 0.8,
+      url: new URL('/testimonials', siteUrl).toString(),
+    },
+    {
+      changeFrequency: 'monthly',
+      priority: 0.8,
       url: new URL('/contact', siteUrl).toString(),
     },
   ]
@@ -56,6 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             'mission-and-vision',
             'articles',
             'careers',
+            'testimonials',
             'faqs',
             'contact',
             'search',

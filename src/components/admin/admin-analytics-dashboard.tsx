@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 import type { AdminProfile } from '@/lib/auth/admin-session'
 import { canViewContent, canViewInquiries } from '@/lib/auth/permissions'
+import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
 import { featuredArticles } from '@/lib/content/featured-articles'
 import { createClient } from '@/lib/supabase/server'
 
@@ -45,11 +46,10 @@ type InquiryRecord = {
 }
 
 type TestimonialRecord = {
-  author_company: string | null
   author_name: string
-  created_at: string
   id: string
-  status: string
+  relationship: 'prospective' | 'past'
+  submitted_at: string
 }
 
 type MetricIcon = 'contacts' | 'likes' | 'visits' | 'views'
@@ -322,10 +322,10 @@ export async function AdminAnalyticsDashboard({
       : Promise.resolve({ data: [] }),
     canReadContent
       ? supabase
-          .from('testimonials')
-          .select('id, author_name, author_company, status, created_at')
-          .in('status', ['draft', 'in_review'])
-          .order('created_at', { ascending: false })
+          .from('candidate_testimonials')
+          .select('id, author_name, relationship, submitted_at')
+          .eq('status', 'pending')
+          .order('submitted_at', { ascending: false })
           .limit(5)
       : Promise.resolve({ data: [] }),
   ])
@@ -599,15 +599,23 @@ export async function AdminAnalyticsDashboard({
                   <h2>Testimonials</h2>
                 </div>
               </div>
-              {canReadContent && <Link href="/admin/clients">View all</Link>}
+              {canReadContent && (
+                <Link href="/admin/testimonials">View all</Link>
+              )}
             </header>
 
             <div className="admin-review-card__list">
+              {canReadContent && (
+                <CandidateTestimonialsLive
+                  audience="admin"
+                  showStatus={false}
+                />
+              )}
               {testimonials.length > 0 ? (
                 testimonials.map((testimonial) => (
                   <Link
                     className="admin-review-card__item"
-                    href="/admin/clients"
+                    href={`/admin/testimonials?status=pending#testimonial-${testimonial.id}`}
                     key={testimonial.id}
                   >
                     <span className="admin-review-card__avatar admin-review-card__avatar--gold">
@@ -616,14 +624,16 @@ export async function AdminAnalyticsDashboard({
                     <span className="admin-review-card__copy">
                       <strong>{testimonial.author_name}</strong>
                       <small>
-                        {testimonial.author_company || 'Client testimonial'}
+                        {testimonial.relationship === 'past'
+                          ? 'Past candidate'
+                          : 'Prospective candidate'}
                       </small>
                     </span>
                     <span className="admin-review-card__meta">
-                      <time dateTime={testimonial.created_at}>
-                        {formatReviewDate(testimonial.created_at)}
+                      <time dateTime={testimonial.submitted_at}>
+                        {formatReviewDate(testimonial.submitted_at)}
                       </time>
-                      <i>{testimonial.status.replace('_', ' ')}</i>
+                      <i>Pending</i>
                     </span>
                   </Link>
                 ))

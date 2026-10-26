@@ -8,6 +8,12 @@
 
 ---
 
+## Next session handoff — 2026-10-22
+
+- [x] Build a public candidate testimonials page with two tabs: a testimonial submission form and approved testimonials. This page is for prospective and past OPG candidates. Keep it distinct from the existing client endorsements on the Clients page. — Implemented 2026-10-22 with review-pending submissions, approved-only public reads, and staging migrations.
+- [x] Build Testimonial Management in the admin interface. Admins can review submitted candidate testimonials and approve or reject them; only approved submissions appear on the public testimonials tab. — Implemented 2026-10-22 with a permission-filtered review queue, atomic review decisions, dashboard navigation, and staging migrations. Added live admin and public updates using private and sanitized Broadcast signals.
+- [ ] Return to the Pages editor for further polish later. Its current refinement is unfinished and is not the next implementation priority.
+
 ## 1. Purpose
 
 This is the day-to-day delivery plan for the OPG Official Website. It turns the architecture document into an ordered backlog with decision gates, expected outputs, quality checks, and launch criteria.

@@ -13,6 +13,7 @@ const footerGroups = [
     title: 'For talent',
     links: [
       { href: '/careers', label: 'Careers' },
+      { href: '/testimonials', label: 'Testimonials' },
       { href: '/articles', label: 'Articles' },
     ],
   },
