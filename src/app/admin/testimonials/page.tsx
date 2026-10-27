@@ -255,14 +255,6 @@ export default async function AdminTestimonialsPage({
         <CandidateTestimonialsLive audience="admin" showStatus={false} />
         <div className="candidate-review-heading">
           <div>
-            <nav
-              aria-label="Breadcrumb"
-              className="candidate-review-breadcrumbs"
-            >
-              <Link href="/admin">Admin</Link>
-              <span aria-hidden="true">/</span>
-              <span aria-current="page">Testimonials</span>
-            </nav>
             <h1>Testimonial management</h1>
             <p>
               Track candidate feedback, review incoming stories, and manage
@@ -278,18 +270,6 @@ export default async function AdminTestimonialsPage({
         />
 
         <div className="candidate-review-table-card">
-          <div className="candidate-review-list-heading">
-            <div>
-              <h2>Submissions</h2>
-              <span>
-                {listError
-                  ? 'Unable to load the selected list'
-                  : submissions.length > 0
-                    ? `Showing ${(page - 1) * PAGE_SIZE + 1}–${(page - 1) * PAGE_SIZE + submissions.length} of ${activeCount}`
-                    : `No ${status === 'all' ? '' : `${status} `}submissions yet`}
-              </span>
-            </div>
-          </div>
           {listError ? (
             <div className="candidate-review-empty" role="alert">
               <span aria-hidden="true">!</span>

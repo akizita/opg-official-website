@@ -8,11 +8,13 @@ export function PillDropdown({
   label,
   onChange,
   options,
+  placement = 'bottom',
   value,
 }: {
   label: string
   onChange: (value: string) => void
   options: Option[]
+  placement?: 'bottom' | 'top'
   value: string
 }) {
   const [open, setOpen] = useState(false)
@@ -55,7 +57,10 @@ export function PillDropdown({
   }
 
   return (
-    <div className="candidate-review-pill-picker" ref={rootRef}>
+    <div
+      className={`candidate-review-pill-picker${placement === 'top' ? ' candidate-review-pill-picker--top' : ''}`}
+      ref={rootRef}
+    >
       <button
         aria-controls={menuId}
         aria-expanded={open}

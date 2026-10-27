@@ -909,6 +909,7 @@ export function TestimonialsInbox({
           </span>
           <PillDropdown
             label="Rows per page"
+            placement="top"
             onChange={(value) => {
               setPageSize(Number(value))
               setLocalPage(1)
