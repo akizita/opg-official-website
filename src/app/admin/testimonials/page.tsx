@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { TestimonialHeaderActions } from '@/app/admin/testimonials/testimonial-header-actions'
+import { TestimonialRetryButton } from '@/app/admin/testimonials/testimonial-retry-button'
 
 import {
   TestimonialAnalytics,
@@ -293,8 +294,12 @@ export default async function AdminTestimonialsPage({
           </div>
           {listError ? (
             <div className="candidate-review-empty" role="alert">
+              <span aria-hidden="true">!</span>
               <h3>Could not load submissions</h3>
-              <p>Refresh this page to try again.</p>
+              <p>
+                The list is temporarily unavailable. Try again to reload it.
+              </p>
+              <TestimonialRetryButton />
             </div>
           ) : (
             <>

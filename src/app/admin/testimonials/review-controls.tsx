@@ -11,9 +11,11 @@ import {
 export function TestimonialReviewControls({
   id,
   onComplete,
+  onResult,
 }: {
   id: string
   onComplete?: () => void
+  onResult?: (message: string, tone: 'success' | 'error') => void
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -27,14 +29,19 @@ export function TestimonialReviewControls({
       try {
         const result = await reviewCandidateTestimonialAction(id, decision)
         if (!result.success) {
-          setError(result.error ?? 'The review could not be saved.')
+          const message = result.error ?? 'The review could not be saved.'
+          setError(message)
+          onResult?.(message, 'error')
           return
         }
         setCompleted(true)
+        onResult?.(`Testimonial ${decision}.`, 'success')
         onComplete?.()
         router.refresh()
       } catch {
-        setError('The review could not be saved. Try again.')
+        const message = 'The review could not be saved. Try again.'
+        setError(message)
+        onResult?.(message, 'error')
       }
     })
   }

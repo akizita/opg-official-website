@@ -266,6 +266,10 @@ export function TestimonialsInbox({
   const [hiddenIds, setHiddenIds] = useState<string[]>([])
   const [deleteError, setDeleteError] = useState('')
   const [reviewError, setReviewError] = useState('')
+  const [toast, setToast] = useState<{
+    message: string
+    tone: 'success' | 'error'
+  } | null>(null)
   const [search, setSearch] = useState('')
   const [connection, setConnection] = useState<'all' | 'past' | 'prospective'>(
     'all',
@@ -331,6 +335,12 @@ export function TestimonialsInbox({
   const selectedApprovable = selectedPending.filter(
     (item) => item.publication_consent,
   )
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = window.setTimeout(() => setToast(null), 5000)
+    return () => window.clearTimeout(timer)
+  }, [toast])
 
   useEffect(() => {
     const dialog = detailDialogRef.current
@@ -429,11 +439,16 @@ export function TestimonialsInbox({
         )
         if (selectedId && succeeded.includes(selectedId)) setSelectedId(null)
         router.refresh()
+        setToast({
+          message: `${succeeded.length} testimonial${succeeded.length === 1 ? '' : 's'} ${decision}.`,
+          tone: 'success',
+        })
       }
-      if (failed > 0)
-        setReviewError(
-          `${failed} of ${items.length} testimonials could not be ${decision}. Refresh and try again.`,
-        )
+      if (failed > 0) {
+        const message = `${failed} of ${items.length} testimonials could not be ${decision}. Refresh and try again.`
+        setReviewError(message)
+        setToast({ message, tone: 'error' })
+      }
     })
   }
 
@@ -455,17 +470,24 @@ export function TestimonialsInbox({
             current.filter((id) => !deletedIds.includes(id)),
           )
           router.refresh()
+          setToast({
+            message: `${deletedIds.length} testimonial${deletedIds.length === 1 ? '' : 's'} deleted.`,
+            tone: 'success',
+          })
         }
         if (result.error) {
           setDeleteTargets((current) =>
             current.filter((item) => !deletedIds.includes(item.id)),
           )
           setDeleteError(result.error)
+          setToast({ message: result.error, tone: 'error' })
         } else {
           setDeleteTargets([])
         }
       } catch {
-        setDeleteError('Could not delete the selected testimonials. Try again.')
+        const message = 'Could not delete the selected testimonials. Try again.'
+        setDeleteError(message)
+        setToast({ message, tone: 'error' })
       }
     })
   }
@@ -904,14 +926,27 @@ export function TestimonialsInbox({
         {visibleSubmissions.length === 0 && (
           <div className="candidate-review-empty">
             <span aria-hidden="true">✦</span>
-            <h3>No matching testimonials</h3>
-            <p>Try a different search or connection filter.</p>
+            <h3>
+              {submissions.length === 0
+                ? status === 'pending'
+                  ? 'Review queue is clear'
+                  : 'No stories here yet'
+                : 'No matching testimonials'}
+            </h3>
+            <p>
+              {submissions.length === 0
+                ? 'New candidate stories will appear here when submitted.'
+                : 'Try a different search or connection filter.'}
+            </p>
             <button
               className="candidate-review-button candidate-review-button--neutral"
               onClick={() => {
                 setSearch('')
                 setConnection('all')
                 setSelectedIds([])
+                if (status !== 'all')
+                  router.push('/admin/testimonials?status=all')
+                else router.refresh()
               }}
               type="button"
             >
@@ -1043,6 +1078,7 @@ export function TestimonialsInbox({
                   <TestimonialReviewControls
                     id={selected.id}
                     onComplete={closeDetails}
+                    onResult={(message, tone) => setToast({ message, tone })}
                   />
                 </div>
               )}
@@ -1115,6 +1151,22 @@ export function TestimonialsInbox({
             </div>
           </div>
         </dialog>
+      )}
+      {toast && (
+        <div
+          className={`candidate-review-toast candidate-review-toast--${toast.tone}`}
+          role={toast.tone === 'error' ? 'alert' : 'status'}
+        >
+          <span aria-hidden="true">{toast.tone === 'success' ? '✓' : '!'}</span>
+          <p>{toast.message}</p>
+          <button
+            aria-label="Dismiss notification"
+            onClick={() => setToast(null)}
+            type="button"
+          >
+            ×
+          </button>
+        </div>
       )}
     </>
   )
