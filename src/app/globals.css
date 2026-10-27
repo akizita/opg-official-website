@@ -23997,7 +23997,9 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-status {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
   font-size: 0.73rem;
@@ -24446,5 +24448,357 @@ html:has(.pages-workspace) {
   .admin-shell__nav-group > a {
     width: 44px;
     flex-basis: 44px;
+  }
+}
+
+/* Testimonial inbox table and local controls. */
+.candidate-review-inbox__toolbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  padding: 0.85rem 1.2rem;
+  border-bottom: 1px solid var(--review-border);
+}
+
+.candidate-review-inbox__toolbar > label {
+  display: grid;
+  gap: 0.2rem;
+  color: var(--review-muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.candidate-review-inbox__toolbar :is(input, select),
+.candidate-review-inbox__pagination select {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--review-border);
+  border-radius: 0.65rem;
+  background: #fffdf9;
+  color: var(--review-ink);
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.candidate-review-inbox__toolbar .candidate-review-inbox__search {
+  flex: 1 1 13rem;
+}
+
+.candidate-review-inbox__toolbar .candidate-review-filter-picker__trigger {
+  min-height: 2.6rem;
+}
+
+.candidate-review-inbox__bulk-toolbar {
+  position: sticky;
+  z-index: 6;
+  top: 0;
+  border-bottom: 1px solid var(--review-border);
+  background: #fff9e9;
+}
+
+.candidate-review-inbox__bulk-toolbar > span {
+  margin-right: auto;
+}
+
+.candidate-review-inbox__feedback {
+  padding: 0.5rem 1.2rem;
+}
+
+.candidate-review-inbox__scroll {
+  max-height: 44rem;
+  overflow: auto;
+}
+
+.candidate-review-inbox table {
+  width: 100%;
+  min-width: 53rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8rem;
+}
+
+.candidate-review-inbox thead th {
+  position: sticky;
+  z-index: 4;
+  top: 0;
+  padding: 0.6rem 0.65rem;
+  border-bottom: 1px solid var(--review-border);
+  background: #f8edcf;
+  color: var(--review-muted);
+  font-weight: 800;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.candidate-review-inbox thead th:first-child {
+  width: 2.4rem;
+}
+
+.candidate-review-inbox thead th:nth-last-child(2) {
+  width: 7rem;
+}
+
+.candidate-review-inbox thead th:last-child {
+  width: 8.6rem;
+}
+
+.candidate-review-inbox thead button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: inherit;
+}
+
+.candidate-review-inbox thead button span {
+  margin-left: 0.2rem;
+  color: var(--review-gold-ink);
+}
+
+.candidate-review-inbox tbody tr {
+  background: #fffdf7;
+}
+
+.candidate-review-inbox tbody tr:nth-child(even) {
+  background: #fffbef;
+}
+
+.candidate-review-inbox tbody tr:hover,
+.candidate-review-inbox tbody tr:focus-within {
+  background: #fff3d5;
+}
+
+.candidate-review-inbox tbody tr.is-selected {
+  background: #ffe9ad;
+}
+
+.candidate-review-inbox tbody :is(td, th) {
+  min-width: 0;
+  padding: 0.65rem;
+  border-bottom: 1px solid #e5d9c2;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.candidate-review-inbox__candidate {
+  max-width: 13rem;
+}
+
+.candidate-review-inbox__story {
+  max-width: 19rem;
+}
+
+.candidate-review-inbox__preview {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.candidate-review-inbox__read-more {
+  margin-top: 0.15rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--review-gold-ink);
+  cursor: pointer;
+  font-size: 0.73rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
+}
+
+.candidate-review-avatar {
+  background: hsl(var(--avatar-hue, 35) 65% 84%);
+  color: hsl(var(--avatar-hue, 35) 75% 21%);
+  font-weight: 850;
+}
+
+.candidate-review-inbox__connection-badge {
+  display: inline-block;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid #a8894f;
+  border-radius: 0.4rem;
+  color: #594222;
+  line-height: 1.25;
+}
+
+.candidate-review-inbox__date {
+  white-space: normal;
+}
+
+.candidate-review-inbox__date small {
+  display: block;
+  color: var(--review-muted);
+  font-size: 0.68rem;
+}
+
+.candidate-review-inbox__actions {
+  position: relative;
+  white-space: nowrap;
+}
+
+.candidate-review-inbox__primary {
+  min-height: 2rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #ac811f;
+  border-radius: 0.5rem;
+  background: #ffe6a5;
+  color: #3b2b10;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.candidate-review-inbox__more {
+  position: relative;
+  top: auto;
+  right: auto;
+  display: inline-block;
+  transform: none;
+  vertical-align: middle;
+}
+
+.candidate-review-inbox__more-button {
+  width: 2rem;
+  height: 2rem;
+  margin-left: 0.25rem;
+}
+
+.candidate-review-inbox__menu {
+  top: calc(100% + 0.25rem);
+  min-width: 11rem;
+}
+
+.candidate-review-inbox__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.8rem 1.2rem;
+  color: var(--review-muted);
+  font-size: 0.77rem;
+}
+
+.candidate-review-inbox__pagination > span {
+  margin-right: auto;
+}
+
+.candidate-review-inbox__pagination label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.candidate-review-inbox__pagination select {
+  width: auto;
+  min-height: 2.2rem;
+}
+
+.candidate-review-inbox__pagination button {
+  min-height: 2.2rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--review-border);
+  border-radius: 0.5rem;
+  background: #fffdf7;
+  color: var(--review-ink);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.candidate-review-inbox__pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.candidate-review-dialog:not(.candidate-review-dialog--confirm) {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(100%, 31rem);
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0 0 0 auto;
+  border-radius: 1.25rem 0 0 1.25rem;
+}
+
+@media (max-width: 767px) {
+  .candidate-review-inbox__toolbar > label,
+  .candidate-review-inbox__toolbar > .candidate-review-filter-picker {
+    flex: 1 1 9rem;
+  }
+
+  .candidate-review-inbox__scroll {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .candidate-review-inbox table,
+  .candidate-review-inbox tbody,
+  .candidate-review-inbox tbody tr,
+  .candidate-review-inbox tbody :is(td, th) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .candidate-review-inbox thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .candidate-review-inbox tbody tr {
+    position: relative;
+    margin: 0.7rem 0;
+    padding: 0.75rem;
+    border: 1px solid var(--review-border);
+    border-radius: 0.8rem;
+  }
+
+  .candidate-review-inbox tbody :is(td, th) {
+    padding: 0.35rem 0;
+    border-bottom: 0;
+  }
+
+  .candidate-review-inbox__selection {
+    position: absolute;
+    top: 0.8rem;
+    right: 0.8rem;
+    width: auto !important;
+  }
+
+  .candidate-review-inbox__candidate {
+    padding-right: 2rem !important;
+  }
+
+  .candidate-review-inbox
+    tbody
+    td:not(
+      .candidate-review-inbox__story,
+      .candidate-review-inbox__selection,
+      .candidate-review-inbox__actions
+    )::before {
+    display: block;
+    color: var(--review-muted);
+    content: attr(data-label);
+    font-size: 0.69rem;
+    font-weight: 800;
+  }
+
+  .candidate-review-inbox__actions {
+    border-top: 1px solid var(--review-border);
+  }
+
+  .candidate-review-dialog:not(.candidate-review-dialog--confirm) {
+    width: min(100%, 27rem);
   }
 }

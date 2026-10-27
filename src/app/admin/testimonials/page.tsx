@@ -10,7 +10,6 @@ import {
 } from '@/app/admin/testimonials/testimonial-analytics'
 import {
   TestimonialsInbox,
-  TestimonialStatusFilter,
   type CandidateSubmission,
   type ReviewFilter,
   type ReviewStatus,
@@ -256,7 +255,10 @@ export default async function AdminTestimonialsPage({
         <CandidateTestimonialsLive audience="admin" showStatus={false} />
         <div className="candidate-review-heading">
           <div>
-            <nav aria-label="Breadcrumb" className="candidate-review-breadcrumbs">
+            <nav
+              aria-label="Breadcrumb"
+              className="candidate-review-breadcrumbs"
+            >
               <Link href="/admin">Admin</Link>
               <span aria-hidden="true">/</span>
               <span aria-current="page">Testimonials</span>
@@ -270,7 +272,11 @@ export default async function AdminTestimonialsPage({
           <TestimonialHeaderActions submissions={submissions} />
         </div>
 
-        <TestimonialAnalytics activeStatus={status} summaries={analytics} trends={trends} />
+        <TestimonialAnalytics
+          activeStatus={status}
+          summaries={analytics}
+          trends={trends}
+        />
 
         <div className="candidate-review-table-card">
           <div className="candidate-review-list-heading">
@@ -284,33 +290,20 @@ export default async function AdminTestimonialsPage({
                     : `No ${status === 'all' ? '' : `${status} `}submissions yet`}
               </span>
             </div>
-            <TestimonialStatusFilter filters={filters} status={status} />
           </div>
           {listError ? (
             <div className="candidate-review-empty" role="alert">
               <h3>Could not load submissions</h3>
               <p>Refresh this page to try again.</p>
             </div>
-          ) : submissions.length === 0 ? (
-            <div className="candidate-review-empty">
-              <span aria-hidden="true">✦</span>
-              <h3>
-                {status === 'pending'
-                  ? 'Review queue is clear'
-                  : 'No stories here yet'}
-              </h3>
-              <p>
-                {status === 'pending'
-                  ? 'New candidate testimonials will appear here for review.'
-                  : 'Submissions matching this filter will appear here.'}
-              </p>
-            </div>
           ) : (
             <>
               <TestimonialsInbox
                 canDelete={canArchive(profile.roleKey)}
                 canReview={canPublish(profile.roleKey)}
+                filters={filters}
                 key={`${status}:${page}`}
+                status={status}
                 submissions={submissions}
               />
               {lastPage > 1 && (
