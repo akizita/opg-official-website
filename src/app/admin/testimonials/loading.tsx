@@ -10,15 +10,16 @@ export default function Loading() {
           <span className="candidate-review-skeleton__line" />
           <span className="candidate-review-skeleton__line candidate-review-skeleton__line--wide" />
         </div>
-        <div className="candidate-review-analytics" aria-hidden="true">
-          <div className="candidate-review-analytics__card candidate-review-skeleton__card">
-            <span className="candidate-review-skeleton__line" />
-            <span className="candidate-review-skeleton__chart" />
-          </div>
-          <div className="candidate-review-analytics__card candidate-review-skeleton__card">
-            <span className="candidate-review-skeleton__line" />
-            <span className="candidate-review-skeleton__ring" />
-          </div>
+        <div className="candidate-review-stats" aria-hidden="true">
+          {(['approved', 'pending', 'rejected'] as const).map((status) => (
+            <div
+              className={`candidate-review-stats__card candidate-review-stats__card--${status} candidate-review-skeleton__card`}
+              key={status}
+            >
+              <span className="candidate-review-skeleton__line" />
+              <span className="candidate-review-skeleton__line candidate-review-skeleton__count" />
+            </div>
+          ))}
         </div>
         <div
           className="candidate-review-table-card candidate-review-skeleton__table"

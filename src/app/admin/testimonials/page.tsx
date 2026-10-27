@@ -2,12 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { TestimonialRetryButton } from '@/app/admin/testimonials/testimonial-retry-button'
 
-import {
-  TestimonialAnalytics,
-  type AnalyticsPeriod,
-  type TestimonialAnalyticsSummary,
-  type TestimonialTrendPoint,
-} from '@/app/admin/testimonials/testimonial-analytics'
+import { TestimonialAnalytics } from '@/app/admin/testimonials/testimonial-analytics'
 import {
   TestimonialsInbox,
   type CandidateSubmission,
@@ -35,42 +30,12 @@ type SubmissionRecord = Omit<
   profile_photo_path?: string | null
   profile_photo_data?: string | null
 }
-type AnalyticsRecord = {
-  period: string
-  submission_count: number | string
-  previous_count: number | string
-  prospective_count: number | string
-  past_count: number | string
-  pending_count: number | string
-  approved_count: number | string
-  rejected_count: number | string
-}
-type TrendRecord = {
-  period: string
-  bucket_index: number
-  bucket_start: string
-  submission_count: number | string | null
-}
 type PageProps = {
   searchParams: Promise<{ status?: string; page?: string }>
 }
 
 const PAGE_SIZE = 20
 const STATUSES: ReviewStatus[] = ['pending', 'approved', 'rejected', 'all']
-const trendLabelFormats: Record<AnalyticsPeriod, Intl.DateTimeFormat> = {
-  week: new Intl.DateTimeFormat('en-SG', {
-    weekday: 'short',
-    timeZone: 'Asia/Singapore',
-  }),
-  month: new Intl.DateTimeFormat('en-SG', {
-    day: 'numeric',
-    timeZone: 'Asia/Singapore',
-  }),
-  year: new Intl.DateTimeFormat('en-SG', {
-    month: 'short',
-    timeZone: 'Asia/Singapore',
-  }),
-}
 const listDateFormat = new Intl.DateTimeFormat('en-SG', {
   day: 'numeric',
   month: 'short',
@@ -123,47 +88,14 @@ export default async function AdminTestimonialsPage({
   const pageNumber =
     Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
   const supabase = await createClient()
-  const [countsResult, analyticsResult, trendResult] = await Promise.all([
-    Promise.all(
-      (['pending', 'approved', 'rejected'] as const).map((item) =>
-        supabase
-          .from('candidate_testimonials')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', item),
-      ),
+  const countsResult = await Promise.all(
+    (['pending', 'approved', 'rejected'] as const).map((item) =>
+      supabase
+        .from('candidate_testimonials')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', item),
     ),
-    supabase.rpc('get_candidate_testimonial_analytics'),
-    supabase.rpc('get_candidate_testimonial_trend'),
-  ])
-  const analytics: TestimonialAnalyticsSummary[] | null = analyticsResult.error
-    ? null
-    : ((analyticsResult.data ?? []) as AnalyticsRecord[])
-        .filter((item) => ['week', 'month', 'year'].includes(item.period))
-        .map((item) => ({
-          period: item.period as AnalyticsPeriod,
-          submissions: Number(item.submission_count),
-          previous: Number(item.previous_count),
-          prospective: Number(item.prospective_count),
-          past: Number(item.past_count),
-          pending: Number(item.pending_count),
-          approved: Number(item.approved_count),
-          rejected: Number(item.rejected_count),
-        }))
-  const trends: TestimonialTrendPoint[] | null = trendResult.error
-    ? null
-    : ((trendResult.data ?? []) as TrendRecord[])
-        .filter((item) => ['week', 'month', 'year'].includes(item.period))
-        .map((item) => ({
-          period: item.period as AnalyticsPeriod,
-          index: item.bucket_index,
-          label: trendLabelFormats[item.period as AnalyticsPeriod].format(
-            new Date(item.bucket_start),
-          ),
-          count:
-            item.submission_count === null
-              ? null
-              : Number(item.submission_count),
-        }))
+  )
   const countError = countsResult.find((result) => result.error)?.error
   const counts = {
     pending: countsResult[0].count ?? 0,
@@ -265,8 +197,7 @@ export default async function AdminTestimonialsPage({
 
         <TestimonialAnalytics
           activeStatus={status}
-          summaries={analytics}
-          trends={trends}
+          counts={countError ? null : counts}
         />
 
         <div className="candidate-review-table-card">
