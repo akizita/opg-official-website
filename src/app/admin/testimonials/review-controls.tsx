@@ -8,7 +8,13 @@ import {
   type TestimonialReviewDecision,
 } from '@/app/admin/testimonials/actions'
 
-export function TestimonialReviewControls({ id }: { id: string }) {
+export function TestimonialReviewControls({
+  id,
+  onComplete,
+}: {
+  id: string
+  onComplete?: () => void
+}) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [confirmReject, setConfirmReject] = useState(false)
@@ -25,6 +31,7 @@ export function TestimonialReviewControls({ id }: { id: string }) {
           return
         }
         setCompleted(true)
+        onComplete?.()
         router.refresh()
       } catch {
         setError('The review could not be saved. Try again.')

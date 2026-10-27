@@ -1,12 +1,23 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 
-import { TestimonialReviewControls } from '@/app/admin/testimonials/review-controls'
-import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
+import {
+  TestimonialAnalytics,
+  type AnalyticsPeriod,
+  type TestimonialAnalyticsSummary,
+  type TestimonialTrendPoint,
+} from '@/app/admin/testimonials/testimonial-analytics'
+import {
+  TestimonialsInbox,
+  TestimonialStatusFilter,
+  type CandidateSubmission,
+  type ReviewFilter,
+  type ReviewStatus,
+} from '@/app/admin/testimonials/testimonials-inbox'
 import { requireAdminSession } from '@/lib/auth/admin-session'
-import { canPublish, canViewContent } from '@/lib/auth/permissions'
+import { canArchive, canPublish, canViewContent } from '@/lib/auth/permissions'
 import { createClient, createPrivilegedClient } from '@/lib/supabase/server'
+import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
 
 export const metadata: Metadata = {
   title: 'Candidate Testimonials | OPG Admin',
@@ -14,22 +25,31 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-type ReviewStatus = 'all' | 'pending' | 'approved' | 'rejected'
-type CandidateSubmission = {
-  id: string
-  author_name: string
-  email: string
-  relationship: 'prospective' | 'past'
-  role_title: string | null
-  rating: number | null
-  quote: string
-  publication_consent: boolean
-  status: Exclude<ReviewStatus, 'all'>
-  submitted_at: string
-  reviewed_at: string | null
+type SubmissionRecord = Omit<
+  CandidateSubmission,
+  | 'profile_photo_url'
+  | 'submitted_at_list_label'
+  | 'submitted_at_label'
+  | 'reviewed_at_label'
+> & {
   profile_photo_path?: string | null
   profile_photo_data?: string | null
-  profile_photo_url?: string | null
+}
+type AnalyticsRecord = {
+  period: string
+  submission_count: number | string
+  previous_count: number | string
+  prospective_count: number | string
+  past_count: number | string
+  pending_count: number | string
+  approved_count: number | string
+  rejected_count: number | string
+}
+type TrendRecord = {
+  period: string
+  bucket_index: number
+  bucket_start: string
+  submission_count: number | string | null
 }
 type PageProps = {
   searchParams: Promise<{ status?: string; page?: string }>
@@ -37,17 +57,34 @@ type PageProps = {
 
 const PAGE_SIZE = 20
 const STATUSES: ReviewStatus[] = ['pending', 'approved', 'rejected', 'all']
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+const trendLabelFormats: Record<AnalyticsPeriod, Intl.DateTimeFormat> = {
+  week: new Intl.DateTimeFormat('en-SG', {
+    weekday: 'short',
     timeZone: 'Asia/Singapore',
-  }).format(new Date(value))
+  }),
+  month: new Intl.DateTimeFormat('en-SG', {
+    day: 'numeric',
+    timeZone: 'Asia/Singapore',
+  }),
+  year: new Intl.DateTimeFormat('en-SG', {
+    month: 'short',
+    timeZone: 'Asia/Singapore',
+  }),
 }
+const listDateFormat = new Intl.DateTimeFormat('en-SG', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'Asia/Singapore',
+})
+const detailDateFormat = new Intl.DateTimeFormat('en-SG', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZone: 'Asia/Singapore',
+})
 
 function reviewUrl(status: ReviewStatus, page = 1) {
   const params = new URLSearchParams()
@@ -86,14 +123,47 @@ export default async function AdminTestimonialsPage({
   const pageNumber =
     Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
   const supabase = await createClient()
-  const countsResult = await Promise.all(
-    (['pending', 'approved', 'rejected'] as const).map((item) =>
-      supabase
-        .from('candidate_testimonials')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', item),
+  const [countsResult, analyticsResult, trendResult] = await Promise.all([
+    Promise.all(
+      (['pending', 'approved', 'rejected'] as const).map((item) =>
+        supabase
+          .from('candidate_testimonials')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', item),
+      ),
     ),
-  )
+    supabase.rpc('get_candidate_testimonial_analytics'),
+    supabase.rpc('get_candidate_testimonial_trend'),
+  ])
+  const analytics: TestimonialAnalyticsSummary[] | null = analyticsResult.error
+    ? null
+    : ((analyticsResult.data ?? []) as AnalyticsRecord[])
+        .filter((item) => ['week', 'month', 'year'].includes(item.period))
+        .map((item) => ({
+          period: item.period as AnalyticsPeriod,
+          submissions: Number(item.submission_count),
+          previous: Number(item.previous_count),
+          prospective: Number(item.prospective_count),
+          past: Number(item.past_count),
+          pending: Number(item.pending_count),
+          approved: Number(item.approved_count),
+          rejected: Number(item.rejected_count),
+        }))
+  const trends: TestimonialTrendPoint[] | null = trendResult.error
+    ? null
+    : ((trendResult.data ?? []) as TrendRecord[])
+        .filter((item) => ['week', 'month', 'year'].includes(item.period))
+        .map((item) => ({
+          period: item.period as AnalyticsPeriod,
+          index: item.bucket_index,
+          label: trendLabelFormats[item.period as AnalyticsPeriod].format(
+            new Date(item.bucket_start),
+          ),
+          count:
+            item.submission_count === null
+              ? null
+              : Number(item.submission_count),
+        }))
   const countError = countsResult.find((result) => result.error)?.error
   const counts = {
     pending: countsResult[0].count ?? 0,
@@ -104,50 +174,45 @@ export default async function AdminTestimonialsPage({
   const activeCount = status === 'all' ? total : counts[status]
   const lastPage = Math.max(1, Math.ceil(activeCount / PAGE_SIZE))
   const page = Math.min(pageNumber, lastPage)
+  const filters: ReviewFilter[] = STATUSES.map((value) => ({
+    value,
+    label:
+      value === 'all'
+        ? 'All submissions'
+        : value[0].toUpperCase() + value.slice(1),
+    count: value === 'all' ? total : counts[value],
+    href: reviewUrl(value),
+  }))
 
   let submissions: CandidateSubmission[] = []
   let listError = countError
   if (!countError) {
     async function loadSubmissions(photoMode: 'inline' | 'storage' | 'legacy') {
-      if (photoMode === 'inline') {
-        let query = supabase
-          .from('candidate_testimonials')
-          .select(
-            'id, author_name, email, relationship, role_title, rating, quote, publication_consent, status, submitted_at, reviewed_at, profile_photo_path, profile_photo_data',
-          )
-          .order('submitted_at', { ascending: false })
-          .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
-        if (status !== 'all') query = query.eq('status', status)
-        return query
-      }
-      if (photoMode === 'storage') {
-        let query = supabase
-          .from('candidate_testimonials')
-          .select(
-            'id, author_name, email, relationship, role_title, rating, quote, publication_consent, status, submitted_at, reviewed_at, profile_photo_path',
-          )
-          .order('submitted_at', { ascending: false })
-          .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
-        if (status !== 'all') query = query.eq('status', status)
-        return query
-      }
+      const columns =
+        'id, author_name, email, relationship, role_title, rating, quote, publication_consent, status, submitted_at, reviewed_at'
+      const photoColumns =
+        photoMode === 'inline'
+          ? ', profile_photo_path, profile_photo_data'
+          : photoMode === 'storage'
+            ? ', profile_photo_path'
+            : ''
       let query = supabase
         .from('candidate_testimonials')
-        .select(
-          'id, author_name, email, relationship, role_title, rating, quote, publication_consent, status, submitted_at, reviewed_at',
-        )
+        .select(`${columns}${photoColumns}`)
         .order('submitted_at', { ascending: false })
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
       if (status !== 'all') query = query.eq('status', status)
       return query
     }
+
     let result = await loadSubmissions('inline')
     if (result.error?.code === '42703')
       result = await loadSubmissions('storage')
     if (result.error?.code === '42703') result = await loadSubmissions('legacy')
     listError = result.error
-    submissions = (result.data ?? []) as CandidateSubmission[]
-    const paths = submissions.flatMap((item) =>
+
+    const records = (result.data ?? []) as unknown as SubmissionRecord[]
+    const paths = records.flatMap((item) =>
       item.profile_photo_path ? [item.profile_photo_path] : [],
     )
     const privileged = paths.length ? createPrivilegedClient() : null
@@ -160,197 +225,110 @@ export default async function AdminTestimonialsPage({
         if (item.signedUrl) signedUrls.set(paths[index], item.signedUrl)
       })
     }
-    submissions = submissions.map((item) => ({
-      ...item,
-      profile_photo_url:
-        (item.profile_photo_path
-          ? signedUrls.get(item.profile_photo_path)
-          : null) ??
-        (item.profile_photo_data
-          ? `data:image/webp;base64,${item.profile_photo_data}`
-          : null),
-    }))
+    submissions = records.map((record) => {
+      const {
+        profile_photo_path: path,
+        profile_photo_data: data,
+        ...item
+      } = record
+      return {
+        ...item,
+        submitted_at_list_label: listDateFormat.format(
+          new Date(item.submitted_at),
+        ),
+        submitted_at_label: detailDateFormat.format(
+          new Date(item.submitted_at),
+        ),
+        reviewed_at_label: item.reviewed_at
+          ? detailDateFormat.format(new Date(item.reviewed_at))
+          : 'Not reviewed',
+        profile_photo_url:
+          (path ? signedUrls.get(path) : null) ??
+          (data ? `data:image/webp;base64,${data}` : null),
+      }
+    })
   }
 
   return (
     <section className="admin-page candidate-review-page">
       <div className="container">
-        <nav aria-label="Admin Breadcrumb" className="admin-breadcrumb">
-          <ol>
-            <li>
-              <Link href="/admin">Dashboard</Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li aria-current="page">Candidate testimonials</li>
-          </ol>
-        </nav>
-
+        <CandidateTestimonialsLive audience="admin" showStatus={false} />
         <div className="candidate-review-heading">
           <div>
-            <p className="eyebrow">Candidate voices</p>
             <h1>Testimonial management</h1>
             <p>
-              Review stories submitted through the website. Approved stories
-              appear on the public Testimonials page; rejected stories stay
-              private.
+              Track candidate feedback, review incoming stories, and manage
+              which testimonials appear on the public website.
             </p>
-          </div>
-          <div className="candidate-review-heading__actions">
-            <CandidateTestimonialsLive audience="admin" />
-            <Link className="candidate-review-public-link" href="/testimonials">
-              View public page <span aria-hidden="true">↗</span>
-            </Link>
           </div>
         </div>
 
-        <nav
-          aria-label="Filter candidate testimonials"
-          className="candidate-review-filters"
-        >
-          {STATUSES.map((item) => {
-            const count = item === 'all' ? total : counts[item]
-            return (
-              <Link
-                aria-current={status === item ? 'page' : undefined}
-                className="candidate-review-filter"
-                href={reviewUrl(item)}
-                key={item}
-              >
-                <span>{item === 'all' ? 'All submissions' : item}</span>
-                <strong>{count}</strong>
-              </Link>
-            )
-          })}
-        </nav>
+        <TestimonialAnalytics summaries={analytics} trends={trends} />
 
-        {listError ? (
-          <div className="candidate-review-empty" role="alert">
-            <h2>Could not load submissions</h2>
-            <p>Refresh this page to try again.</p>
-          </div>
-        ) : submissions.length === 0 ? (
-          <div className="candidate-review-empty">
-            <span aria-hidden="true">“ ”</span>
-            <h2>
-              {status === 'pending'
-                ? 'Review queue is clear'
-                : 'No stories here yet'}
-            </h2>
-            <p>
-              {status === 'pending'
-                ? 'New candidate testimonials will appear here for review.'
-                : 'Submissions matching this filter will appear here.'}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="candidate-review-list-heading">
-              <h2>
-                {status === 'all' ? 'All submissions' : `${status} stories`}
-              </h2>
+        <div className="candidate-review-table-card">
+          <div className="candidate-review-list-heading">
+            <div>
+              <h2>Submissions</h2>
               <span>
-                Showing {(page - 1) * PAGE_SIZE + 1}–
-                {(page - 1) * PAGE_SIZE + submissions.length} of {activeCount}
+                {listError
+                  ? 'Unable to load the selected list'
+                  : submissions.length > 0
+                    ? `Showing ${(page - 1) * PAGE_SIZE + 1}–${(page - 1) * PAGE_SIZE + submissions.length} of ${activeCount}`
+                    : `No ${status === 'all' ? '' : `${status} `}submissions yet`}
               </span>
             </div>
-            <div className="candidate-review-list">
-              {submissions.map((item) => (
-                <article
-                  className="candidate-review-card"
-                  id={`testimonial-${item.id}`}
-                  key={item.id}
-                >
-                  <div className="candidate-review-card__person">
-                    <span
-                      className="candidate-review-card__avatar"
-                      aria-hidden="true"
-                    >
-                      {item.profile_photo_url ? (
-                        <Image
-                          alt=""
-                          height={48}
-                          src={item.profile_photo_url}
-                          unoptimized
-                          width={48}
-                        />
-                      ) : (
-                        <svg fill="none" viewBox="0 0 40 40" aria-hidden="true">
-                          <circle cx="20" cy="15" r="6" fill="currentColor" />
-                          <path
-                            d="M8 34c0-6.6 5.4-11 12-11s12 4.4 12 11"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      )}
-                    </span>
-                    <div>
-                      <h3>{item.author_name}</h3>
-                      <p>
-                        {item.relationship === 'past'
-                          ? 'Past candidate'
-                          : 'Prospective candidate'}
-                        {item.role_title ? ` · ${item.role_title}` : ''}
-                      </p>
-                    </div>
-                    <a href={`mailto:${item.email}`}>{item.email}</a>
-                  </div>
-                  <div className="candidate-review-card__story">
-                    <div className="candidate-review-card__meta">
-                      <span
-                        className={`candidate-review-status candidate-review-status--${item.status}`}
-                      >
-                        {item.status}
-                      </span>
-                      <span>Submitted {formatDate(item.submitted_at)}</span>
-                      {item.rating !== null && (
-                        <span aria-label={`${item.rating} out of 5 stars`}>
-                          {'★'.repeat(item.rating)}
-                          {'☆'.repeat(5 - item.rating)}
-                        </span>
-                      )}
-                    </div>
-                    <blockquote>{item.quote}</blockquote>
-                    <div className="candidate-review-card__footer">
-                      <p>
-                        {item.publication_consent
-                          ? 'Publication consent given'
-                          : 'Publication consent missing'}
-                        {item.reviewed_at
-                          ? ` · Reviewed ${formatDate(item.reviewed_at)}`
-                          : ''}
-                      </p>
-                      {item.status === 'pending' &&
-                        canPublish(profile.roleKey) &&
-                        item.publication_consent && (
-                          <TestimonialReviewControls id={item.id} />
-                        )}
-                    </div>
-                  </div>
-                </article>
-              ))}
+            <TestimonialStatusFilter filters={filters} status={status} />
+          </div>
+          {listError ? (
+            <div className="candidate-review-empty" role="alert">
+              <h3>Could not load submissions</h3>
+              <p>Refresh this page to try again.</p>
             </div>
-            {lastPage > 1 && (
-              <nav
-                aria-label="Submission pages"
-                className="candidate-review-pagination"
-              >
-                {page > 1 ? (
-                  <Link href={reviewUrl(status, page - 1)}>← Previous</Link>
-                ) : (
-                  <span />
-                )}
-                <span>
-                  Page {page} of {lastPage}
-                </span>
-                {page < lastPage ? (
-                  <Link href={reviewUrl(status, page + 1)}>Next →</Link>
-                ) : (
-                  <span />
-                )}
-              </nav>
-            )}
-          </>
-        )}
+          ) : submissions.length === 0 ? (
+            <div className="candidate-review-empty">
+              <span aria-hidden="true">✦</span>
+              <h3>
+                {status === 'pending'
+                  ? 'Review queue is clear'
+                  : 'No stories here yet'}
+              </h3>
+              <p>
+                {status === 'pending'
+                  ? 'New candidate testimonials will appear here for review.'
+                  : 'Submissions matching this filter will appear here.'}
+              </p>
+            </div>
+          ) : (
+            <>
+              <TestimonialsInbox
+                canDelete={canArchive(profile.roleKey)}
+                canReview={canPublish(profile.roleKey)}
+                key={`${status}:${page}`}
+                submissions={submissions}
+              />
+              {lastPage > 1 && (
+                <nav
+                  aria-label="Submission pages"
+                  className="candidate-review-pagination"
+                >
+                  {page > 1 ? (
+                    <Link href={reviewUrl(status, page - 1)}>← Previous</Link>
+                  ) : (
+                    <span />
+                  )}
+                  <span>
+                    Page {page} of {lastPage}
+                  </span>
+                  {page < lastPage ? (
+                    <Link href={reviewUrl(status, page + 1)}>Next →</Link>
+                  ) : (
+                    <span />
+                  )}
+                </nav>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </section>
   )

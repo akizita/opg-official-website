@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public, pg_catalog;
 
-select plan(24);
+select plan(33);
 
 select has_table('public', 'candidate_testimonials', 'candidate testimonial submissions have a dedicated table');
 select ok(
@@ -61,6 +61,43 @@ select ok(
   'authenticated reviewers can call the permission-checked review function'
 );
 select ok(
+  not has_table_privilege('authenticated', 'public.candidate_testimonials', 'DELETE'),
+  'administrators cannot delete testimonials directly'
+);
+select ok(
+  not has_function_privilege('anon', 'public.delete_candidate_testimonial(uuid)', 'EXECUTE'),
+  'anonymous visitors cannot delete testimonials'
+);
+select ok(
+  has_function_privilege('authenticated', 'public.delete_candidate_testimonial(uuid)', 'EXECUTE'),
+  'authenticated users can call the permission-checked delete function'
+);
+select ok(
+  not has_function_privilege('anon', 'public.get_candidate_testimonial_analytics()', 'EXECUTE'),
+  'anonymous visitors cannot read candidate analytics'
+);
+select ok(
+  has_function_privilege('authenticated', 'public.get_candidate_testimonial_analytics()', 'EXECUTE'),
+  'authenticated users can call the permission-checked analytics function'
+);
+select ok(
+  not has_function_privilege('anon', 'public.get_candidate_testimonial_trend()', 'EXECUTE'),
+  'anonymous visitors cannot read candidate submission trends'
+);
+select ok(
+  has_function_privilege('authenticated', 'public.get_candidate_testimonial_trend()', 'EXECUTE'),
+  'authenticated users can call the permission-checked trend function'
+);
+select ok(
+  exists (
+    select 1 from pg_catalog.pg_indexes
+    where schemaname = 'public'
+      and tablename = 'candidate_testimonials'
+      and indexname = 'candidate_testimonials_submitted_at_idx'
+  ),
+  'candidate analytics can filter by submission date efficiently'
+);
+select ok(
   exists (
     select 1 from pg_catalog.pg_policies
     where schemaname = 'realtime'
@@ -77,6 +114,15 @@ select ok(
       and not tgisinternal
   ),
   'candidate submission and review changes have a broadcast trigger'
+);
+select ok(
+  exists (
+    select 1 from pg_catalog.pg_trigger
+    where tgrelid = 'public.candidate_testimonials'::regclass
+      and tgname = 'candidate_testimonial_realtime_delete'
+      and not tgisinternal
+  ),
+  'deleted testimonials update the admin and public lists'
 );
 
 insert into public.candidate_testimonials (
