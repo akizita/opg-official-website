@@ -270,7 +270,7 @@ export default async function AdminTestimonialsPage({
           <TestimonialHeaderActions submissions={submissions} />
         </div>
 
-        <TestimonialAnalytics summaries={analytics} trends={trends} />
+        <TestimonialAnalytics activeStatus={status} summaries={analytics} trends={trends} />
 
         <div className="candidate-review-table-card">
           <div className="candidate-review-list-heading">

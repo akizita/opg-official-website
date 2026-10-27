@@ -30,8 +30,10 @@ describe('TestimonialAnalytics', () => {
     expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*>month<\/button>/)
     expect(html.match(/<article /g)).toHaveLength(2)
     expect(html).toContain('candidate-review-analytics__status-strip')
-    expect(html).toContain('<span>pending</span><strong>2</strong>')
-    expect(html).toContain('<span>rejected</span><strong>1</strong>')
+    expect(html).toContain('href="/admin/testimonials?status=pending"')
+    expect(html).toContain('aria-label="2 this month">2</strong>')
+    expect(html).toContain('href="/admin/testimonials?status=rejected"')
+    expect(html).toContain('▲ 4 vs last month')
     expect(html).toContain('candidate-review-analytics__connection-legend')
     expect(html).toContain(
       'aria-label="3 prospective candidates (75%) and 1 past candidate (25%)"',

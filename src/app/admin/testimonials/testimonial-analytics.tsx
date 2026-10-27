@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, type CSSProperties } from 'react'
 
 export type AnalyticsPeriod = 'week' | 'month' | 'year'
@@ -28,13 +29,11 @@ function share(part: number, total: number) {
   return total > 0 ? Math.round((part / total) * 100) : 0
 }
 
-function comparison(current: number, previous: number) {
-  if (current === previous) return { label: 'No change', tone: 'neutral' }
-  if (previous === 0) return { label: 'New activity', tone: 'up' }
-  const percent = Math.round((Math.abs(current - previous) / previous) * 100)
+function comparison(current: number, previous: number, period: AnalyticsPeriod) {
+  const difference = current - previous
   return {
-    label: `${current > previous ? 'Up' : 'Down'} ${percent}%`,
-    tone: current > previous ? 'up' : 'down',
+    label: `${difference > 0 ? '▲ ' : difference < 0 ? '▼ ' : ''}${number.format(Math.abs(difference))} vs last ${period}`,
+    tone: difference > 0 ? 'up' : difference < 0 ? 'down' : 'neutral',
   }
 }
 
@@ -62,21 +61,14 @@ function TrendChart({
     .filter((point) => point.count !== null)
     .map((point) => ({
       ...point,
-      x: 28 + ((point.index + 1) / ordered.length) * 544,
-      y: 138 - ((point.count ?? 0) / maximum) * 102,
+      x: 42 + (point.index / Math.max(1, ordered.length - 1)) * 530,
+      y: 128 - ((point.count ?? 0) / maximum) * 104,
     }))
   const last = plotted[plotted.length - 1]
   const hoveredPoint = plotted.find((point) => point.index === hoveredIndex)
-  let line = plotted.length ? 'M 28 138' : ''
-  for (let index = 0; index < plotted.length; index += 1) {
-    const previousPoint = plotted[index - 1] ?? { x: 28, y: 138 }
-    const point = plotted[index]
-    line += ` Q ${previousPoint.x} ${previousPoint.y} ${(previousPoint.x + point.x) / 2} ${(previousPoint.y + point.y) / 2}`
-  }
-  if (last) {
-    line += ` Q ${last.x} ${last.y} ${last.x} ${last.y}`
-  }
-  const area = last ? `${line} L ${last.x} 138 L 28 138 Z` : ''
+  const first = plotted[0]
+  const line = plotted.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const area = first && last ? `${line} L ${last.x} 128 L ${first.x} 128 Z` : ''
   const ticks = [
     ...new Set(
       [0, 0.25, 0.5, 0.75, 1].map((part) =>
@@ -91,6 +83,7 @@ function TrendChart({
         <div
           className="candidate-review-analytics__trend-tooltip"
           aria-hidden="true"
+          style={{ left: `${Math.min(72, (hoveredPoint.x / 600) * 100)}%` }}
         >
           <strong>{hoveredPoint.label}</strong>
           <span>{number.format(hoveredPoint.count ?? 0)} submissions</span>
@@ -110,11 +103,6 @@ function TrendChart({
         preserveAspectRatio="none"
       >
         <defs>
-          <linearGradient id="testimonial-trend-line" x1="0%" x2="100%">
-            <stop offset="0%" stopColor="#ea580c" />
-            <stop offset="52%" stopColor="#f29f04" />
-            <stop offset="100%" stopColor="#f2b705" />
-          </linearGradient>
           <linearGradient
             id="testimonial-trend-fill"
             x1="0%"
@@ -142,20 +130,21 @@ function TrendChart({
             />
           </pattern>
         </defs>
-        {[36, 87, 138].map((y) => (
-          <line
-            className="candidate-review-analytics__trend-grid"
-            key={y}
-            x1="28"
-            x2="572"
-            y1={y}
-            y2={y}
-          />
-        ))}
+        {(maximum < 2 ? [1, 0] : [1, 0.5, 0]).map((fraction) => {
+          const y = 128 - fraction * 104
+          return (
+            <g key={fraction}>
+              <line className="candidate-review-analytics__trend-grid" x1="42" x2="572" y1={y} y2={y} />
+              <text className="candidate-review-analytics__trend-y-label" x="34" y={y + 3} textAnchor="end">
+                {number.format(Math.round(maximum * fraction))}
+              </text>
+            </g>
+          )
+        })}
         {last && last.x < 572 && (
           <rect
             fill="url(#testimonial-trend-upcoming)"
-            height="114"
+            height="104"
             width={572 - last.x}
             x={last.x}
             y="24"
@@ -166,7 +155,6 @@ function TrendChart({
           <path
             className="candidate-review-analytics__trend-line"
             d={line}
-            stroke="url(#testimonial-trend-line)"
           />
         )}
         {plotted.map((point, index) => (
@@ -174,23 +162,25 @@ function TrendChart({
             key={point.index}
             onMouseEnter={() => setHoveredIndex(point.index)}
             onMouseLeave={() => setHoveredIndex(null)}
+            onFocus={() => setHoveredIndex(point.index)}
+            onBlur={() => setHoveredIndex(null)}
           >
-            <circle
-              className={
-                index === plotted.length - 1
-                  ? 'candidate-review-analytics__trend-point is-latest'
-                  : 'candidate-review-analytics__trend-point'
-              }
-              cx={point.x}
-              cy={point.y}
-              r={index === plotted.length - 1 ? 4.5 : 2.5}
-            />
+            {((point.count ?? 0) > 0 || hoveredIndex === point.index) && (
+              <circle
+                className={`candidate-review-analytics__trend-point${index === plotted.length - 1 ? ' is-latest' : ''}`}
+                cx={point.x}
+                cy={point.y}
+                r={hoveredIndex === point.index ? 4.5 : 3}
+              />
+            )}
             <circle
               className="candidate-review-analytics__trend-hit"
               cx={point.x}
               cy={point.y}
               r="11"
               fill="transparent"
+              tabIndex={0}
+              aria-label={`${point.label}: ${number.format(point.count ?? 0)} submissions`}
             >
               <title>{`${point.label}: ${point.count} submissions (${share(point.count ?? 0, total)}% of this ${period})`}</title>
             </circle>
@@ -212,9 +202,11 @@ function TrendChart({
 export function TestimonialAnalytics({
   summaries,
   trends,
+  activeStatus = 'pending',
 }: {
   summaries: TestimonialAnalyticsSummary[] | null
   trends: TestimonialTrendPoint[] | null
+  activeStatus?: 'pending' | 'approved' | 'rejected' | 'all'
 }) {
   const [period, setPeriod] = useState<AnalyticsPeriod>('month')
   const [hoveredKind, setHoveredKind] = useState<'prospective' | 'past' | null>(
@@ -231,7 +223,7 @@ export function TestimonialAnalytics({
   const prospectiveShare = share(prospective, submissions)
   const hoveredCount = hoveredKind === 'prospective' ? prospective : past
   const hoveredShare = share(hoveredCount, submissions)
-  const change = comparison(submissions, previous)
+  const change = comparison(submissions, previous, period)
   const points = trends?.filter((item) => item.period === period) ?? null
 
   return (
@@ -300,13 +292,15 @@ export function TestimonialAnalytics({
                   ['rejected', rejected],
                 ] as const
               ).map(([status, count]) => (
-                <div
+                <Link
+                  aria-current={activeStatus === status ? 'page' : undefined}
                   className={`candidate-review-analytics__status-item candidate-review-analytics__status-item--${status}`}
+                  href={`/admin/testimonials?status=${status}`}
                   key={status}
                 >
                   <span>{status}</span>
-                  <strong>{number.format(count)}</strong>
-                </div>
+                  <strong aria-label={`${number.format(count)} this ${period}`}>{number.format(count)}</strong>
+                </Link>
               ))}
             </div>
             <p className="candidate-review-analytics__note">

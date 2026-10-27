@@ -23054,7 +23054,7 @@ html:has(.pages-workspace) {
   position: absolute;
   z-index: 2;
   top: 0;
-  right: 0.35rem;
+  right: auto;
   display: grid;
   gap: 0.06rem;
   min-width: 8rem;
@@ -23104,9 +23104,16 @@ html:has(.pages-workspace) {
 
 .candidate-review-analytics__trend-line {
   fill: none;
+  stroke: #bd7900;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 3.3;
+}
+
+.candidate-review-analytics__trend-y-label {
+  fill: var(--review-muted);
+  font-size: 9px;
+  font-weight: 650;
 }
 
 .candidate-review-analytics__trend-point {
@@ -23168,6 +23175,15 @@ html:has(.pages-workspace) {
   padding: 0.35rem 0.5rem;
   border-radius: 0.55rem;
   background: rgb(255 255 255 / 55%);
+  border: 1px solid var(--review-border);
+  color: var(--review-ink);
+  text-decoration: none;
+}
+
+.candidate-review-analytics__status-item:hover,
+.candidate-review-analytics__status-item[aria-current='page'] {
+  background: #fff1cd;
+  border-color: #ad7b1b;
 }
 
 .candidate-review-analytics__status-item span {
