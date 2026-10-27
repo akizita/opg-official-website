@@ -22816,8 +22816,16 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-page {
+  --review-ink: #241e16;
+  --review-muted: #5c5245;
+  --review-gold-ink: #694907;
+  --review-border: #d9c8a9;
+  --review-surface: #fffdf7;
+  --review-radius: 1.25rem;
+  --review-shadow: 0 0.65rem 1.8rem rgb(68 46 15 / 9%);
+  --review-gap: var(--space-3);
   background: transparent;
-  color: #201a12;
+  color: var(--review-ink);
   padding-block: clamp(1.25rem, 2.5vw, 2rem);
 }
 
@@ -22852,19 +22860,17 @@ html:has(.pages-workspace) {
 .candidate-review-analytics {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(17rem, 0.85fr);
-  gap: 0.75rem;
+  gap: var(--review-gap);
   margin-bottom: 0.85rem;
 }
 
 .candidate-review-analytics__card {
   min-width: 0;
   padding: clamp(0.95rem, 1.4vw, 1.2rem);
-  border: 1px solid rgb(255 255 255 / 88%);
-  border-radius: 1.5rem;
-  background: rgb(255 253 247 / 80%);
-  box-shadow:
-    0 0.9rem 2.3rem rgb(101 69 16 / 8%),
-    inset 0 1px rgb(255 255 255 / 84%);
+  border: 1px solid var(--review-border);
+  border-radius: var(--review-radius);
+  background: var(--review-surface);
+  box-shadow: var(--review-shadow);
   -webkit-backdrop-filter: blur(22px) saturate(135%);
   backdrop-filter: blur(22px) saturate(135%);
 }
@@ -22894,7 +22900,7 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-analytics__eyebrow {
-  color: #ac780c;
+  color: var(--review-gold-ink);
   font-size: 0.68rem;
   font-weight: 850;
   letter-spacing: 0.1em;
@@ -22924,7 +22930,7 @@ html:has(.pages-workspace) {
   border: 0;
   border-radius: 0.58rem;
   background: transparent;
-  color: #776c59;
+  color: var(--review-muted);
   cursor: pointer;
   font: inherit;
   font-size: 0.77rem;
@@ -22981,7 +22987,7 @@ html:has(.pages-workspace) {
 
 .candidate-review-analytics__change--neutral {
   background: #f2eee4;
-  color: #776a57;
+  color: var(--review-muted);
 }
 
 .candidate-review-analytics__trend {
@@ -23069,7 +23075,7 @@ html:has(.pages-workspace) {
   justify-content: space-between;
   margin-top: -0.25rem;
   padding-inline: 0.25rem;
-  color: #81735e;
+  color: var(--review-muted);
   font-size: 0.68rem;
 }
 
@@ -23080,13 +23086,13 @@ html:has(.pages-workspace) {
   margin: 0.5rem 0 0;
   border: 1px dashed rgb(159 125 65 / 26%);
   border-radius: 0.9rem;
-  color: #857862;
+  color: var(--review-muted);
   font-size: 0.8rem;
 }
 
 .candidate-review-analytics__note {
   margin: 0.45rem 0 0;
-  color: #897d69;
+  color: var(--review-muted);
   font-size: 0.68rem;
 }
 
@@ -23110,7 +23116,7 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-analytics__status-item span {
-  color: #796e5d;
+  color: var(--review-muted);
   font-size: 0.7rem;
   text-transform: capitalize;
 }
@@ -23133,7 +23139,7 @@ html:has(.pages-workspace) {
 
 .candidate-review-analytics__connection-intro {
   margin: 0.35rem 0 0;
-  color: #756a57;
+  color: var(--review-muted);
   font-size: 0.82rem;
   line-height: 1.45;
 }
@@ -23181,13 +23187,13 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-analytics__donut-center span {
-  color: #796d59;
+  color: var(--review-muted);
   font-size: 0.65rem;
   text-transform: capitalize;
 }
 
 .candidate-review-analytics__donut-center small {
-  color: #a16908;
+  color: var(--review-gold-ink);
   font-size: 0.65rem;
   font-weight: 800;
 }
@@ -23239,7 +23245,7 @@ html:has(.pages-workspace) {
 
 .candidate-review-analytics__connection-empty,
 .candidate-review-analytics__unavailable {
-  color: #796d59;
+  color: var(--review-muted);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -23315,7 +23321,7 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-filter-picker__label small {
-  color: #8b7859;
+  color: var(--review-muted);
   font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -23400,7 +23406,7 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-filter-picker__option-count {
-  color: #87775e;
+  color: var(--review-muted);
   font-size: 0.76rem;
   font-weight: 750;
 }
@@ -23492,7 +23498,7 @@ html:has(.pages-workspace) {
 
 .candidate-review-list-heading > div > span,
 .candidate-review-pagination > span {
-  color: #786c5e;
+  color: var(--review-muted);
   font-size: 0.84rem;
 }
 
@@ -23503,12 +23509,10 @@ html:has(.pages-workspace) {
 
 .candidate-review-table-card,
 .candidate-review-empty {
-  border: 1px solid rgb(255 255 255 / 86%);
-  border-radius: 1.5rem;
-  background: rgb(255 253 247 / 82%);
-  box-shadow:
-    0 0.9rem 2.3rem rgb(101 69 16 / 9%),
-    inset 0 1px rgb(255 255 255 / 82%);
+  border: 1px solid var(--review-border);
+  border-radius: var(--review-radius);
+  background: var(--review-surface);
+  box-shadow: var(--review-shadow);
   -webkit-backdrop-filter: blur(22px) saturate(135%);
   backdrop-filter: blur(22px) saturate(135%);
 }
@@ -23565,7 +23569,7 @@ html:has(.pages-workspace) {
 
 .candidate-review-inbox__bulk-toolbar > span {
   margin-right: auto;
-  color: #796d59;
+  color: var(--review-muted);
 }
 
 .candidate-review-inbox__bulk-toolbar .candidate-review-button {
@@ -23607,7 +23611,7 @@ html:has(.pages-workspace) {
   min-height: 2.6rem;
   border-block: 1px solid rgb(136 104 57 / 13%);
   background: rgb(251 244 225 / 60%);
-  color: #7a6b55;
+  color: var(--review-muted);
   font-size: 0.72rem;
   font-weight: 750;
 }
@@ -23842,7 +23846,7 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-inbox__menu button small {
-  color: #8e716b;
+  color: var(--review-muted);
   font-size: 0.69rem;
 }
 
@@ -24097,7 +24101,7 @@ html:has(.pages-workspace) {
 
 .candidate-review-empty p {
   margin: 0;
-  color: #726653;
+  color: var(--review-muted);
 }
 
 .candidate-review-pagination {
