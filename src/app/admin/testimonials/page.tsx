@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { TestimonialHeaderActions } from '@/app/admin/testimonials/testimonial-header-actions'
 import { TestimonialRetryButton } from '@/app/admin/testimonials/testimonial-retry-button'
 
 import {
@@ -270,7 +269,6 @@ export default async function AdminTestimonialsPage({
               which testimonials appear on the public website.
             </p>
           </div>
-          <TestimonialHeaderActions submissions={submissions} />
         </div>
 
         <TestimonialAnalytics

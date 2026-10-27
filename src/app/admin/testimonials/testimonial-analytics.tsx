@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, type CSSProperties } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { useState } from 'react'
 
 export type AnalyticsPeriod = 'week' | 'month' | 'year'
 
@@ -71,9 +72,17 @@ function TrendChart({
   const last = plotted[plotted.length - 1]
   const hoveredPoint = plotted.find((point) => point.index === hoveredIndex)
   const first = plotted[0]
-  const line = plotted
-    .map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`)
-    .join(' ')
+  const peak = plotted.reduce<(typeof plotted)[number] | null>(
+    (best, point) =>
+      !best || (point.count ?? 0) > (best.count ?? 0) ? point : best,
+    null,
+  )
+  const line = plotted.reduce((path, point, index) => {
+    if (index === 0) return `M ${point.x} ${point.y}`
+    const previous = plotted[index - 1]
+    const control = (point.x - previous.x) * 0.38
+    return `${path} C ${previous.x + control} ${previous.y}, ${point.x - control} ${point.y}, ${point.x} ${point.y}`
+  }, '')
   const area = first && last ? `${line} L ${last.x} 128 L ${first.x} 128 Z` : ''
   const ticks = [
     ...new Set(
@@ -116,8 +125,9 @@ function TrendChart({
             y1="0%"
             y2="100%"
           >
-            <stop offset="0%" stopColor="#f29f04" stopOpacity="0.36" />
-            <stop offset="100%" stopColor="#f2b705" stopOpacity="0.015" />
+            <stop offset="0%" stopColor="#e6a327" stopOpacity="0.3" />
+            <stop offset="55%" stopColor="#f2c76d" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#fff8e9" stopOpacity="0" />
           </linearGradient>
           <pattern
             height="7"
@@ -158,6 +168,25 @@ function TrendChart({
             </g>
           )
         })}
+        {hoveredPoint && (
+          <g aria-hidden="true">
+            <rect
+              className="candidate-review-analytics__trend-hover-band"
+              x={hoveredPoint.x - 8}
+              y="24"
+              width="16"
+              height="104"
+              rx="8"
+            />
+            <line
+              className="candidate-review-analytics__trend-hover-rule"
+              x1={hoveredPoint.x}
+              x2={hoveredPoint.x}
+              y1="24"
+              y2="128"
+            />
+          </g>
+        )}
         {last && last.x < 572 && (
           <rect
             fill="url(#testimonial-trend-upcoming)"
@@ -170,6 +199,17 @@ function TrendChart({
         {area && <path d={area} fill="url(#testimonial-trend-fill)" />}
         {line && (
           <path className="candidate-review-analytics__trend-line" d={line} />
+        )}
+        {peak && (peak.count ?? 0) > 0 && (
+          <g
+            aria-hidden="true"
+            className="candidate-review-analytics__trend-peak"
+          >
+            <circle cx={peak.x} cy={peak.y} r="8" />
+            <text x={peak.x} y={Math.max(13, peak.y - 13)} textAnchor="middle">
+              Peak {number.format(peak.count ?? 0)}
+            </text>
+          </g>
         )}
         {plotted.map((point, index) => (
           <g
@@ -223,6 +263,7 @@ export function TestimonialAnalytics({
   activeStatus?: 'pending' | 'approved' | 'rejected' | 'all'
 }) {
   const [period, setPeriod] = useState<AnalyticsPeriod>('month')
+  const reduceMotion = useReducedMotion()
   const [hoveredKind, setHoveredKind] = useState<'prospective' | 'past' | null>(
     null,
   )
@@ -237,6 +278,10 @@ export function TestimonialAnalytics({
   const prospectiveShare = share(prospective, submissions)
   const hoveredCount = hoveredKind === 'prospective' ? prospective : past
   const hoveredShare = share(hoveredCount, submissions)
+  const circumference = 2 * Math.PI * 58
+  const prospectiveFraction = submissions > 0 ? prospective / submissions : 0
+  const pastFraction = submissions > 0 ? past / submissions : 0
+  const arcGap = prospective > 0 && past > 0 ? 5 : 0
   const change = comparison(submissions, previous, period)
   const points = trends?.filter((item) => item.period === period) ?? null
 
@@ -350,29 +395,84 @@ export function TestimonialAnalytics({
                 className={`candidate-review-analytics__donut${submissions === 0 ? ' is-empty' : ''}`}
                 role="img"
                 aria-label={`${prospective} prospective ${prospective === 1 ? 'candidate' : 'candidates'} (${prospectiveShare}%) and ${past} past ${past === 1 ? 'candidate' : 'candidates'} (${share(past, submissions)}%)`}
-                onMouseMove={(event) => {
-                  if (submissions === 0) return
-                  const bounds = event.currentTarget.getBoundingClientRect()
-                  const x = event.clientX - bounds.left - bounds.width / 2
-                  const y = event.clientY - bounds.top - bounds.height / 2
-                  if (Math.hypot(x, y) < bounds.width * 0.32) {
-                    setHoveredKind(null)
-                    return
-                  }
-                  const angle = ((Math.atan2(y, x) * 180) / Math.PI + 450) % 360
-                  setHoveredKind(
-                    angle < (prospective / submissions) * 360
-                      ? 'prospective'
-                      : 'past',
-                  )
-                }}
                 onMouseLeave={() => setHoveredKind(null)}
-                style={
-                  {
-                    '--prospective-share': `${prospectiveShare}%`,
-                  } as CSSProperties
-                }
               >
+                <svg
+                  aria-hidden="true"
+                  className="candidate-review-analytics__donut-svg"
+                  viewBox="0 0 160 160"
+                >
+                  <defs>
+                    <linearGradient
+                      id="testimonial-donut-amber"
+                      x1="0"
+                      x2="1"
+                      y1="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor="#ffcb5e" />
+                      <stop offset="100%" stopColor="#dc8e05" />
+                    </linearGradient>
+                    <linearGradient
+                      id="testimonial-donut-slate"
+                      x1="0"
+                      x2="1"
+                      y1="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor="#766349" />
+                      <stop offset="100%" stopColor="#3e342b" />
+                    </linearGradient>
+                  </defs>
+                  <circle
+                    className="candidate-review-analytics__donut-track"
+                    cx="80"
+                    cy="80"
+                    r="58"
+                  />
+                  {prospective > 0 && (
+                    <motion.circle
+                      className={`candidate-review-analytics__donut-segment${past === 0 ? ' is-full' : ''}`}
+                      cx="80"
+                      cy="80"
+                      r="58"
+                      fill="none"
+                      stroke="url(#testimonial-donut-amber)"
+                      strokeDasharray={`${Math.max(0, prospectiveFraction * circumference - arcGap)} ${circumference}`}
+                      strokeDashoffset="0"
+                      transform="rotate(-90 80 80)"
+                      initial={false}
+                      animate={{
+                        strokeWidth: hoveredKind === 'prospective' ? 23 : 19,
+                        opacity: hoveredKind === 'past' ? 0.55 : 1,
+                      }}
+                      transition={{ duration: reduceMotion ? 0 : 0.22 }}
+                      onMouseEnter={() => setHoveredKind('prospective')}
+                      onMouseLeave={() => setHoveredKind(null)}
+                    />
+                  )}
+                  {past > 0 && (
+                    <motion.circle
+                      className={`candidate-review-analytics__donut-segment${prospective === 0 ? ' is-full' : ''}`}
+                      cx="80"
+                      cy="80"
+                      r="58"
+                      fill="none"
+                      stroke="url(#testimonial-donut-slate)"
+                      strokeDasharray={`${Math.max(0, pastFraction * circumference - arcGap)} ${circumference}`}
+                      strokeDashoffset={-prospectiveFraction * circumference}
+                      transform="rotate(-90 80 80)"
+                      initial={false}
+                      animate={{
+                        strokeWidth: hoveredKind === 'past' ? 23 : 19,
+                        opacity: hoveredKind === 'prospective' ? 0.55 : 1,
+                      }}
+                      transition={{ duration: reduceMotion ? 0 : 0.22 }}
+                      onMouseEnter={() => setHoveredKind('past')}
+                      onMouseLeave={() => setHoveredKind(null)}
+                    />
+                  )}
+                </svg>
                 <div className="candidate-review-analytics__donut-center">
                   <strong>
                     {number.format(hoveredKind ? hoveredCount : submissions)}

@@ -18,6 +18,7 @@ import {
   type TestimonialReviewDecision,
 } from '@/app/admin/testimonials/actions'
 import { TestimonialReviewControls } from '@/app/admin/testimonials/review-controls'
+import { PillDropdown } from '@/app/admin/testimonials/pill-dropdown'
 
 export type ReviewStatus = 'all' | 'pending' | 'approved' | 'rejected'
 
@@ -274,9 +275,9 @@ export function TestimonialsInbox({
   const [connection, setConnection] = useState<'all' | 'past' | 'prospective'>(
     'all',
   )
-  const [sortKey, setSortKey] = useState<
-    'submitted_at' | 'author_name' | 'relationship' | 'status' | 'quote'
-  >('submitted_at')
+  const [sortKey, setSortKey] = useState<'submitted_at' | 'author_name'>(
+    'submitted_at',
+  )
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [pageSize, setPageSize] = useState(10)
   const [localPage, setLocalPage] = useState(1)
@@ -285,7 +286,7 @@ export function TestimonialsInbox({
   const detailDialogRef = useRef<HTMLDialogElement>(null)
   const deleteDialogRef = useRef<HTMLDialogElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
-  const lastTriggerRef = useRef<HTMLButtonElement>(null)
+  const lastTriggerRef = useRef<HTMLElement>(null)
   const menuTriggerRef = useRef<HTMLButtonElement>(null)
   const deleteTriggerRef = useRef<HTMLButtonElement>(null)
   const selected = submissions.find((item) => item.id === selectedId)
@@ -322,12 +323,6 @@ export function TestimonialsInbox({
     currentPage * pageSize,
   )
   const selectedVisible = visibleSubmissions.filter((item) =>
-    selectedIds.includes(item.id),
-  )
-  const allVisibleSelected =
-    pageRows.length > 0 &&
-    pageRows.every((item) => selectedIds.includes(item.id))
-  const someVisibleSelected = pageRows.some((item) =>
     selectedIds.includes(item.id),
   )
   const selectedPending = selectedVisible.filter(
@@ -405,18 +400,10 @@ export function TestimonialsInbox({
     })
   }
 
-  function openDetails(item: CandidateSubmission, trigger: HTMLButtonElement) {
+  function openDetails(item: CandidateSubmission, trigger: HTMLElement) {
     lastTriggerRef.current = trigger
     setMenuId(null)
     setSelectedId(item.id)
-  }
-
-  function setSort(key: typeof sortKey) {
-    setSortDirection((current) =>
-      sortKey === key && current === 'asc' ? 'desc' : 'asc',
-    )
-    setSortKey(key)
-    setLocalPage(1)
   }
 
   function reviewItems(
@@ -521,94 +508,65 @@ export function TestimonialsInbox({
       <div className="candidate-review-inbox__toolbar">
         <label className="candidate-review-inbox__search">
           <span className="sr-only">Search candidate or story</span>
+          <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+            <circle cx="10.8" cy="10.8" r="6.3" />
+            <path d="m16 16 4.5 4.5" />
+          </svg>
           <input
             onChange={(event) => {
               setSearch(event.target.value)
               setLocalPage(1)
               setSelectedIds([])
             }}
-            placeholder="Search candidate or story"
+            placeholder="Search name or story…"
             type="search"
             value={search}
           />
         </label>
         <TestimonialStatusFilter filters={filters} status={status} />
-        <label>
-          <span>Connection</span>
-          <select
-            onChange={(event) => {
-              setConnection(event.target.value as typeof connection)
-              setLocalPage(1)
-              setSelectedIds([])
-            }}
-            value={connection}
-          >
-            <option value="all">All connections</option>
-            <option value="prospective">Prospective</option>
-            <option value="past">Past</option>
-          </select>
-        </label>
-        <label>
-          <span>Sort</span>
-          <select
-            onChange={(event) => {
-              const value = event.target.value
-              setSortKey(value === 'name' ? 'author_name' : 'submitted_at')
-              setSortDirection(
-                value === 'oldest' || value === 'name' ? 'asc' : 'desc',
-              )
-              setLocalPage(1)
-            }}
-            value={
-              sortKey === 'author_name' && sortDirection === 'asc'
-                ? 'name'
-                : sortKey === 'submitted_at'
-                  ? sortDirection === 'asc'
-                    ? 'oldest'
-                    : 'newest'
-                  : 'custom'
-            }
-          >
-            <option disabled value="custom">
-              Column sort
-            </option>
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="name">Name A–Z</option>
-          </select>
-        </label>
+        <PillDropdown
+          label="Connection"
+          onChange={(value) => {
+            setConnection(value as typeof connection)
+            setLocalPage(1)
+            setSelectedIds([])
+          }}
+          options={[
+            { value: 'all', label: 'All connections' },
+            { value: 'prospective', label: 'Prospective' },
+            { value: 'past', label: 'Past' },
+          ]}
+          value={connection}
+        />
+        <PillDropdown
+          label="Sort by"
+          onChange={(value) => {
+            setSortKey(value === 'name' ? 'author_name' : 'submitted_at')
+            setSortDirection(
+              value === 'oldest' || value === 'name' ? 'asc' : 'desc',
+            )
+            setLocalPage(1)
+          }}
+          options={[
+            { value: 'newest', label: 'Newest first' },
+            { value: 'oldest', label: 'Oldest first' },
+            { value: 'name', label: 'Name A–Z' },
+          ]}
+          value={
+            sortKey === 'author_name'
+              ? 'name'
+              : sortDirection === 'asc'
+                ? 'oldest'
+                : 'newest'
+          }
+        />
       </div>
 
-      {(canReview || canDelete) && (
+      {selectedVisible.length > 1 && (canReview || canDelete) && (
         <div className="candidate-review-inbox__bulk-toolbar">
-          <label className="candidate-review-inbox__select-all">
-            <input
-              aria-label="Select all testimonials shown on this page"
-              checked={allVisibleSelected}
-              onChange={(event) =>
-                setSelectedIds((current) =>
-                  event.target.checked
-                    ? [
-                        ...new Set([
-                          ...current,
-                          ...pageRows.map((item) => item.id),
-                        ]),
-                      ]
-                    : current.filter(
-                        (id) => !pageRows.some((item) => item.id === id),
-                      ),
-                )
-              }
-              ref={(input) => {
-                if (input)
-                  input.indeterminate =
-                    someVisibleSelected && !allVisibleSelected
-              }}
-              type="checkbox"
-            />
-            Select page
-          </label>
-          <span aria-live="polite">{selectedVisible.length} selected</span>
+          <span aria-live="polite">
+            <strong>{selectedVisible.length}</strong> selected
+          </span>
           {canReview && (
             <button
               className="candidate-review-button candidate-review-button--approve"
@@ -645,14 +603,6 @@ export function TestimonialsInbox({
               Delete
             </button>
           )}
-          <button
-            className="candidate-review-button candidate-review-button--neutral"
-            disabled={selectedVisible.length === 0 || deleting || reviewing}
-            onClick={() => setSelectedIds([])}
-            type="button"
-          >
-            Clear
-          </button>
         </div>
       )}
       {reviewError && (
@@ -672,96 +622,90 @@ export function TestimonialsInbox({
             <caption className="sr-only">
               Candidate testimonial submissions on the loaded page
             </caption>
-            <thead>
+            <thead className="sr-only">
               <tr>
-                {(canReview || canDelete) && (
-                  <th scope="col">
-                    <span className="sr-only">Select</span>
-                  </th>
-                )}
-                {(
-                  [
-                    ['author_name', 'Candidate'],
-                    ['quote', 'Story preview'],
-                    ['relationship', 'Connection'],
-                    ['submitted_at', 'Submitted'],
-                    ['status', 'Status'],
-                  ] as const
-                ).map(([key, label]) => (
-                  <th
-                    aria-sort={
-                      sortKey === key
-                        ? sortDirection === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                        : 'none'
-                    }
-                    key={key}
-                    scope="col"
-                  >
-                    <button
-                      onClick={() => setSort(key)}
-                      title={
-                        key === 'author_name'
-                          ? 'Candidate name and Role / Company'
-                          : undefined
-                      }
-                      type="button"
-                    >
-                      {label}{' '}
-                      <span aria-hidden="true">
-                        {sortKey === key
-                          ? sortDirection === 'asc'
-                            ? '↑'
-                            : '↓'
-                          : '↕'}
-                      </span>
-                    </button>
-                  </th>
-                ))}
-                <th scope="col">Action</th>
+                <th
+                  aria-sort={sortKey === 'author_name' ? 'ascending' : 'none'}
+                  scope="col"
+                >
+                  Candidate and role
+                </th>
+                <th scope="col">Story preview</th>
+                <th scope="col">Connection</th>
+                <th
+                  aria-sort={
+                    sortKey === 'submitted_at'
+                      ? sortDirection === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : 'none'
+                  }
+                  scope="col"
+                >
+                  Submitted
+                </th>
+                <th scope="col">Status</th>
+                {(canReview || canDelete) && <th scope="col">Actions</th>}
               </tr>
             </thead>
             <tbody>
-              {pageRows.map((item) => (
+              {pageRows.map((item, index) => (
                 <tr
+                  aria-label={`Open testimonial from ${item.author_name}`}
                   className={
                     selectedIds.includes(item.id) ? 'is-selected' : undefined
                   }
                   id={`testimonial-${item.id}`}
                   key={item.id}
+                  onClick={(event) => {
+                    if (
+                      event.target instanceof Element &&
+                      event.target.closest('button, a, input')
+                    )
+                      return
+                    openDetails(item, event.currentTarget)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.target !== event.currentTarget) return
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      openDetails(item, event.currentTarget)
+                    }
+                  }}
+                  tabIndex={0}
                 >
-                  {(canReview || canDelete) && (
-                    <td
-                      className="candidate-review-inbox__selection"
-                      data-label="Select"
-                    >
-                      <label>
-                        <span className="sr-only">
-                          Select testimonial from {item.author_name}
-                        </span>
-                        <input
-                          aria-label={`Select testimonial from ${item.author_name}`}
-                          checked={selectedIds.includes(item.id)}
-                          onChange={(event) =>
-                            setSelectedIds((current) =>
-                              event.target.checked
-                                ? [...new Set([...current, item.id])]
-                                : current.filter((id) => id !== item.id),
-                            )
-                          }
-                          type="checkbox"
-                        />
-                      </label>
-                    </td>
-                  )}
                   <th
                     className="candidate-review-inbox__candidate"
                     data-label="Candidate"
                     scope="row"
                   >
                     <span className="candidate-review-inbox__person">
-                      <CandidateAvatar item={item} />
+                      {canReview || canDelete ? (
+                        <button
+                          aria-label={`${selectedIds.includes(item.id) ? 'Deselect' : 'Select'} testimonial from ${item.author_name}`}
+                          aria-pressed={selectedIds.includes(item.id)}
+                          className="candidate-review-inbox__avatar-select"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            setSelectedIds((current) =>
+                              current.includes(item.id)
+                                ? current.filter((id) => id !== item.id)
+                                : [...current, item.id],
+                            )
+                          }}
+                          type="button"
+                        >
+                          <CandidateAvatar item={item} />
+                          <span
+                            aria-hidden="true"
+                            className="candidate-review-inbox__avatar-check"
+                          >
+                            ✓
+                          </span>
+                        </button>
+                      ) : (
+                        <CandidateAvatar item={item} />
+                      )}
                       <span className="candidate-review-inbox__copy">
                         <strong>{item.author_name}</strong>
                         <span
@@ -783,15 +727,6 @@ export function TestimonialsInbox({
                     >
                       {item.quote}
                     </span>
-                    <button
-                      className="candidate-review-inbox__read-more"
-                      onClick={(event) =>
-                        openDetails(item, event.currentTarget)
-                      }
-                      type="button"
-                    >
-                      Read more
-                    </button>
                   </td>
                   <td data-label="Connection">
                     <span className="candidate-review-inbox__connection-badge">
@@ -826,35 +761,14 @@ export function TestimonialsInbox({
                       {item.status}
                     </span>
                   </td>
-                  <td
-                    className="candidate-review-inbox__actions"
-                    data-label="Action"
-                  >
-                    {item.status === 'pending' &&
-                    canReview &&
-                    item.publication_consent ? (
-                      <button
-                        className="candidate-review-inbox__primary"
-                        disabled={reviewing || deleting}
-                        onClick={() => reviewItems([item], 'approved')}
-                        type="button"
-                      >
-                        Approve
-                      </button>
-                    ) : (
-                      <button
-                        className="candidate-review-inbox__primary"
-                        onClick={(event) =>
-                          openDetails(item, event.currentTarget)
-                        }
-                        type="button"
-                      >
-                        View
-                      </button>
-                    )}
-                    {(canReview || canDelete) && (
+                  {(canReview || canDelete) && (
+                    <td
+                      className="candidate-review-inbox__actions"
+                      data-label="Action"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <div
-                        className="candidate-review-inbox__more"
+                        className={`candidate-review-inbox__more${index >= pageRows.length - 2 ? ' is-upward' : ''}`}
                         data-menu-id={item.id}
                       >
                         <button
@@ -946,8 +860,8 @@ export function TestimonialsInbox({
                           </div>
                         )}
                       </div>
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -993,20 +907,19 @@ export function TestimonialsInbox({
             –{Math.min(currentPage * pageSize, visibleSubmissions.length)} of{' '}
             {visibleSubmissions.length} loaded
           </span>
-          <label>
-            Rows per page{' '}
-            <select
-              onChange={(event) => {
-                setPageSize(Number(event.target.value))
-                setLocalPage(1)
-              }}
-              value={pageSize}
-            >
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-            </select>
-          </label>
+          <PillDropdown
+            label="Rows per page"
+            onChange={(value) => {
+              setPageSize(Number(value))
+              setLocalPage(1)
+            }}
+            options={[
+              { value: '10', label: '10' },
+              { value: '25', label: '25' },
+              { value: '50', label: '50' },
+            ]}
+            value={String(pageSize)}
+          />
           <button
             disabled={currentPage === 1}
             onClick={() => setLocalPage((page) => page - 1)}
