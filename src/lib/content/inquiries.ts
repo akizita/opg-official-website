@@ -36,6 +36,12 @@ export type SubmissionResult = {
   errors?: Record<string, string>
 }
 
+const MAX_STORED_SUBJECT_LENGTH = 120
+
+function subjectPrefix(intent: InquiryIntent): string {
+  return intent === 'talent' ? '[Talent] ' : '[Client] '
+}
+
 // Best-effort per-instance throttling; Turnstile provides the primary bot check.
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
 
@@ -120,6 +126,7 @@ export function validateInquiryInput(input: unknown): {
       ? raw.turnstileToken.trim()
       : undefined
   const intent: InquiryIntent = raw.intent === 'talent' ? 'talent' : 'client'
+  const maxSubjectLength = MAX_STORED_SUBJECT_LENGTH - subjectPrefix(intent).length
 
   // Honeypot trap check
   if (honeypot) {
@@ -155,11 +162,11 @@ export function validateInquiryInput(input: unknown): {
     errors.email = 'Email must be 254 characters or fewer'
   }
 
-  // Subject: 2-120 characters
+  // The stored subject includes its inquiry-category prefix.
   if (!subject || subject.length < 2) {
     errors.subject = 'Please enter a subject (at least 2 characters)'
-  } else if (subject.length > 120) {
-    errors.subject = 'Subject must be 120 characters or fewer'
+  } else if (subject.length > maxSubjectLength) {
+    errors.subject = `Subject must be ${maxSubjectLength} characters or fewer`
   }
 
   // Message: 20-5,000 characters
@@ -288,7 +295,7 @@ export async function submitContactInquiry(
     .insert({
       full_name: validation.data.fullName,
       email: validation.data.email,
-      subject: `[${validation.data.intent === 'talent' ? 'Talent' : 'Client'}] ${validation.data.subject}`,
+      subject: `${subjectPrefix(validation.data.intent ?? 'client')}${validation.data.subject}`,
       message: validation.data.message,
       status: 'new',
       ip_hash: ipHash,

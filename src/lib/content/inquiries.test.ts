@@ -76,6 +76,24 @@ describe('inquiries schema & validation', () => {
       'You must acknowledge the Privacy Notice to submit',
     )
   })
+
+  it('keeps the prefixed subject within the database limit', () => {
+    const input = {
+      fullName: 'Alice Johnson',
+      email: 'alice@example.com',
+      subject: 'A'.repeat(111),
+      message: 'Please contact me about a dedicated delivery team.',
+      intent: 'client' as const,
+      privacyConsent: true,
+      elapsedSeconds: 5,
+    }
+
+    expect(validateInquiryInput(input).data).not.toBeNull()
+    expect(validateInquiryInput({ ...input, subject: 'A'.repeat(112) })).toEqual({
+      data: null,
+      errors: { subject: 'Subject must be 111 characters or fewer' },
+    })
+  })
 })
 
 describe('inquiries abuse controls', () => {

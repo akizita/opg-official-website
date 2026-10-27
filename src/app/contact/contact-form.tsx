@@ -256,7 +256,7 @@ export function ContactForm({ copy }: { copy: Record<string, string> }) {
               aria-invalid={Boolean(result?.errors?.subject)}
               disabled={isPending}
               id="subject"
-              maxLength={120}
+              maxLength={111}
               name="subject"
               placeholder={
                 intent === 'client'
