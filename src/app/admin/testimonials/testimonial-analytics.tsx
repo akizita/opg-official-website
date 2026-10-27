@@ -387,6 +387,7 @@ export function TestimonialAnalytics({
                   >
                     <span aria-hidden="true" />
                     <span>{label}</span>
+                    <span>{number.format(count)}</span>
                     <strong>{share(count, submissions)}%</strong>
                   </button>
                 ))}
