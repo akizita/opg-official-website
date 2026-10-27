@@ -29,7 +29,11 @@ function share(part: number, total: number) {
   return total > 0 ? Math.round((part / total) * 100) : 0
 }
 
-function comparison(current: number, previous: number, period: AnalyticsPeriod) {
+function comparison(
+  current: number,
+  previous: number,
+  period: AnalyticsPeriod,
+) {
   const difference = current - previous
   return {
     label: `${difference > 0 ? '▲ ' : difference < 0 ? '▼ ' : ''}${number.format(Math.abs(difference))} vs last ${period}`,
@@ -67,7 +71,9 @@ function TrendChart({
   const last = plotted[plotted.length - 1]
   const hoveredPoint = plotted.find((point) => point.index === hoveredIndex)
   const first = plotted[0]
-  const line = plotted.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const line = plotted
+    .map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`)
+    .join(' ')
   const area = first && last ? `${line} L ${last.x} 128 L ${first.x} 128 Z` : ''
   const ticks = [
     ...new Set(
@@ -134,8 +140,19 @@ function TrendChart({
           const y = 128 - fraction * 104
           return (
             <g key={fraction}>
-              <line className="candidate-review-analytics__trend-grid" x1="42" x2="572" y1={y} y2={y} />
-              <text className="candidate-review-analytics__trend-y-label" x="34" y={y + 3} textAnchor="end">
+              <line
+                className="candidate-review-analytics__trend-grid"
+                x1="42"
+                x2="572"
+                y1={y}
+                y2={y}
+              />
+              <text
+                className="candidate-review-analytics__trend-y-label"
+                x="34"
+                y={y + 3}
+                textAnchor="end"
+              >
                 {number.format(Math.round(maximum * fraction))}
               </text>
             </g>
@@ -152,10 +169,7 @@ function TrendChart({
         )}
         {area && <path d={area} fill="url(#testimonial-trend-fill)" />}
         {line && (
-          <path
-            className="candidate-review-analytics__trend-line"
-            d={line}
-          />
+          <path className="candidate-review-analytics__trend-line" d={line} />
         )}
         {plotted.map((point, index) => (
           <g
@@ -299,7 +313,9 @@ export function TestimonialAnalytics({
                   key={status}
                 >
                   <span>{status}</span>
-                  <strong aria-label={`${number.format(count)} this ${period}`}>{number.format(count)}</strong>
+                  <strong aria-label={`${number.format(count)} this ${period}`}>
+                    {number.format(count)}
+                  </strong>
                 </Link>
               ))}
             </div>

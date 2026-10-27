@@ -25,9 +25,11 @@ function SignOutIcon() {
 
 export function AdminShell({ children, profile }: AdminShellProps) {
   const nameParts = profile.displayName.trim().split(/\s+/).filter(Boolean)
-  const initials = (nameParts.length === 1
-    ? nameParts[0].slice(0, 2).split('')
-    : nameParts.map((part) => part[0]))
+  const initials = (
+    nameParts.length === 1
+      ? nameParts[0].slice(0, 2).split('')
+      : nameParts.map((part) => part[0])
+  )
     .join('')
     .slice(0, 2)
     .toUpperCase()

@@ -16447,7 +16447,7 @@ body:has(.admin-shell) > #main-content {
 }
 
 .admin-shell__account-copy small {
-  color: rgb(255 255 255 / 44%);
+  color: #c3c1bc;
   font-size: 0.67rem;
   margin-top: 0.12rem;
 }
@@ -16457,7 +16457,7 @@ body:has(.admin-shell) > #main-content {
   background: transparent;
   border: 0;
   border-radius: 0.45rem;
-  color: rgb(255 255 255 / 48%);
+  color: #c3c1bc;
   cursor: pointer;
   display: flex;
   height: 2rem;
@@ -22820,6 +22820,7 @@ html:has(.pages-workspace) {
   --review-muted: #5c5245;
   --review-gold-ink: #694907;
   --review-border: #d9c8a9;
+  --review-control-border: #8e7650;
   --review-surface: #fffdf7;
   --review-radius: 1.25rem;
   --review-shadow: 0 0.65rem 1.8rem rgb(68 46 15 / 9%);
@@ -22873,7 +22874,7 @@ html:has(.pages-workspace) {
   gap: 0.3rem;
   min-height: 2.55rem;
   padding: 0.5rem 0.85rem;
-  border: 1px solid var(--review-border);
+  border: 1px solid var(--review-control-border);
   border-radius: 0.7rem;
   background: var(--review-surface);
   box-shadow: 0 0.2rem 0.6rem rgb(68 46 15 / 6%);
@@ -22975,7 +22976,7 @@ html:has(.pages-workspace) {
   flex: none;
   gap: 0.2rem;
   padding: 0.25rem;
-  border: 1px solid rgb(226 201 150 / 58%);
+  border: 1px solid var(--review-control-border);
   border-radius: 0.8rem;
   background: rgb(255 255 255 / 61%);
 }
@@ -23131,6 +23132,12 @@ html:has(.pages-workspace) {
 
 .candidate-review-analytics__trend-hit {
   cursor: crosshair;
+}
+
+.candidate-review-analytics__trend-hit:focus-visible {
+  outline: none;
+  stroke: #684500;
+  stroke-width: 3;
 }
 
 .candidate-review-analytics__trend-axis {
@@ -23352,7 +23359,7 @@ html:has(.pages-workspace) {
   min-width: 13.8rem;
   min-height: 3.1rem;
   padding: 0.35rem 0.75rem;
-  border: 1px solid rgb(227 193 127 / 72%);
+  border: 1px solid var(--review-control-border);
   border-radius: 999px;
   background: linear-gradient(
     145deg,
@@ -23855,7 +23862,7 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-inbox__more-button {
-  border-color: rgb(184 146 72 / 30%);
+  border-color: var(--review-control-border);
   background: rgb(255 250 238 / 76%);
   box-shadow: inset 0 1px rgb(255 255 255 / 85%);
   transition:
@@ -24070,6 +24077,12 @@ html:has(.pages-workspace) {
   border-top: 1px solid rgb(133 103 54 / 20%);
 }
 
+.candidate-review-dialog__actions p {
+  margin: 0 0 0.8rem;
+  color: var(--review-muted);
+  font-size: 0.84rem;
+}
+
 .candidate-review-dialog--confirm {
   width: min(calc(100% - 2rem), 28rem);
 }
@@ -24130,7 +24143,7 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-button--neutral {
-  border-color: #dccbb0;
+  border-color: var(--review-control-border);
   background: rgb(255 255 255 / 68%);
   color: #514334;
 }
@@ -24201,7 +24214,7 @@ html:has(.pages-workspace) {
   align-items: center;
   min-height: 2.5rem;
   padding: 0.5rem 0.9rem;
-  border: 1px solid #e6d8bf;
+  border: 1px solid var(--review-control-border);
   border-radius: 999px;
   background: rgb(255 255 255 / 72%);
   color: #4b3920;
@@ -24214,8 +24227,8 @@ html:has(.pages-workspace) {
   background: #fff4d8;
 }
 
-.candidate-review-page :is(button, a):focus-visible {
-  outline: 3px solid #b57811;
+.candidate-review-page :is(button, a, input, select):focus-visible {
+  outline: 3px solid #75500e;
   outline-offset: 3px;
 }
 
@@ -24236,7 +24249,7 @@ html:has(.pages-workspace) {
   }
 }
 
-@container candidate-review-page (max-width: 60rem) {
+@container candidate-review-page (max-width: 48rem) {
   .candidate-review-analytics {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -24474,7 +24487,7 @@ html:has(.pages-workspace) {
   width: 100%;
   min-height: 2.6rem;
   padding: 0.45rem 0.65rem;
-  border: 1px solid var(--review-border);
+  border: 1px solid var(--review-control-border);
   border-radius: 0.65rem;
   background: #fffdf9;
   color: var(--review-ink);
@@ -24534,6 +24547,10 @@ html:has(.pages-workspace) {
 
 .candidate-review-inbox thead th:first-child {
   width: 2.4rem;
+}
+
+.candidate-review-inbox--readonly thead th:first-child {
+  width: auto;
 }
 
 .candidate-review-inbox thead th:nth-last-child(2) {
@@ -24704,7 +24721,7 @@ html:has(.pages-workspace) {
 .candidate-review-inbox__pagination button {
   min-height: 2.2rem;
   padding: 0.3rem 0.65rem;
-  border: 1px solid var(--review-border);
+  border: 1px solid var(--review-control-border);
   border-radius: 0.5rem;
   background: #fffdf7;
   color: var(--review-ink);

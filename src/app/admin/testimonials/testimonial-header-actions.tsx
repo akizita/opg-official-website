@@ -5,7 +5,7 @@ import Link from 'next/link'
 import type { CandidateSubmission } from '@/app/admin/testimonials/testimonials-inbox'
 
 function csvCell(value: string) {
-  const safe = /^[=+@\-\t\r]/.test(value) ? `'${value}` : value
+  const safe = /^[=+@-]/.test(value.trimStart()) ? `'${value}` : value
   return `"${safe.replaceAll('"', '""')}"`
 }
 
@@ -15,7 +15,14 @@ export function TestimonialHeaderActions({
   submissions: CandidateSubmission[]
 }) {
   function exportCsv() {
-    const heading = ['Candidate', 'Role / Company', 'Connection', 'Status', 'Submitted (SGT)', 'Story']
+    const heading = [
+      'Candidate',
+      'Role / Company',
+      'Connection',
+      'Status',
+      'Submitted (SGT)',
+      'Story',
+    ]
     const rows = submissions.map((item) => [
       item.author_name,
       item.role_title ?? '',
@@ -25,7 +32,9 @@ export function TestimonialHeaderActions({
       item.quote,
     ])
     const csv = `\uFEFF${[heading, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n')}\r\n`
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    const url = URL.createObjectURL(
+      new Blob([csv], { type: 'text/csv;charset=utf-8' }),
+    )
     const link = document.createElement('a')
     link.href = url
     link.download = 'candidate-testimonials.csv'

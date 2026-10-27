@@ -287,6 +287,7 @@ export function TestimonialsInbox({
   const listRef = useRef<HTMLDivElement>(null)
   const lastTriggerRef = useRef<HTMLButtonElement>(null)
   const menuTriggerRef = useRef<HTMLButtonElement>(null)
+  const deleteTriggerRef = useRef<HTMLButtonElement>(null)
   const selected = submissions.find((item) => item.id === selectedId)
   const deleteDialogOpen = deleteTargets.length > 0
   const visibleSubmissions = useMemo(() => {
@@ -394,6 +395,14 @@ export function TestimonialsInbox({
     if (deleting) return
     setDeleteTargets([])
     setDeleteError('')
+    requestAnimationFrame(() => {
+      const target = deleteTriggerRef.current?.isConnected
+        ? deleteTriggerRef.current
+        : listRef.current?.querySelector<HTMLInputElement>(
+            'input[type="search"]',
+          )
+      target?.focus()
+    })
   }
 
   function openDetails(item: CandidateSubmission, trigger: HTMLButtonElement) {
@@ -439,6 +448,13 @@ export function TestimonialsInbox({
         )
         if (selectedId && succeeded.includes(selectedId)) setSelectedId(null)
         router.refresh()
+        if (status !== 'all' && items.length === 1) {
+          requestAnimationFrame(() =>
+            listRef.current
+              ?.querySelector<HTMLInputElement>('input[type="search"]')
+              ?.focus(),
+          )
+        }
         setToast({
           message: `${succeeded.length} testimonial${succeeded.length === 1 ? '' : 's'} ${decision}.`,
           tone: 'success',
@@ -483,6 +499,14 @@ export function TestimonialsInbox({
           setToast({ message: result.error, tone: 'error' })
         } else {
           setDeleteTargets([])
+          requestAnimationFrame(() => {
+            const target = deleteTriggerRef.current?.isConnected
+              ? deleteTriggerRef.current
+              : listRef.current?.querySelector<HTMLInputElement>(
+                  'input[type="search"]',
+                )
+            target?.focus()
+          })
         }
       } catch {
         const message = 'Could not delete the selected testimonials. Try again.'
@@ -611,7 +635,8 @@ export function TestimonialsInbox({
             <button
               className="candidate-review-button candidate-review-button--reject"
               disabled={selectedVisible.length === 0 || deleting || reviewing}
-              onClick={() => {
+              onClick={(event) => {
+                deleteTriggerRef.current = event.currentTarget
                 setDeleteError('')
                 setDeleteTargets(selectedVisible)
               }}
@@ -638,7 +663,10 @@ export function TestimonialsInbox({
           {reviewError}
         </p>
       )}
-      <div className="candidate-review-inbox" ref={listRef}>
+      <div
+        className={`candidate-review-inbox${canReview || canDelete ? '' : ' candidate-review-inbox--readonly'}`}
+        ref={listRef}
+      >
         <div className="candidate-review-inbox__scroll">
           <table>
             <caption className="sr-only">
@@ -906,6 +934,8 @@ export function TestimonialsInbox({
                                 onClick={() => {
                                   setMenuId(null)
                                   setDeleteTargets([item])
+                                  deleteTriggerRef.current =
+                                    menuTriggerRef.current
                                 }}
                                 role="menuitem"
                                 type="button"
@@ -1077,17 +1107,45 @@ export function TestimonialsInbox({
                 <div className="candidate-review-dialog__actions">
                   <TestimonialReviewControls
                     id={selected.id}
-                    onComplete={closeDetails}
+                    onComplete={() => {
+                      setSelectedId(null)
+                      requestAnimationFrame(() =>
+                        listRef.current
+                          ?.querySelector<HTMLInputElement>(
+                            'input[type="search"]',
+                          )
+                          ?.focus(),
+                      )
+                    }}
                     onResult={(message, tone) => setToast({ message, tone })}
                   />
+                </div>
+              )}
+            {selected.status === 'pending' &&
+              canReview &&
+              !selected.publication_consent && (
+                <div className="candidate-review-dialog__actions">
+                  <p>
+                    Publication consent is missing, so this story cannot be
+                    approved.
+                  </p>
+                  <button
+                    className="candidate-review-button candidate-review-button--neutral"
+                    disabled={reviewing}
+                    onClick={() => reviewItems([selected], 'rejected')}
+                    type="button"
+                  >
+                    Reject testimonial
+                  </button>
                 </div>
               )}
             {canDelete && (
               <div className="candidate-review-dialog__actions">
                 <button
                   className="candidate-review-button candidate-review-button--reject"
-                  onClick={() => {
-                    closeDetails()
+                  onClick={(event) => {
+                    deleteTriggerRef.current = event.currentTarget
+                    setSelectedId(null)
                     setDeleteTargets([selected])
                   }}
                   type="button"
