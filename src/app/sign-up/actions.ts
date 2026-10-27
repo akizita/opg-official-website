@@ -36,6 +36,13 @@ export async function visitorSignUpAction(
   const callback = new URL('/auth/callback', getSiteUrl())
   callback.searchParams.set('next', '/contact')
   const supabase = await createClient()
+  const { data: claimsData } = await supabase.auth.getClaims()
+  if (claimsData?.claims?.sub) {
+    return {
+      status: 'error',
+      message: 'Sign out before creating another account.',
+    }
+  }
   const { data, error } = await supabase.auth.signUp({
     email,
     password,

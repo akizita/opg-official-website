@@ -33,6 +33,8 @@ export function SiteHeader() {
             </Link>
           ))}
           <Link href="/account">Account</Link>
+          <Link href="/sign-in">Log in</Link>
+          <Link href="/sign-up">Sign up</Link>
         </nav>
 
         <Link className="header-cta" href="/contact">
@@ -48,6 +50,8 @@ export function SiteHeader() {
               </Link>
             ))}
             <Link href="/account">Account</Link>
+            <Link href="/sign-in">Log in</Link>
+            <Link href="/sign-up">Sign up</Link>
             <Link href="/contact">Contact us</Link>
           </nav>
         </details>

@@ -13,12 +13,14 @@ import { visitorSignUpAction } from './actions'
 
 describe('visitor sign-up', () => {
   const signUp = vi.fn()
+  const getClaims = vi.fn()
 
   beforeEach(() => {
     vi.clearAllMocks()
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'http://localhost:3000')
+    getClaims.mockResolvedValue({ data: null, error: null })
     vi.mocked(createClient).mockResolvedValue({
-      auth: { signUp },
+      auth: { signUp, getClaims },
     } as unknown as Awaited<ReturnType<typeof createClient>>)
   })
   afterEach(() => vi.unstubAllEnvs())
@@ -58,6 +60,24 @@ describe('visitor sign-up', () => {
       data,
     )
     expect(result.status).toBe('error')
+    expect(signUp).not.toHaveBeenCalled()
+  })
+
+  it('requires sign-out before creating another account', async () => {
+    getClaims.mockResolvedValue({
+      data: { claims: { sub: 'visitor-1' } },
+      error: null,
+    })
+
+    const result = await visitorSignUpAction(
+      { status: 'idle', message: '' },
+      form(),
+    )
+
+    expect(result).toEqual({
+      status: 'error',
+      message: 'Sign out before creating another account.',
+    })
     expect(signUp).not.toHaveBeenCalled()
   })
 })

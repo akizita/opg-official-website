@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
+import Link from 'next/link'
 
+import { visitorSignOutAction } from '@/app/account/actions'
 import { AuthPanel } from '@/components/admin/auth-panel'
 import { GoogleAuthForm } from '@/components/site/google-auth-form'
 import { getSafePublicPath } from '@/lib/auth/redirect'
@@ -20,7 +21,7 @@ export default async function VisitorSignInPage({
 }) {
   const { next, notice } = await searchParams
   const destination = getSafePublicPath(next)
-  if (await getVisitorSession()) redirect(destination)
+  const session = await getVisitorSession()
 
   return (
     <AuthPanel
@@ -28,6 +29,20 @@ export default async function VisitorSignInPage({
       eyebrow="Your OPG account"
       title="Welcome back"
     >
+      {session && (
+        <div className="auth-session-note" role="status">
+          <p>
+            You are signed in as <strong>{session.email}</strong>. You can use
+            another account below or sign out first.
+          </p>
+          <div className="auth-session-note__actions">
+            <Link href="/account">View account</Link>
+            <form action={visitorSignOutAction}>
+              <button type="submit">Sign out to use another account</button>
+            </form>
+          </div>
+        </div>
+      )}
       {notice === 'oauth-error' && (
         <p className="form-message form-message--error" role="alert">
           Google sign-in could not be completed. Please try again.

@@ -92,6 +92,12 @@ export function ContactForm({
 
   return (
     <div className="contact-form-container">
+      <div className="contact-form__account">
+        <span>
+          Signed in as <strong>{signedInEmail}</strong>
+        </span>
+        <Link href="/sign-in">Switch account</Link>
+      </div>
       {/* Inquiry category selector */}
       <div
         aria-label="Inquiry Category"

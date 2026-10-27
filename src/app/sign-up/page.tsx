@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
+import Link from 'next/link'
 
+import { visitorSignOutAction } from '@/app/account/actions'
 import { AuthPanel } from '@/components/admin/auth-panel'
 import { GoogleAuthForm } from '@/components/site/google-auth-form'
 import { getVisitorSession } from '@/lib/auth/visitor-session'
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 }
 
 export default async function VisitorSignUpPage() {
-  if (await getVisitorSession()) redirect('/contact')
+  const session = await getVisitorSession()
 
   return (
     <AuthPanel
@@ -21,6 +22,20 @@ export default async function VisitorSignUpPage() {
       eyebrow="Your OPG account"
       title="Get started"
     >
+      {session && (
+        <div className="auth-session-note" role="status">
+          <p>
+            You are signed in as <strong>{session.email}</strong>. Sign out
+            before creating another account.
+          </p>
+          <div className="auth-session-note__actions">
+            <Link href="/account">View account</Link>
+            <form action={visitorSignOutAction}>
+              <button type="submit">Sign out</button>
+            </form>
+          </div>
+        </div>
+      )}
       <GoogleAuthForm />
       <div className="auth-divider" role="separator">
         <span>or sign up with email</span>
