@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { TestimonialHeaderActions } from '@/app/admin/testimonials/testimonial-header-actions'
 
 import {
   TestimonialAnalytics,
@@ -255,12 +256,18 @@ export default async function AdminTestimonialsPage({
         <CandidateTestimonialsLive audience="admin" showStatus={false} />
         <div className="candidate-review-heading">
           <div>
+            <nav aria-label="Breadcrumb" className="candidate-review-breadcrumbs">
+              <Link href="/admin">Admin</Link>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">Testimonials</span>
+            </nav>
             <h1>Testimonial management</h1>
             <p>
               Track candidate feedback, review incoming stories, and manage
               which testimonials appear on the public website.
             </p>
           </div>
+          <TestimonialHeaderActions submissions={submissions} />
         </div>
 
         <TestimonialAnalytics summaries={analytics} trends={trends} />

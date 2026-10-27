@@ -22835,7 +22835,62 @@ html:has(.pages-workspace) {
 }
 
 .candidate-review-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
   margin-bottom: 1rem;
+}
+
+.candidate-review-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--review-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.candidate-review-breadcrumbs a {
+  text-underline-offset: 0.2rem;
+}
+
+.candidate-review-heading__actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding-bottom: 0.15rem;
+}
+
+.candidate-review-heading__actions :is(button, a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 2.55rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--review-border);
+  border-radius: 0.7rem;
+  background: var(--review-surface);
+  box-shadow: 0 0.2rem 0.6rem rgb(68 46 15 / 6%);
+  color: var(--review-ink);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.candidate-review-heading__actions :is(button, a):hover {
+  background: #fff3d5;
+}
+
+.candidate-review-heading__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .candidate-review-heading > div:first-child {
@@ -24162,6 +24217,14 @@ html:has(.pages-workspace) {
 @container candidate-review-page (max-width: 37rem) {
   .candidate-review-heading h1 {
     white-space: normal;
+  }
+
+  .candidate-review-heading__actions {
+    width: 100%;
+  }
+
+  .candidate-review-heading__actions :is(button, a) {
+    flex: 1 1 auto;
   }
 
   .candidate-review-list-heading {
