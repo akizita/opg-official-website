@@ -61,7 +61,7 @@ export default async function AdminInquiriesPage({
     query = query.eq('status', activeStatus)
   }
 
-  const { data: inquiries } = await query
+  const { data: inquiries, error: inquiriesError } = await query
   const inquiryList = (inquiries as InquiryRow[]) || []
 
   const statusFilters = [
@@ -124,7 +124,14 @@ export default async function AdminInquiriesPage({
         </div>
 
         <div style={{ marginTop: '2rem' }}>
-          {inquiryList.length > 0 ? (
+          {inquiriesError ? (
+            <div className="alert-banner alert-banner--error" role="alert">
+              <p>Inquiries could not be loaded. Please try again.</p>
+              <Link className="button-link" href="/admin/inquiries">
+                Retry loading inquiries
+              </Link>
+            </div>
+          ) : inquiryList.length > 0 ? (
             <div className="card-grid">
               {inquiryList.map((inq) => {
                 const refId = `OPG-${inq.id.slice(0, 8).toUpperCase()}`

@@ -1,7 +1,7 @@
 import { createHash } from 'crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { createClient } from '@/lib/supabase/server'
+import { createPrivilegedClient } from '@/lib/supabase/server'
 
 export type InquiryIntent = 'client' | 'talent'
 
@@ -36,9 +36,8 @@ export type SubmissionResult = {
   errors?: Record<string, string>
 }
 
-// In-memory rate limiting and duplicate tracking for edge/serverless resilience
+// Best-effort per-instance throttling; Turnstile provides the primary bot check.
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
-const duplicateStore = new Set<string>()
 
 export function hashValue(val: string): string {
   return createHash('sha256').update(val.toLowerCase().trim()).digest('hex')
@@ -52,14 +51,6 @@ export async function verifyTurnstileToken(
 
   // In local development or test, allow test bypass if key is not configured
   if (!secretKey) {
-    return { success: true }
-  }
-
-  // Cloudflare standard test tokens
-  if (
-    token === 'XXXX.DUMMY.TOKEN.XXXX' ||
-    token === '1x0000000000000000000000000000000AA'
-  ) {
     return { success: true }
   }
 
@@ -132,12 +123,16 @@ export function validateInquiryInput(input: unknown): {
 
   // Honeypot trap check
   if (honeypot) {
-    errors.honeypot = 'Automated submission detected'
+    errors.form = 'Unable to submit this form. Please try again.'
   }
 
   // Time trap: human takes at least 2 seconds
-  if (elapsedSeconds !== undefined && elapsedSeconds < 2) {
-    errors.timeTrap = 'Form submitted too quickly'
+  if (
+    elapsedSeconds === undefined ||
+    !Number.isFinite(elapsedSeconds) ||
+    elapsedSeconds < 2
+  ) {
+    errors.form = 'Please take a moment to complete the form and try again.'
   }
 
   // Payload size safety
@@ -239,18 +234,6 @@ export function checkRateLimits(
   return { allowed: true }
 }
 
-export function checkDuplicateFingerprint(
-  email: string,
-  message: string,
-): boolean {
-  const fingerprint = hashValue(`${email}:${message}`)
-  if (duplicateStore.has(fingerprint)) {
-    return true // duplicate
-  }
-  duplicateStore.add(fingerprint)
-  return false
-}
-
 export async function submitContactInquiry(
   input: InquirySubmissionInput,
   options?: {
@@ -274,18 +257,6 @@ export async function submitContactInquiry(
     }
   }
 
-  // Duplicate Check
-  const isDuplicate = checkDuplicateFingerprint(
-    validation.data.email,
-    validation.data.message,
-  )
-  if (isDuplicate) {
-    return {
-      success: true,
-      referenceId: 'OPG-DUP-ACK',
-    }
-  }
-
   // Turnstile Verification
   const turnstile = await verifyTurnstileToken(
     validation.data.turnstileToken,
@@ -294,11 +265,21 @@ export async function submitContactInquiry(
   if (!turnstile.success) {
     return {
       success: false,
-      errors: { turnstile: turnstile.error || 'Challenge verification failed' },
+      errors: { form: turnstile.error || 'Challenge verification failed' },
     }
   }
 
-  const supabase = options?.client ?? (await createClient())
+  // Anonymous clients cannot insert into the protected inquiries or outbox tables.
+  const supabase = options?.client ?? createPrivilegedClient()
+  if (!supabase) {
+    console.error('Contact submissions require SUPABASE_SECRET_KEY.')
+    return {
+      success: false,
+      errors: {
+        form: 'The contact form is temporarily unavailable. Please use an email address listed on this page.',
+      },
+    }
+  }
   const ipHash = hashValue(clientIp)
 
   // Insert into contact_inquiries
@@ -316,6 +297,7 @@ export async function submitContactInquiry(
     .single()
 
   if (inquiryError || !inquiry) {
+    console.error('Could not save contact inquiry:', inquiryError?.message)
     return {
       success: false,
       errors: {
@@ -327,22 +309,34 @@ export async function submitContactInquiry(
   const referenceId = `OPG-${inquiry.id.slice(0, 8).toUpperCase()}`
 
   // Queue Notification Outbox entry
-  await supabase.from('notification_outbox').insert({
-    idempotency_key: `inquiry-${inquiry.id}`,
-    recipient:
-      validation.data.intent === 'talent'
-        ? 'recruitment@opglobal.com.hk'
-        : 'inquiries@opglobal.com.hk',
-    template: 'new_inquiry',
-    payload: {
-      inquiryId: inquiry.id,
-      referenceId,
-      intent: validation.data.intent,
-      fullName: validation.data.fullName,
-      subject: validation.data.subject,
-    },
-    status: 'queued',
-  })
+  try {
+    const { error: notificationError } = await supabase
+      .from('notification_outbox')
+      .insert({
+        idempotency_key: `inquiry-${inquiry.id}`,
+        recipient:
+          validation.data.intent === 'talent'
+            ? 'recruitment@opglobal.com.hk'
+            : 'inquiries@opglobal.com.hk',
+        template: 'new_inquiry',
+        payload: {
+          inquiryId: inquiry.id,
+          referenceId,
+          intent: validation.data.intent,
+          fullName: validation.data.fullName,
+          subject: validation.data.subject,
+        },
+        status: 'queued',
+      })
+    if (notificationError) {
+      console.error(
+        'Could not queue contact inquiry notification:',
+        notificationError.message,
+      )
+    }
+  } catch (error) {
+    console.error('Could not queue contact inquiry notification:', error)
+  }
 
   return {
     success: true,

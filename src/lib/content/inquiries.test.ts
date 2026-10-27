@@ -1,18 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(),
-  createStaticClient: vi.fn(),
+  createPrivilegedClient: vi.fn(),
 }))
 
 import {
-  checkDuplicateFingerprint,
   checkRateLimits,
   hashValue,
   submitContactInquiry,
   validateInquiryInput,
 } from '@/lib/content/inquiries'
-import { createClient } from '@/lib/supabase/server'
+import { createPrivilegedClient } from '@/lib/supabase/server'
 
 describe('inquiries schema & validation', () => {
   it('validates a valid inquiry payload', () => {
@@ -40,11 +38,12 @@ describe('inquiries schema & validation', () => {
       message: 'Spam message content here that meets length requirements.',
       privacyConsent: true,
       honeypot: 'filled_by_bot',
+      elapsedSeconds: 5,
     }
 
     const { data, errors } = validateInquiryInput(honeypotSubmission)
     expect(data).toBeNull()
-    expect(errors.honeypot).toBe('Automated submission detected')
+    expect(errors.form).toBeDefined()
   })
 
   it('rejects submission if time trap triggered (<2 seconds)', () => {
@@ -59,7 +58,7 @@ describe('inquiries schema & validation', () => {
 
     const { data, errors } = validateInquiryInput(fastSubmission)
     expect(data).toBeNull()
-    expect(errors.timeTrap).toBe('Form submitted too quickly')
+    expect(errors.form).toBeDefined()
   })
 
   it('rejects submission without privacy consent', () => {
@@ -87,17 +86,6 @@ describe('inquiries abuse controls', () => {
     expect(h1).toHaveLength(64)
   })
 
-  it('detects exact duplicate fingerprints within suppression window', () => {
-    const email = 'duplicate-test@example.com'
-    const message = 'Identical message content for duplication test.'
-
-    const first = checkDuplicateFingerprint(email, message)
-    expect(first).toBe(false) // not duplicate yet
-
-    const second = checkDuplicateFingerprint(email, message)
-    expect(second).toBe(true) // duplicate!
-  })
-
   it('enforces rate limits per IP and email', () => {
     const ip = '192.0.2.1'
     const email = 'rate-test@example.com'
@@ -111,6 +99,7 @@ describe('inquiries abuse controls', () => {
 describe('inquiry submission database transaction', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(createPrivilegedClient).mockReset()
   })
 
   it('inserts inquiry and queues notification in outbox', async () => {
@@ -138,8 +127,6 @@ describe('inquiry submission database transaction', () => {
       }),
     }
 
-    vi.mocked(createClient).mockResolvedValue(mockClient as never)
-
     const result = await submitContactInquiry(
       {
         fullName: 'Jane Doe',
@@ -151,10 +138,158 @@ describe('inquiry submission database transaction', () => {
         elapsedSeconds: 5,
         turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
       },
-      { clientIp: '198.51.100.1' },
+      { clientIp: '198.51.100.1', client: mockClient as never },
     )
 
     expect(result.success).toBe(true)
     expect(result.referenceId).toBe('OPG-INQ-1234')
+  })
+
+  it('uses the server-only client so public inquiries enter the protected inbox', async () => {
+    const inquiryInsert = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: { id: 'inq-87654321-uuid' },
+          error: null,
+        }),
+      }),
+    })
+    const notificationInsert = vi.fn().mockResolvedValue({ error: null })
+    const from = vi.fn((table: string) =>
+      table === 'contact_inquiries'
+        ? { insert: inquiryInsert }
+        : { insert: notificationInsert },
+    )
+    vi.mocked(createPrivilegedClient).mockReturnValue({ from } as never)
+
+    const result = await submitContactInquiry(
+      {
+        fullName: 'Morgan Lee',
+        email: 'morgan@example.com',
+        subject: 'A project inquiry',
+        message: 'Please contact me about a dedicated delivery team.',
+        intent: 'talent',
+        privacyConsent: true,
+        elapsedSeconds: 5,
+      },
+      { clientIp: '198.51.100.2' },
+    )
+
+    expect(result).toEqual({ success: true, referenceId: 'OPG-INQ-8765' })
+    expect(from).toHaveBeenCalledWith('contact_inquiries')
+    expect(from).toHaveBeenCalledWith('notification_outbox')
+    expect(inquiryInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: '[Talent] A project inquiry' }),
+    )
+    expect(notificationInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ recipient: 'recruitment@opglobal.com.hk' }),
+    )
+  })
+
+  it('allows retry after a database failure without acknowledging an unsaved inquiry', async () => {
+    const single = vi
+      .fn()
+      .mockResolvedValueOnce({ data: null, error: { message: 'offline' } })
+      .mockResolvedValueOnce({ data: { id: 'inq-abcdef12-uuid' }, error: null })
+    const client = {
+      from: vi.fn((table: string) =>
+        table === 'contact_inquiries'
+          ? {
+              insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({ single }),
+              }),
+            }
+          : { insert: vi.fn().mockResolvedValue({ error: null }) },
+      ),
+    }
+    const input = {
+      fullName: 'Retry Person',
+      email: 'retry-contact@example.com',
+      subject: 'A project inquiry',
+      message: 'Please contact me about a dedicated delivery team.',
+      privacyConsent: true,
+      elapsedSeconds: 5,
+    }
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    try {
+      const first = await submitContactInquiry(input, {
+        clientIp: '198.51.100.3',
+        client: client as never,
+      })
+      const second = await submitContactInquiry(input, {
+        clientIp: '198.51.100.3',
+        client: client as never,
+      })
+
+      expect(first.success).toBe(false)
+      expect(second).toEqual({ success: true, referenceId: 'OPG-INQ-ABCD' })
+      expect(single).toHaveBeenCalledTimes(2)
+    } finally {
+      errorLog.mockRestore()
+    }
+  })
+
+  it('keeps the saved inquiry successful when notification queuing fails', async () => {
+    const client = {
+      from: vi.fn((table: string) =>
+        table === 'contact_inquiries'
+          ? {
+              insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
+                    data: { id: 'inq-fedcba98-uuid' },
+                    error: null,
+                  }),
+                }),
+              }),
+            }
+          : { insert: vi.fn().mockRejectedValue(new Error('queue offline')) },
+      ),
+    }
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    try {
+      const result = await submitContactInquiry(
+        {
+          fullName: 'Taylor Cruz',
+          email: 'taylor@example.com',
+          subject: 'A project inquiry',
+          message: 'Please contact me about a dedicated delivery team.',
+          privacyConsent: true,
+          elapsedSeconds: 5,
+        },
+        { clientIp: '198.51.100.4', client: client as never },
+      )
+
+      expect(result).toEqual({ success: true, referenceId: 'OPG-INQ-FEDC' })
+      expect(errorLog).toHaveBeenCalled()
+    } finally {
+      errorLog.mockRestore()
+    }
+  })
+
+  it('reports unavailable storage instead of claiming success without a server key', async () => {
+    vi.mocked(createPrivilegedClient).mockReturnValue(null)
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    try {
+      const result = await submitContactInquiry(
+        {
+          fullName: 'Robin Kim',
+          email: 'robin@example.com',
+          subject: 'A project inquiry',
+          message: 'Please contact me about a dedicated delivery team.',
+          privacyConsent: true,
+          elapsedSeconds: 5,
+        },
+        { clientIp: '198.51.100.5' },
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.errors?.form).toContain('temporarily unavailable')
+    } finally {
+      errorLog.mockRestore()
+    }
   })
 })

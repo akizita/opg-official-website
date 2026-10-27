@@ -1,13 +1,26 @@
 'use client'
 
 import Link from 'next/link'
+import Script from 'next/script'
 import { useEffect, useRef, useState, useTransition } from 'react'
 
 import { submitContactAction } from '@/app/contact/actions'
 import type { InquiryIntent } from '@/lib/content/inquiries'
 
+type TurnstileWindow = Window & {
+  turnstile?: {
+    render: (
+      container: HTMLElement,
+      options: { sitekey: string; size: 'flexible' },
+    ) => string
+    remove: (widgetId: string) => void
+  }
+}
+
 export function ContactForm({ copy }: { copy: Record<string, string> }) {
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()
   const [intent, setIntent] = useState<InquiryIntent>('client')
+  const [turnstileReady, setTurnstileReady] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [result, setResult] = useState<{
     success: boolean
@@ -17,13 +30,29 @@ export function ContactForm({ copy }: { copy: Record<string, string> }) {
 
   const mountTimeRef = useRef<number | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
+  const submittingRef = useRef(false)
 
   useEffect(() => {
     mountTimeRef.current = Date.now()
   }, [])
 
+  useEffect(() => {
+    if (!siteKey || !turnstileReady || result?.success) return
+    const container =
+      formRef.current?.querySelector<HTMLElement>('#contact-turnstile')
+    const turnstile = (window as TurnstileWindow).turnstile
+    if (!container || !turnstile) return
+    const widgetId = turnstile.render(container, {
+      sitekey: siteKey,
+      size: 'flexible',
+    })
+    return () => turnstile.remove(widgetId)
+  }, [siteKey, turnstileReady, result?.success])
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submittingRef.current) return
+    submittingRef.current = true
     setResult(null)
 
     const form = event.currentTarget
@@ -49,23 +78,24 @@ export function ContactForm({ copy }: { copy: Record<string, string> }) {
             form: 'A network error occurred while submitting your inquiry. Please try again.',
           },
         })
+      } finally {
+        submittingRef.current = false
       }
     })
   }
 
   return (
     <div className="contact-form-container">
-      {/* Intent Selection Tabs */}
+      {/* Inquiry category selector */}
       <div
         aria-label="Inquiry Category"
         className="contact-intent-tabs"
-        role="tablist"
+        role="group"
       >
         <button
-          aria-selected={intent === 'client'}
+          aria-pressed={intent === 'client'}
           className={`contact-intent-tab ${intent === 'client' ? 'contact-intent-tab--active' : ''}`}
           onClick={() => setIntent('client')}
-          role="tab"
           type="button"
         >
           <span className="contact-intent-tab__title">
@@ -76,10 +106,9 @@ export function ContactForm({ copy }: { copy: Record<string, string> }) {
           </span>
         </button>
         <button
-          aria-selected={intent === 'talent'}
+          aria-pressed={intent === 'talent'}
           className={`contact-intent-tab ${intent === 'talent' ? 'contact-intent-tab--active' : ''}`}
           onClick={() => setIntent('talent')}
-          role="tab"
           type="button"
         >
           <span className="contact-intent-tab__title">
@@ -137,6 +166,13 @@ export function ContactForm({ copy }: { copy: Record<string, string> }) {
           onSubmit={handleSubmit}
           ref={formRef}
         >
+          {siteKey && (
+            <Script
+              onReady={() => setTurnstileReady(true)}
+              src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+              strategy="afterInteractive"
+            />
+          )}
           {result?.errors?.form && (
             <div
               aria-live="assertive"
@@ -291,6 +327,8 @@ export function ContactForm({ copy }: { copy: Record<string, string> }) {
               </p>
             )}
           </div>
+
+          {siteKey && <div id="contact-turnstile" />}
 
           <div className="contact-form__submit-row">
             <button
