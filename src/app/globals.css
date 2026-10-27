@@ -24296,3 +24296,66 @@ html:has(.pages-workspace) {
     animation: none;
   }
 }
+
+/* Admin navigation rhythm and accessible account controls. */
+.admin-shell__nav {
+  gap: 0.9rem;
+}
+
+.admin-shell__nav-group {
+  gap: 0.25rem;
+}
+
+.admin-shell__nav-group > p {
+  margin: 0 0 0.25rem;
+  color: #b9b7b2;
+  font-size: 0.67rem;
+}
+
+.admin-shell__nav-group > a {
+  height: 44px;
+  min-height: 44px;
+  padding-block: 0.4rem;
+}
+
+.admin-shell__sign-out {
+  position: relative;
+}
+
+.admin-shell__sign-out::after {
+  position: absolute;
+  right: calc(100% + 0.45rem);
+  top: 50%;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #b9a16b;
+  border-radius: 0.4rem;
+  background: #241e16;
+  color: #fff8e8;
+  content: attr(data-tooltip);
+  font-size: 0.75rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.admin-shell__sign-out:is(:hover, :focus-visible)::after {
+  opacity: 1;
+}
+
+@media (min-width: 38.01rem) and (max-height: 54rem) {
+  .admin-shell__sidebar {
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 38rem) {
+  .admin-shell__nav {
+    gap: 0.25rem;
+  }
+
+  .admin-shell__nav-group > a {
+    width: 44px;
+    flex-basis: 44px;
+  }
+}

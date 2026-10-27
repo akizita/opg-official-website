@@ -24,9 +24,10 @@ function SignOutIcon() {
 }
 
 export function AdminShell({ children, profile }: AdminShellProps) {
-  const initials = profile.displayName
-    .split(' ')
-    .map((part) => part[0])
+  const nameParts = profile.displayName.trim().split(/\s+/).filter(Boolean)
+  const initials = (nameParts.length === 1
+    ? nameParts[0].slice(0, 2).split('')
+    : nameParts.map((part) => part[0]))
     .join('')
     .slice(0, 2)
     .toUpperCase()
@@ -74,6 +75,7 @@ export function AdminShell({ children, profile }: AdminShellProps) {
               className="admin-shell__sign-out"
               type="submit"
               aria-label="Sign out of the OPG administration workspace"
+              data-tooltip="Sign out"
               title="Sign out"
             >
               <SignOutIcon />
