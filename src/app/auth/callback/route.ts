@@ -5,7 +5,7 @@ import {
   getAdminSession,
 } from '@/lib/auth/admin-session'
 import { DESIGNATED_SUPER_ADMIN_EMAIL } from '@/lib/auth/config'
-import { getSafeAdminPath } from '@/lib/auth/redirect'
+import { getSafeAdminPath, isPublicAuthPath } from '@/lib/auth/redirect'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
@@ -13,8 +13,14 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code')
   const next = requestUrl.searchParams.get('next')
   const error = requestUrl.searchParams.get('error')
+  const publicFlow = isPublicAuthPath(next)
 
   if (error) {
+    if (publicFlow) {
+      return NextResponse.redirect(
+        new URL('/sign-in?notice=oauth-error', requestUrl.origin),
+      )
+    }
     const errorCode = requestUrl.searchParams.get('error_code')
     const notice =
       errorCode === 'signup_disabled' ? 'signup-disabled' : 'oauth-error'
@@ -30,8 +36,30 @@ export async function GET(request: NextRequest) {
 
     if (exchangeError) {
       return NextResponse.redirect(
-        new URL('/admin/sign-in?notice=oauth-error', requestUrl.origin),
+        new URL(
+          publicFlow
+            ? '/sign-in?notice=invalid-link'
+            : '/admin/sign-in?notice=oauth-error',
+          requestUrl.origin,
+        ),
       )
+    }
+
+    if (publicFlow) {
+      const { data: claimsData, error: claimsError } =
+        await supabase.auth.getClaims()
+      if (
+        claimsError ||
+        !claimsData?.claims?.sub ||
+        typeof claimsData.claims.email !== 'string' ||
+        !claimsData.claims.email.trim()
+      ) {
+        await supabase.auth.signOut()
+        return NextResponse.redirect(
+          new URL('/sign-in?notice=invalid-link', requestUrl.origin),
+        )
+      }
+      return NextResponse.redirect(new URL(next!, requestUrl.origin))
     }
 
     const session = await getAdminSession()

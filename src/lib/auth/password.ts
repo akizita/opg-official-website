@@ -13,5 +13,9 @@ export function validateAdminPassword(password: string) {
     return 'Include at least one number.'
   }
 
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return 'Include at least one symbol.'
+  }
+
   return null
 }

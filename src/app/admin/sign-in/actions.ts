@@ -3,33 +3,25 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { headers } from 'next/headers'
-
 import {
   getAdminAuthDestination,
   getAdminSession,
 } from '@/lib/auth/admin-session'
 import { DESIGNATED_SUPER_ADMIN_EMAIL } from '@/lib/auth/config'
 import type { AuthFormState } from '@/lib/auth/form-state'
+import { getSiteUrl } from '@/lib/site-config'
 import { createClient } from '@/lib/supabase/server'
 
 export async function signInWithGoogleAction(): Promise<void> {
-  const headersList = await headers()
-  const host = headersList.get('host')
-  const proto =
-    headersList.get('x-forwarded-proto') ??
-    (host?.startsWith('localhost') ? 'http' : 'https')
-  const origin = host
-    ? `${proto}://${host}`
-    : process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'http://localhost:3000'
+  const callback = new URL('/auth/callback', getSiteUrl())
+  callback.searchParams.set('next', '/admin')
 
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/auth/callback?next=/admin`,
+      redirectTo: callback.toString(),
       queryParams: {
-        access_type: 'offline',
         prompt: 'select_account',
       },
     },

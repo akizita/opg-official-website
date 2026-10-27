@@ -34,6 +34,16 @@ describe('GET /auth/callback', () => {
     )
   })
 
+  it('returns public OAuth errors to the visitor sign-in page', async () => {
+    const request = new NextRequest(
+      'http://localhost:3000/auth/callback?error=access_denied&next=/contact',
+    )
+    const response = await GET(request)
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/sign-in?notice=oauth-error',
+    )
+  })
+
   it('redirects with signup-disabled when error_code is signup_disabled', async () => {
     const request = new NextRequest(
       'http://localhost:3000/auth/callback?error=access_denied&error_code=signup_disabled',
@@ -172,5 +182,27 @@ describe('GET /auth/callback', () => {
     expect(response.headers.get('location')).toBe(
       'http://localhost:3000/admin/media',
     )
+  })
+
+  it('sends a signed-in public visitor to Contact Us without admin provisioning', async () => {
+    const exchangeCodeForSession = vi.fn().mockResolvedValue({ error: null })
+    const getClaims = vi.fn().mockResolvedValue({
+      data: { claims: { sub: 'visitor-1', email: 'visitor@example.com' } },
+      error: null,
+    })
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { exchangeCodeForSession, getClaims },
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+
+    const response = await GET(
+      new NextRequest(
+        'http://localhost:3000/auth/callback?code=valid-code&next=/contact',
+      ),
+    )
+
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/contact',
+    )
+    expect(getAdminSession).not.toHaveBeenCalled()
   })
 })

@@ -9,6 +9,7 @@ import type { PageDocument } from '@/lib/content/page-documents'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
 import { getVisiblePageDocument } from '@/lib/content/visible-page-document'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
+import { getVisitorSession } from '@/lib/auth/visitor-session'
 import { createClient } from '@/lib/supabase/server'
 
 export const revalidate = 3600 // 1 hour ISR
@@ -66,7 +67,12 @@ export default async function ContactPage({
 }) {
   const { opgPreview } = await searchParams
   const supabase = await createClient()
-  const doc = await getVisiblePageDocument(supabase, 'contact', opgPreview === '1')
+  const visitor = await getVisitorSession()
+  const doc = await getVisiblePageDocument(
+    supabase,
+    'contact',
+    opgPreview === '1',
+  )
   const copy = getPageCopy(doc?.content, CONTACT_COPY_SECTIONS)
   const siteUrl = getSiteUrl()
   const pageUrl = new URL('/contact', siteUrl).toString()
@@ -100,7 +106,10 @@ export default async function ContactPage({
 
   return (
     <main className="contact-page">
-      <PageVisualRuntime page="contact" config={getPageVisualConfig(doc?.content)} />
+      <PageVisualRuntime
+        page="contact"
+        config={getPageVisualConfig(doc?.content)}
+      />
       {/* Schema.org ContactPage JSON-LD */}
       <script
         dangerouslySetInnerHTML={{
@@ -197,7 +206,33 @@ export default async function ContactPage({
           </div>
 
           <div className="contact-form-column">
-            <ContactForm copy={copy} />
+            {visitor ? (
+              <ContactForm copy={copy} signedInEmail={visitor.email} />
+            ) : (
+              <Card
+                eyebrow="Contact the team"
+                title="Sign in to send a message"
+              >
+                <p>
+                  Use your OPG account to send an inquiry and help us reply to
+                  the right address.
+                </p>
+                <div className="public-account-actions">
+                  <Link
+                    className="button-link button-link--primary"
+                    href="/sign-in?next=/contact"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    className="button-link button-link--secondary"
+                    href="/sign-up"
+                  >
+                    Create an account
+                  </Link>
+                </div>
+              </Card>
+            )}
           </div>
         </div>
       </div>

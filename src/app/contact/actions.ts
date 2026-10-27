@@ -7,6 +7,7 @@ import {
   type SubmissionResult,
   submitContactInquiry,
 } from '@/lib/content/inquiries'
+import { createClient } from '@/lib/supabase/server'
 
 export type ContactActionState = {
   success: boolean
@@ -17,6 +18,22 @@ export type ContactActionState = {
 export async function submitContactAction(
   formData: FormData,
 ): Promise<ContactActionState> {
+  const supabase = await createClient()
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims()
+  const accountEmail = claimsData?.claims?.email
+  if (
+    claimsError ||
+    !claimsData?.claims?.sub ||
+    typeof accountEmail !== 'string' ||
+    !accountEmail.trim()
+  ) {
+    return {
+      success: false,
+      errors: { form: 'Please sign in before sending an inquiry.' },
+    }
+  }
+
   const headerList = await headers()
   const forwardedFor = headerList.get('x-forwarded-for')
   const realIp = headerList.get('x-real-ip')
@@ -27,7 +44,7 @@ export async function submitContactAction(
     return typeof value === 'string' ? value : ''
   }
   const fullName = textField('fullName')
-  const email = textField('email')
+  const email = accountEmail.trim().toLowerCase()
   const subject = textField('subject')
   const message = textField('message')
   const intent: InquiryIntent =

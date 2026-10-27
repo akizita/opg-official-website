@@ -1,7 +1,11 @@
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { getSafeAdminPath } from '@/lib/auth/redirect'
+import {
+  getSafeAdminPath,
+  getSafePublicPath,
+  isPublicAuthPath,
+} from '@/lib/auth/redirect'
 import { createClient } from '@/lib/supabase/server'
 
 const emailOtpTypes = new Set<EmailOtpType>([
@@ -21,11 +25,16 @@ export async function GET(request: NextRequest) {
   const tokenHash = request.nextUrl.searchParams.get('token_hash')
   const type = request.nextUrl.searchParams.get('type')
   const defaultNext =
-    type === 'invite' || type === 'recovery' ? '/admin/set-password' : '/admin'
-  const next = getSafeAdminPath(
-    request.nextUrl.searchParams.get('next'),
-    defaultNext,
-  )
+    type === 'invite' || type === 'recovery'
+      ? '/admin/set-password'
+      : type === 'signup'
+        ? '/contact'
+        : '/admin'
+  const requestedNext = request.nextUrl.searchParams.get('next')
+  const publicFlow = type === 'signup' || isPublicAuthPath(requestedNext)
+  const next = publicFlow
+    ? getSafePublicPath(requestedNext)
+    : getSafeAdminPath(requestedNext, defaultNext)
 
   if (tokenHash && isEmailOtpType(type)) {
     const supabase = await createClient()
@@ -40,6 +49,11 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(
-    new URL('/admin/sign-in?notice=invalid-link', request.url),
+    new URL(
+      publicFlow
+        ? '/sign-in?notice=invalid-link'
+        : '/admin/sign-in?notice=invalid-link',
+      request.url,
+    ),
   )
 }

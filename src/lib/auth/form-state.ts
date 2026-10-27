@@ -1,6 +1,6 @@
 export type AuthFormState = {
   message: string
-  status: 'idle' | 'error'
+  status: 'idle' | 'error' | 'success'
 }
 
 export const initialAuthFormState: AuthFormState = {

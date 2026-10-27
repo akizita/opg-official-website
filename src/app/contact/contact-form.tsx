@@ -17,7 +17,13 @@ type TurnstileWindow = Window & {
   }
 }
 
-export function ContactForm({ copy }: { copy: Record<string, string> }) {
+export function ContactForm({
+  copy,
+  signedInEmail,
+}: {
+  copy: Record<string, string>
+  signedInEmail: string
+}) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()
   const [intent, setIntent] = useState<InquiryIntent>('client')
   const [turnstileReady, setTurnstileReady] = useState(false)
@@ -230,11 +236,12 @@ export function ContactForm({ copy }: { copy: Record<string, string> }) {
               }
               aria-invalid={Boolean(result?.errors?.email)}
               autoComplete="email"
+              defaultValue={signedInEmail}
               disabled={isPending}
               id="email"
               maxLength={254}
               name="email"
-              placeholder={copy.emailPlaceholder}
+              readOnly
               required
               type="email"
             />

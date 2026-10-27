@@ -21,5 +21,8 @@ describe('validateAdminPassword', () => {
       'uppercase',
     )
     expect(validateAdminPassword('NoNumbersInThisPassword')).toContain('number')
+    expect(validateAdminPassword('NoSymbolsInThisPassword123')).toContain(
+      'symbol',
+    )
   })
 })

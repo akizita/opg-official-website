@@ -5156,6 +5156,35 @@ h3 {
   margin-top: 0;
 }
 
+.auth-panel > .auth-oauth-form {
+  margin-top: var(--space-8);
+}
+
+.public-auth-links,
+.public-account-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  justify-content: space-between;
+}
+
+.public-auth-links a,
+.auth-secondary-action a {
+  color: var(--color-ink);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.public-account-actions {
+  justify-content: flex-start;
+  margin-top: var(--space-6);
+}
+
+.public-account-actions form {
+  margin: 0;
+}
+
 .auth-oauth-form .button--oauth {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

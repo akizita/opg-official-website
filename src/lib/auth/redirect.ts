@@ -19,3 +19,16 @@ export function getSafeAdminPath(
     return fallback
   }
 }
+
+const publicAuthPaths = new Set(['/contact', '/account', '/reset-password'])
+
+export function isPublicAuthPath(value: string | null | undefined): boolean {
+  return typeof value === 'string' && publicAuthPaths.has(value)
+}
+
+export function getSafePublicPath(
+  value: string | null | undefined,
+  fallback = '/contact',
+): string {
+  return isPublicAuthPath(value) ? value! : fallback
+}

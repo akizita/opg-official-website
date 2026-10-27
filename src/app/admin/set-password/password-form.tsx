@@ -40,7 +40,8 @@ export function PasswordForm() {
       </label>
       <p className="field-hint">
         Use at least {MIN_ADMIN_PASSWORD_LENGTH} characters with uppercase and
-        lowercase letters and a number. A password manager is recommended.
+        lowercase letters, a number, and a symbol. A password manager is
+        recommended.
       </p>
       {state.status === 'error' ? (
         <p className="form-message form-message--error" role="alert">

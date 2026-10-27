@@ -29,6 +29,15 @@ The visible Home page is a draft layout with dual audience paths. Navigation des
 - Authenticator verification is bypassed only when the app is running with `NODE_ENV=development`. Set `ADMIN_MFA_REQUIRED=true` to exercise MFA locally. Production and test builds always require AAL2 MFA.
 - The development bypass removes only the second-factor step. A valid Supabase password or Google session is still required.
 
+### Visitor sign-in and Contact Us
+
+- Visitors sign in at `/sign-in` using an email and password or Google. New visitors can create an account at `/sign-up`; password recovery is at `/forgot-password`. The account page is `/account`.
+- The Contact Us form requires a signed-in account. The server checks the Supabase session again on submission and uses the authenticated email address, so a posted email field cannot impersonate another sender. CMS access remains separate at `/admin/sign-in` and still requires an active administrator profile and MFA in production.
+- Set `NEXT_PUBLIC_SITE_URL` to the exact origin used for this environment, such as `http://localhost:3000` locally or the deployed HTTPS origin. Set the Supabase URL and publishable key as described in `.env.example`. Keep `SUPABASE_SECRET_KEY` server-only for inquiry storage.
+- In Supabase Dashboard, enable the Email and Google providers, allow new user signups, and **keep email confirmation required**. The linked staging project currently reports Google enabled, signup allowed, and email confirmation required. Under **Authentication → URL Configuration**, allow the app callback URLs, including their `?next=` variants, for local and deployed origins. A narrowly scoped `https://your-site.example/auth/callback**` entry covers those variants. Configure the production Site URL to the deployed origin, and add each preview origin used for auth.
+- In Google Cloud, create a Web OAuth client and add the **Supabase Auth callback URL** shown on the Google provider page (ending in `/auth/v1/callback`) as an authorized redirect URI. Enter that client's ID and secret on the Supabase Google provider page. The Google Cloud callback is the Supabase URL; the website `/auth/callback` belongs in Supabase's redirect allow list.
+- Configure a reliable SMTP provider and the email templates in Supabase before relying on email confirmation or password reset in production. For a local Supabase stack, `supabase/config.toml` enables email signup; Google also needs a local OAuth client ID and secret if you want to test it against the local stack. A browser sign-in with a real Google account is still needed to verify consent and callback settings.
+
 ## Quality checks
 
 Run the same checks used by continuous integration:
