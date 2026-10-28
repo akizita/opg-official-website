@@ -92,54 +92,6 @@ export function ContactForm({
 
   return (
     <div className="contact-form-container">
-      {/* Inquiry category selector */}
-      <div
-        aria-label="Inquiry Category"
-        className="contact-intent-tabs"
-        role="group"
-      >
-        <button
-          aria-pressed={intent === 'client'}
-          className={`contact-intent-tab ${intent === 'client' ? 'contact-intent-tab--active' : ''}`}
-          onClick={() => setIntent('client')}
-          type="button"
-        >
-          <span className="contact-intent-tab__title">
-            {copy.clientTabTitle}
-          </span>
-          <span className="contact-intent-tab__desc">
-            {copy.clientTabDescription}
-          </span>
-        </button>
-        <button
-          aria-pressed={intent === 'talent'}
-          className={`contact-intent-tab ${intent === 'talent' ? 'contact-intent-tab--active' : ''}`}
-          onClick={() => setIntent('talent')}
-          type="button"
-        >
-          <span className="contact-intent-tab__title">
-            {copy.talentTabTitle}
-          </span>
-          <span className="contact-intent-tab__desc">
-            {copy.talentTabDescription}
-          </span>
-        </button>
-      </div>
-
-      {intent === 'talent' && (
-        <aside
-          aria-label="Talent Careers Notice"
-          className="contact-talent-notice"
-        >
-          <p>
-            {copy.talentNotice}{' '}
-            <Link className="inline-link" href="/careers">
-              {copy.careersLink}
-            </Link>
-          </p>
-        </aside>
-      )}
-
       {result?.success ? (
         <div aria-live="polite" className="contact-success-card" role="status">
           <div className="contact-success-badge">{copy.successBadge}</div>
@@ -200,6 +152,53 @@ export function ContactForm({
               type="text"
             />
           </div>
+
+          <div className="contact-form__intro">
+            <p className="eyebrow">Your message</p>
+            <h2>Send an inquiry</h2>
+          </div>
+
+          <div className="contact-intent-select">
+            <label htmlFor="inquiryIntent">Inquiry type</label>
+            <div className="contact-intent-select__control">
+              <select
+                disabled={isPending}
+                id="inquiryIntent"
+                onChange={(event) =>
+                  setIntent(
+                    event.target.value === 'talent' ? 'talent' : 'client',
+                  )
+                }
+                value={intent}
+              >
+                <option value="client">{copy.clientTabTitle}</option>
+                <option value="talent">{copy.talentTabTitle}</option>
+              </select>
+              <span
+                aria-hidden="true"
+                className="contact-intent-select__arrow"
+              />
+            </div>
+            <p className="contact-intent-select__hint">
+              {intent === 'client'
+                ? copy.clientTabDescription
+                : copy.talentTabDescription}
+            </p>
+          </div>
+
+          {intent === 'talent' && (
+            <aside
+              aria-label="Talent Careers Notice"
+              className="contact-talent-notice"
+            >
+              <p>
+                {copy.talentNotice}{' '}
+                <Link className="inline-link" href="/careers">
+                  {copy.careersLink}
+                </Link>
+              </p>
+            </aside>
+          )}
 
           <div className="form-field">
             <label htmlFor="fullName">

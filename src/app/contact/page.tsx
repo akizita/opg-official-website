@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
+import { OpgSocialLinks } from '@/components/site/opg-social-links'
 import { ContactForm } from '@/app/contact/contact-form'
+import { Aurora } from '@/components/ui/aurora'
 import { Card } from '@/components/ui/card'
 import { CONTACT_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
 import type { PageDocument } from '@/lib/content/page-documents'
@@ -106,6 +108,9 @@ export default async function ContactPage({
 
   return (
     <main className="contact-page">
+      <div aria-hidden="true" className="contact-page__aurora">
+        <Aurora amplitude={0.7} blend={0.38} speed={0.45} />
+      </div>
       <PageVisualRuntime
         page="contact"
         config={getPageVisualConfig(doc?.content)}
@@ -119,17 +124,6 @@ export default async function ContactPage({
       />
 
       <div className="container">
-        {/* Accessible Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="breadcrumb">
-          <ol>
-            <li>
-              <Link href="/">Home</Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li aria-current="page">Contact</li>
-          </ol>
-        </nav>
-
         {/* Hero Section */}
         <header className="contact-hero">
           <p className="eyebrow">{copy.heroEyebrow}</p>
@@ -138,7 +132,9 @@ export default async function ContactPage({
         </header>
 
         {/* Two-Column Grid: Left Info / Right Interactive Form */}
-        <div className="contact-layout-grid">
+        <div
+          className={`contact-layout-grid${visitor ? '' : ' contact-layout-grid--guest'}`}
+        >
           <div className="contact-info-column">
             <Card eyebrow={copy.channelsEyebrow} title={copy.channelsTitle}>
               <div className="contact-channel-item">
@@ -166,6 +162,7 @@ export default async function ContactPage({
                 </a>
                 <p className="contact-channel-desc">{copy.talentDescription}</p>
               </div>
+              <OpgSocialLinks />
             </Card>
 
             <Card eyebrow={copy.operationsEyebrow} title={copy.operationsTitle}>

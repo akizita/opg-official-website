@@ -2,10 +2,6 @@ export default function ContactLoading() {
   return (
     <main className="contact-page">
       <div className="container">
-        <div
-          className="skeleton-line"
-          style={{ width: '120px', height: '1.25rem', marginBottom: '1.5rem' }}
-        />
         <header className="contact-hero">
           <div
             className="skeleton-line"
