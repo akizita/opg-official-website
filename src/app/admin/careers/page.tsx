@@ -2,27 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { Card } from '@/components/ui/card'
-import { EmptyState } from '@/components/ui/empty-state'
-import { StatusBadge } from '@/components/ui/status-badge'
+import { Notice } from '@/components/ui/notice'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import { canViewContent } from '@/lib/auth/permissions'
-import { createClient } from '@/lib/supabase/server'
+import { getCareersFeed, JazzHrApiError } from '@/lib/jazzhr/client'
+import type { CareersFeed } from '@/lib/jazzhr/types'
 
 export const metadata: Metadata = {
-  title: 'Manage Careers & Openings | OPG Admin',
-}
-
-type JobRow = {
-  id: string
-  slug: string
-  title: string
-  department?: { name: string } | null
-  employment_type: string
-  location: string
-  is_remote: boolean
-  status: 'draft' | 'published' | 'archived'
-  application_url: string
-  created_at: string
+  title: 'Careers Integration | OPG Admin',
 }
 
 export default async function AdminCareersPage() {
@@ -44,26 +31,16 @@ export default async function AdminCareersPage() {
     )
   }
 
-  const supabase = await createClient()
-  const { data: jobs } = await supabase
-    .from('job_openings')
-    .select(
-      `
-      id,
-      slug,
-      title,
-      department:departments(name),
-      employment_type,
-      location,
-      is_remote,
-      status,
-      application_url,
-      created_at
-    `,
-    )
-    .order('created_at', { ascending: false })
-
-  const jobList = (jobs as unknown as JobRow[]) || []
+  let feed: CareersFeed | null = null
+  let integrationError: string | null = null
+  try {
+    feed = await getCareersFeed()
+  } catch (error) {
+    integrationError =
+      error instanceof JazzHrApiError
+        ? error.message
+        : 'The JazzHR integration could not be checked.'
+  }
 
   return (
     <section className="admin-page">
@@ -81,78 +58,73 @@ export default async function AdminCareersPage() {
         <div className="admin-heading">
           <div>
             <p className="eyebrow">Talent Operations</p>
-            <h1>Job Openings & Careers</h1>
+            <h1>JazzHR Careers Integration</h1>
             <p>
-              Manage active positions, external ATS application mappings, and
-              employment profiles.
+              JazzHR is the source of truth for public roles and candidate
+              applications. This workspace is read-only.
             </p>
           </div>
-          <div>
+          <div className="button-row">
             <Link className="button button--secondary" href="/admin">
-              ← Return to Dashboard
+              ← Dashboard
             </Link>
           </div>
         </div>
 
-        <div className="admin-services-list" style={{ marginTop: '2rem' }}>
-          {jobList.length > 0 ? (
+        {integrationError ? (
+          <Notice title="JazzHR check failed" variant="error">
+            {integrationError} Verify the server-side API key and JazzHR service
+            status, then reload this page.
+          </Notice>
+        ) : !feed?.configured ? (
+          <Notice title="JazzHR API key is not configured" variant="warning">
+            Add `JAZZHR_API_KEY` to the server environment and restart or
+            redeploy the application. Never expose it as a `NEXT_PUBLIC_`
+            variable.
+          </Notice>
+        ) : (
+          <div className="admin-careers-status" role="status">
+            <div>
+              <span className="admin-careers-status__dot" />
+              <strong>Connected</strong>
+            </div>
+            <p>
+              {feed.jobs.length} public open{' '}
+              {feed.jobs.length === 1 ? 'role' : 'roles'} received from JazzHR.
+            </p>
+          </div>
+        )}
+
+        {feed?.configured && feed.jobs.length > 0 ? (
+          <div className="admin-services-list" style={{ marginTop: '2rem' }}>
             <div className="card-grid">
-              {jobList.map((job) => (
+              {feed.jobs.map((job) => (
                 <Card
-                  eyebrow={`${job.department?.name || 'General'} · ${job.employment_type} · ${job.is_remote ? 'Remote' : job.location}`}
+                  eyebrow={`${job.department || 'General'} · ${job.employmentTypeLabel} · ${job.location}`}
                   key={job.id}
                   title={job.title}
                 >
-                  <p
-                    style={{
-                      fontSize: '0.85rem',
-                      color: 'var(--color-text-subtle)',
-                    }}
-                  >
-                    Application ATS: {job.application_url}
-                  </p>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginTop: '1rem',
-                      paddingTop: '0.75rem',
-                      borderTop: '1px solid var(--color-border)',
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    <StatusBadge status={job.status} />
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
-                      {job.status === 'published' && (
-                        <Link
-                          className="button-link button-link--secondary"
-                          href={`/careers/${job.slug}`}
-                          target="_blank"
-                        >
-                          View Live ↗
-                        </Link>
-                      )}
-                      <a
-                        className="button-link button-link--secondary"
-                        href={job.application_url}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        ATS Link ↗
-                      </a>
-                    </div>
+                  <div className="admin-careers-card__actions">
+                    <Link
+                      className="button-link button-link--secondary"
+                      href={`/careers/${job.slug}`}
+                      target="_blank"
+                    >
+                      View website ↗
+                    </Link>
+                    <Link
+                      className="button-link button-link--secondary"
+                      href={job.applyPath}
+                      target="_blank"
+                    >
+                      Test application ↗
+                    </Link>
                   </div>
                 </Card>
               ))}
             </div>
-          ) : (
-            <EmptyState
-              description="No job openings have been configured yet."
-              title="No Job Openings Found"
-            />
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
     </section>
   )

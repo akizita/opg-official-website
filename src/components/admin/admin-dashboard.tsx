@@ -11,6 +11,7 @@ import {
   canViewSubscribers,
 } from '@/lib/auth/permissions'
 import type { PageDocument } from '@/lib/content/page-documents'
+import { getCareersFeed } from '@/lib/jazzhr/client'
 import { createClient } from '@/lib/supabase/server'
 
 type ModuleIcon =
@@ -126,15 +127,15 @@ export async function AdminDashboard({
   const hasSubscriberAccess = canViewSubscribers(profile.roleKey)
   const supabase = await createClient()
 
-  const [articleResult, jobResult, inquiryResult] = await Promise.all([
+  const [articleResult, jobCount, inquiryResult] = await Promise.all([
     hasContentAccess
       ? supabase.from('articles').select('*', { count: 'exact', head: true })
       : Promise.resolve({ count: 0 }),
     hasContentAccess
-      ? supabase
-          .from('job_openings')
-          .select('*', { count: 'exact', head: true })
-      : Promise.resolve({ count: 0 }),
+      ? getCareersFeed()
+          .then((feed) => feed.jobs.length)
+          .catch(() => 0)
+      : Promise.resolve(0),
     hasInquiryAccess
       ? supabase
           .from('contact_inquiries')
@@ -144,7 +145,6 @@ export async function AdminDashboard({
   ])
 
   const articleCount = articleResult.count ?? 0
-  const jobCount = jobResult.count ?? 0
   const newInquiryCount = inquiryResult.count ?? 0
   const modules: DashboardModule[] = []
 

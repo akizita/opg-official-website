@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 
+import { getCareersFeed } from '@/lib/jazzhr/client'
 import { getSiteUrl, isSiteIndexable } from '@/lib/site-config'
 import { createStaticClient } from '@/lib/supabase/server'
 
@@ -97,21 +98,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
 
-    // Published job openings
-    const { data: jobs } = await supabase
-      .from('job_openings')
-      .select('slug, updated_at')
-      .eq('status', 'published')
-
-    if (jobs) {
-      for (const job of jobs) {
-        entries.push({
-          url: new URL(`/careers/${job.slug}`, siteUrl).toString(),
-          lastModified: job.updated_at ? new Date(job.updated_at) : undefined,
-          changeFrequency: 'weekly',
-          priority: 0.8,
-        })
-      }
+    // Public JazzHR job openings
+    const careersFeed = await getCareersFeed()
+    for (const job of careersFeed.jobs) {
+      entries.push({
+        url: new URL(`/careers/${job.slug}`, siteUrl).toString(),
+        lastModified: job.publishedAt ? new Date(job.publishedAt) : undefined,
+        changeFrequency: 'daily',
+        priority: 0.8,
+      })
     }
   } catch {
     // Fallback safely if DB is unreachable during build
