@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ArrowUpRight01Icon, Mail01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 
 import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { OpgSocialLinks } from '@/components/site/opg-social-links'
 import { ContactForm } from '@/app/contact/contact-form'
 import { Aurora } from '@/components/ui/aurora'
-import { Card } from '@/components/ui/card'
+import { SpotlightCard } from '@/components/ui/spotlight-card'
 import { CONTACT_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
 import type { PageDocument } from '@/lib/content/page-documents'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
@@ -92,13 +94,7 @@ export default async function ContactPage({
       contactPoint: [
         {
           '@type': 'ContactPoint',
-          contactType: 'customer service',
-          email: copy.clientEmail,
-          availableLanguage: ['English'],
-        },
-        {
-          '@type': 'ContactPoint',
-          contactType: 'human resources',
+          contactType: 'general inquiries',
           email: copy.talentEmail,
           availableLanguage: ['English'],
         },
@@ -109,7 +105,12 @@ export default async function ContactPage({
   return (
     <main className="contact-page">
       <div aria-hidden="true" className="contact-page__aurora">
-        <Aurora amplitude={0.7} blend={0.38} speed={0.45} />
+        <Aurora
+          amplitude={0.78}
+          blend={0.35}
+          colorStops={['#d99a00', '#f29f04', '#f2b705', '#ffd000', '#ffe27a']}
+          speed={0.5}
+        />
       </div>
       <PageVisualRuntime
         page="contact"
@@ -124,112 +125,76 @@ export default async function ContactPage({
       />
 
       <div className="container">
-        {/* Hero Section */}
-        <header className="contact-hero">
-          <p className="eyebrow">{copy.heroEyebrow}</p>
-          <h1 className="contact-hero__title">{copy.heroTitle}</h1>
-          <p className="contact-hero__lead">{copy.heroLead}</p>
-        </header>
-
-        {/* Two-Column Grid: Left Info / Right Interactive Form */}
-        <div
-          className={`contact-layout-grid${visitor ? '' : ' contact-layout-grid--guest'}`}
-        >
+        <div className="contact-layout-grid">
           <div className="contact-info-column">
-            <Card eyebrow={copy.channelsEyebrow} title={copy.channelsTitle}>
-              <div className="contact-channel-item">
-                <span className="contact-channel-label">
-                  {copy.clientLabel}
-                </span>
-                <a
-                  className="contact-channel-value"
-                  href={`mailto:${copy.clientEmail}`}
-                >
-                  {copy.clientEmail}
-                </a>
-                <p className="contact-channel-desc">{copy.clientDescription}</p>
-              </div>
+            <header className="contact-hero">
+              <h1 className="contact-hero__title">{copy.heroTitle}</h1>
+              <p className="contact-hero__lead">{copy.heroLead}</p>
+            </header>
 
+            <section aria-label="Contact details" className="contact-details">
               <div className="contact-channel-item">
-                <span className="contact-channel-label">
-                  {copy.talentLabel}
-                </span>
                 <a
-                  className="contact-channel-value"
+                  aria-label={`Email us: ${copy.talentEmail}`}
+                  className="contact-channel-link"
                   href={`mailto:${copy.talentEmail}`}
                 >
-                  {copy.talentEmail}
+                  <span aria-hidden="true" className="contact-channel-icon">
+                    <HugeiconsIcon
+                      icon={Mail01Icon}
+                      size={21}
+                      strokeWidth={1.8}
+                    />
+                  </span>
+                  <span className="contact-channel-value">
+                    {copy.talentEmail}
+                  </span>
+                  <span aria-hidden="true" className="contact-link-arrow">
+                    <HugeiconsIcon
+                      icon={ArrowUpRight01Icon}
+                      size={16}
+                      strokeWidth={2}
+                    />
+                  </span>
                 </a>
-                <p className="contact-channel-desc">{copy.talentDescription}</p>
               </div>
               <OpgSocialLinks />
-            </Card>
-
-            <Card eyebrow={copy.operationsEyebrow} title={copy.operationsTitle}>
-              <div className="contact-channel-item">
-                <span className="contact-channel-label">
-                  {copy.officeLabel}
-                </span>
-                <address className="contact-address">
-                  {copy.officeName}
-                  <br />
-                  {copy.officeLocation}
-                </address>
-              </div>
-
-              <div className="contact-channel-item">
-                <span className="contact-channel-label">
-                  {copy.coverageLabel}
-                </span>
-                <p className="contact-channel-desc">{copy.coverageBody}</p>
-              </div>
-
-              <div className="contact-channel-item">
-                <span className="contact-channel-label">{copy.slaLabel}</span>
-                <p className="contact-channel-desc">{copy.slaBody}</p>
-              </div>
-            </Card>
-
-            <div className="contact-faq-teaser">
-              <h3>{copy.teaserTitle}</h3>
-              <p>{copy.teaserBody}</p>
-              <Link
-                className="button-link button-link--secondary"
-                href="/articles"
-              >
-                {copy.teaserCta}
-              </Link>
-            </div>
+            </section>
           </div>
 
           <div className="contact-form-column">
-            {visitor ? (
-              <ContactForm copy={copy} signedInEmail={visitor.email} />
-            ) : (
-              <Card
-                eyebrow="Contact the team"
-                title="Sign in to send a message"
-              >
-                <p>
-                  Use your OPG account to send an inquiry and help us reply to
-                  the right address.
-                </p>
-                <div className="public-account-actions">
-                  <Link
-                    className="button-link button-link--primary"
-                    href="/sign-in?next=/contact"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    className="button-link button-link--secondary"
-                    href="/sign-up"
-                  >
-                    Create an account
-                  </Link>
+            <SpotlightCard
+              className="contact-form-spotlight"
+              spotlightColor="rgba(245, 182, 24, 0.26)"
+              tabIndex={-1}
+              trackPointerWhileFocused
+            >
+              {visitor ? (
+                <ContactForm copy={copy} signedInEmail={visitor.email} />
+              ) : (
+                <div className="contact-signin">
+                  <h2>Sign in to send a message</h2>
+                  <p>
+                    Use your OPG account to send an inquiry and help us reply to
+                    the right address.
+                  </p>
+                  <div className="public-account-actions">
+                    <Link
+                      className="button-link button-link--primary"
+                      href="/sign-in?next=/contact"
+                    >
+                      Sign in
+                    </Link>
+                    <Link
+                      className="button-link button-link--secondary"
+                      href="/sign-up"
+                    >
+                      Create an account
+                    </Link>
+                  </div>
                 </div>
-              </Card>
-            )}
+              )}
+            </SpotlightCard>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { getAdminSession } from '@/lib/auth/admin-session'
 import { isAdminMfaRequired } from '@/lib/auth/config'
+import './inquiries/inquiries.css'
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },

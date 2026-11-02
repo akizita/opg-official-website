@@ -10,12 +10,16 @@ interface Position {
 export interface SpotlightCardProps extends React.PropsWithChildren {
   className?: string
   spotlightColor?: string
+  tabIndex?: number
+  trackPointerWhileFocused?: boolean
 }
 
 export function SpotlightCard({
   children,
   className = '',
   spotlightColor = 'rgba(242, 159, 4, 0.20)',
+  tabIndex = 0,
+  trackPointerWhileFocused = false,
 }: SpotlightCardProps) {
   const divRef = useRef<HTMLDivElement>(null)
   const [isFocused, setIsFocused] = useState<boolean>(false)
@@ -23,18 +27,28 @@ export function SpotlightCard({
   const [opacity, setOpacity] = useState<number>(0)
 
   const handleMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    if (!divRef.current || isFocused) return
+    if (!divRef.current || (isFocused && !trackPointerWhileFocused)) return
 
     const rect = divRef.current.getBoundingClientRect()
     setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top })
   }
 
-  const handleFocus = () => {
+  const handleFocus: React.FocusEventHandler<HTMLDivElement> = (e) => {
     setIsFocused(true)
+    if (trackPointerWhileFocused && divRef.current) {
+      const card = divRef.current.getBoundingClientRect()
+      const target = e.target.getBoundingClientRect()
+      setPosition({
+        x: target.left + target.width / 2 - card.left,
+        y: target.top + target.height / 2 - card.top,
+      })
+    }
     setOpacity(0.65)
   }
 
-  const handleBlur = () => {
+  const handleBlur: React.FocusEventHandler<HTMLDivElement> = (e) => {
+    if (e.relatedTarget && divRef.current?.contains(e.relatedTarget as Node))
+      return
     setIsFocused(false)
     setOpacity(0)
   }
@@ -56,7 +70,7 @@ export function SpotlightCard({
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
       ref={divRef}
-      tabIndex={0}
+      tabIndex={tabIndex}
     >
       <div
         aria-hidden="true"

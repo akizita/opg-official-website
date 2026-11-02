@@ -1,0 +1,1357 @@
+/* ==========================================================================
+   Admin Inquiries Inbox — Glassmorphism Card Table, Dropdown & Gmail-Style Modal
+   ========================================================================== */
+
+.inquiries-page-heading {
+  margin-bottom: 1.75rem;
+}
+
+.inquiries-inbox-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+/* Header & Controls Aligned Row */
+.inquiries-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.inquiries-header-content {
+  flex: 1 1 24rem;
+  max-width: 38rem;
+}
+
+.inquiries-header-title {
+  font-size: clamp(1.85rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--color-ink, #1a1612);
+  line-height: 1.1;
+  margin: 0 0 0.5rem 0;
+}
+
+.inquiries-header-subtitle {
+  font-size: 0.9375rem;
+  color: #634f33;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 44ch;
+}
+
+.inquiries-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 0 1 auto;
+}
+
+/* Controls Toolbar (fallback / alias) */
+.inquiries-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Search Box */
+.inquiries-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 18.5rem;
+  max-width: 100%;
+}
+
+.inquiries-search-icon {
+  position: absolute;
+  left: 0.95rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  max-width: 1.15rem;
+  max-height: 1.15rem;
+  color: #8c7353;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.inquiries-search-input {
+  width: 100%;
+  height: 2.85rem;
+  padding: 0.45rem 2.2rem 0.45rem 2.75rem;
+  border-radius: 9999px;
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.8),
+    0 4px 18px rgba(103, 76, 21, 0.06);
+  color: var(--color-ink, #1a1612);
+  font: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.inquiries-search-input::placeholder {
+  color: #8c8c8c;
+  opacity: 0.65;
+}
+
+.inquiries-search-input:hover {
+  background: rgba(255, 255, 255, 0.58);
+  border-color: rgba(217, 190, 140, 0.65);
+}
+
+.inquiries-search-input:focus {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: #c79a32;
+  box-shadow:
+    0 0 0 3px rgba(242, 159, 4, 0.22),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95);
+}
+
+.inquiries-search-clear {
+  position: absolute;
+  right: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(140, 115, 83, 0.18);
+  color: #5c4728;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.inquiries-search-clear:hover {
+  background: rgba(140, 115, 83, 0.35);
+}
+
+/* Glassmorphism Pill Dropdown Filter */
+.inquiries-pill-filter {
+  position: relative;
+  z-index: 25;
+}
+
+.inquiries-pill-filter__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  height: 2.85rem;
+  padding: 0 1.15rem;
+  border-radius: 9999px; /* Pill-shaped */
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.8),
+    0 4px 18px rgba(103, 76, 21, 0.06);
+  color: var(--color-ink, #1a1612);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.inquiries-pill-filter__trigger:hover,
+.inquiries-pill-filter__trigger[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: #c79a32;
+  box-shadow:
+    0 6px 20px rgba(103, 76, 21, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95);
+}
+
+.inquiries-pill-filter__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-ink, #1a1612);
+}
+
+.inquiries-pill-filter__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  padding: 0 0.4rem;
+  border-radius: 9999px;
+  background: rgba(242, 159, 4, 0.18);
+  color: #805000;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.inquiries-pill-filter__chevron {
+  width: 1rem;
+  height: 1rem;
+  max-width: 1rem;
+  max-height: 1rem;
+  color: #7a6344;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.inquiries-pill-filter__chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Selection Box: Rounded Corners + Glassmorphism */
+.inquiries-pill-filter__menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 60;
+  min-width: 14.5rem;
+  padding: 0.5rem;
+  border-radius: 1rem; /* Rounded corners */
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(170%);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.94), rgba(255, 252, 245, 0.88));
+  border: 1px solid rgba(217, 190, 140, 0.65);
+  box-shadow: 0 16px 40px rgba(60, 41, 17, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  animation: inquiries-menu-appear 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes inquiries-menu-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.inquiries-pill-filter__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--color-ink, #1a1612);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.inquiries-pill-filter__option:hover,
+.inquiries-pill-filter__option:focus-visible {
+  background: #fce8b8;
+  outline: none;
+}
+
+.inquiries-pill-filter__option--active {
+  background: #fae1a0;
+  font-weight: 750;
+}
+
+.inquiries-pill-filter__option-lead {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.inquiries-pill-filter__option-name {
+  font-weight: 650;
+}
+
+.inquiries-pill-filter__option-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  background: rgba(103, 76, 21, 0.08);
+  color: #634b22;
+}
+
+.inquiries-pill-filter__dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.inquiries-pill-filter__dot--all {
+  background: #8c7353;
+}
+.inquiries-pill-filter__dot--new {
+  background: #0284c7;
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.6);
+}
+.inquiries-pill-filter__dot--read {
+  background: #d97706;
+}
+.inquiries-pill-filter__dot--replied {
+  background: #16a34a;
+}
+.inquiries-pill-filter__dot--archived {
+  background: #64748b;
+}
+
+/* Glassmorphism Card Table Container (See-through glassmorphism, fits 100%) */
+.inquiries-card-table {
+  border-radius: 1.25rem;
+  overflow: hidden;
+  width: 100%;
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.85),
+    0 12px 36px rgba(103, 76, 21, 0.07);
+  transition: box-shadow 0.2s ease;
+}
+
+.inquiries-table-scroll {
+  width: 100%;
+  overflow: hidden; /* No scrollbars — fits entire card table */
+}
+
+/* Table: Fixed layout guarantees all columns fit perfectly */
+.inquiries-inbox-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.inquiries-inbox-table thead {
+  background: rgba(255, 255, 255, 0.32);
+  border-bottom: 1px solid rgba(120, 80, 0, 0.12);
+}
+
+.inquiries-inbox-table th {
+  padding: 0.95rem 1rem;
+  font-size: 0.74rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #735936;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(120, 80, 0, 0.1);
+}
+
+.inquiries-inbox-table td {
+  padding: 0.9rem 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(120, 80, 0, 0.07);
+}
+
+/* Email Inbox Row */
+.inquiries-inbox-row {
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.16s ease, transform 0.12s ease, box-shadow 0.16s ease;
+  user-select: none;
+}
+
+.inquiries-inbox-row:hover {
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.inquiries-inbox-row:active {
+  transform: scale(0.998);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.inquiries-inbox-row:focus-visible {
+  outline: 2px solid #f29f04;
+  outline-offset: -2px;
+}
+
+/* Unread / New Inquiry State */
+.inquiries-inbox-row--new {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.inquiries-inbox-row--new:hover {
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.inquiries-inbox-row--new .inquiries-sender-name,
+.inquiries-inbox-row--new .inquiries-preview-subject {
+  font-weight: 780;
+  color: #1a1612;
+}
+
+/* Type Pill Badges */
+.inquiry-type-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.22rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.inquiry-type-pill--client {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.14));
+  color: #92400e;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.inquiry-type-pill--talent {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(79, 70, 229, 0.14));
+  color: #4338ca;
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.inquiry-type-pill--general {
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.18), rgba(71, 85, 105, 0.14));
+  color: #334155;
+  border-color: rgba(100, 116, 139, 0.35);
+}
+
+/* Sender Cell */
+.inquiries-sender-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.inquiries-unread-indicator {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #0284c7;
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.7);
+  flex-shrink: 0;
+}
+
+.inquiries-sender-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.inquiries-sender-name {
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--color-ink, #1a1612);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inquiries-sender-email {
+  font-size: 0.75rem;
+  color: #69563f;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Subject & Preview Container */
+.inquiries-message-preview-container {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inquiries-preview-subject {
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--color-ink, #1a1612);
+  flex-shrink: 0;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inquiries-preview-separator {
+  color: #a8947a;
+  flex-shrink: 0;
+}
+
+.inquiries-preview-text {
+  font-size: 0.85rem;
+  color: #6e5a42;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+/* Date */
+.inquiries-col-date {
+  text-align: right;
+}
+
+.inquiries-col-date time {
+  font-size: 0.82rem;
+  color: #5c4728;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status Column */
+.inquiries-col-status {
+  text-align: center;
+}
+
+/* Action Chevron Button */
+.inquiries-col-action {
+  text-align: right;
+}
+
+.inquiries-row-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(103, 76, 21, 0.06);
+  color: #735936;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inquiries-inbox-row:hover .inquiries-row-action-btn {
+  background: rgba(242, 159, 4, 0.25);
+  color: #734200;
+  transform: translateX(2px);
+}
+
+.inquiries-row-action-btn svg {
+  width: 1rem;
+  height: 1rem;
+  max-width: 1rem;
+  max-height: 1rem;
+  flex-shrink: 0;
+}
+
+/* Empty Cell & Grey Muted Placeholders */
+.inquiries-empty-cell {
+  padding: 4.5rem 1.5rem !important;
+  text-align: center;
+}
+
+.inquiries-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.inquiries-empty-icon {
+  font-size: 1.5rem;
+  color: #8c8c8c;
+  opacity: 0.5;
+  margin-bottom: 0.2rem;
+}
+
+.inquiries-empty-state h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #737373;
+  opacity: 0.7;
+}
+
+.inquiries-empty-state p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #8c8c8c;
+  opacity: 0.6;
+  max-width: 24rem;
+}
+
+/* Card Table Footer */
+.inquiries-card-table__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.28);
+  border-top: 1px solid rgba(120, 80, 0, 0.08);
+  font-size: 0.82rem;
+  color: #69563f;
+}
+
+.inquiries-new-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  background: rgba(2, 132, 199, 0.15);
+  color: #0369a1;
+  font-weight: 750;
+  font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   Gmail-Style Contact Modal (Sender in Header, Inner Scrollbar, Clean Reply)
+   ========================================================================== */
+
+.inquiries-modal {
+  border: 0;
+  padding: 1.5rem;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* Preserves card's rounded corners */
+}
+
+.inquiries-modal:not([open]) {
+  display: none;
+}
+
+.inquiries-modal::backdrop {
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  background: rgba(28, 20, 10, 0.45);
+  animation: inquiries-backdrop-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes inquiries-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Card with Intact Rounded Corners & True See-Through Glassmorphism */
+.inquiries-modal__card {
+  width: min(54rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 3rem);
+  border-radius: 1.5rem; /* Rounded corners */
+  overflow: hidden; /* Clips contents cleanly to rounded corners */
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 24px 60px rgba(58, 38, 9, 0.16),
+    0 4px 16px rgba(0, 0, 0, 0.04),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  animation: inquiries-modal-slide-in 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes inquiries-modal-slide-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Card Header (Spans cleanly at the top of the card) */
+.inquiries-modal__header {
+  flex-shrink: 0;
+  padding: 1.4rem 1.85rem 1.25rem;
+  background: rgba(255, 255, 255, 0.28);
+  border-bottom: 1px solid rgba(120, 80, 0, 0.08);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.inquiries-modal__header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.inquiries-modal__sender-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.inquiries-modal__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 50%;
+  background: hsl(var(--avatar-hue, 35), 70%, 55%);
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.inquiries-modal__sender-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.inquiries-modal__sender-line {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.inquiries-modal__sender-name {
+  font-size: 1.02rem;
+  font-weight: 750;
+  color: var(--color-ink, #1a1612);
+}
+
+.inquiries-modal__sender-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: #69563f;
+  flex-wrap: wrap;
+}
+
+.inquiries-modal__sender-email {
+  color: #5c4728;
+  font-weight: 500;
+}
+
+.inquiries-modal__copy-pill {
+  padding: 0.12rem 0.45rem;
+  border: 0;
+  border-radius: 9999px;
+  background: rgba(103, 76, 21, 0.08);
+  color: #634b22;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.inquiries-modal__copy-pill:hover {
+  background: rgba(103, 76, 21, 0.18);
+}
+
+.inquiries-modal__meta-sep {
+  color: #c4b59f;
+}
+
+.inquiries-modal__sender-date {
+  color: #7a6344;
+  font-size: 0.78rem;
+}
+
+.inquiries-modal__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.inquiries-modal__ref-tag {
+  font-family: monospace;
+  font-size: 0.76rem;
+  font-weight: 750;
+  color: #8c704a;
+  background: rgba(103, 76, 21, 0.08);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.4rem;
+}
+
+.inquiries-modal__close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(103, 76, 21, 0.08);
+  color: #5c4728;
+  cursor: pointer;
+  font-size: 1.15rem;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.inquiries-modal__close-btn:hover {
+  background: rgba(103, 76, 21, 0.2);
+  color: #1a1612;
+  transform: rotate(90deg);
+}
+
+/* Scrollable Content Container — Inner scrollbar preserves card's rounded corners */
+.inquiries-modal__scroll-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1.5rem 1.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+/* Sleek Inner Scrollbar */
+.inquiries-modal__scroll-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.inquiries-modal__scroll-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.inquiries-modal__scroll-content::-webkit-scrollbar-thumb {
+  background: rgba(140, 115, 83, 0.25);
+  border-radius: 9999px;
+}
+
+.inquiries-modal__scroll-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 115, 83, 0.45);
+}
+
+/* Subject & Message Sections with Clear Labels */
+.inquiries-modal__field-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8c704a;
+  margin-bottom: 0.35rem;
+}
+
+.inquiries-modal__subject-block {
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(217, 190, 140, 0.25);
+}
+
+.inquiries-modal__subject-text {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 750;
+  color: var(--color-ink, #1a1612);
+  line-height: 1.35;
+}
+
+.inquiries-modal__message-block {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Message Body */
+.inquiries-modal__message-body {
+  font-size: 0.95rem;
+  line-height: 1.68;
+  color: var(--color-ink, #1a1612);
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 14px;
+  padding: 1.15rem 1.35rem;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Gmail-style Reply Area */
+.inquiries-modal__reply-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(120, 80, 0, 0.08);
+}
+
+.inquiries-modal__reply-trigger-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Gmail Reply Button */
+.inquiries-gmail-reply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.5);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  color: #5c4728;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(103, 76, 21, 0.06);
+  transition: all 0.16s ease;
+}
+
+.inquiries-gmail-reply-btn:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: #f59e0b;
+  color: #1a1612;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.2);
+}
+
+.inquiries-gmail-reply-btn:active {
+  transform: translateY(0);
+}
+
+.inquiries-gmail-client-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border-radius: 9999px;
+  background: transparent;
+  border: 1px solid rgba(217, 190, 140, 0.35);
+  color: #735936;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.inquiries-gmail-client-btn:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: #1a1612;
+}
+
+/* Gmail-Style Composer (See-through Glassmorphic) */
+.inquiries-gmail-composer {
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow:
+    0 8px 24px rgba(103, 76, 21, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: inquiries-composer-slide-down 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top center;
+}
+
+@keyframes inquiries-composer-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Quick Response Template Selector Bar */
+.inquiries-gmail-composer__template-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid rgba(120, 80, 0, 0.08);
+  background: rgba(255, 255, 255, 0.28);
+  flex-wrap: wrap;
+}
+
+.inquiries-gmail-composer__template-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #735936;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.inquiries-gmail-composer__template-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.inquiries-template-chip {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(120, 80, 0, 0.15);
+  color: #45341f;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.inquiries-template-chip:hover {
+  background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
+  border-color: #f59e0b;
+  color: #78350f;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.18);
+}
+
+.inquiries-template-chip--active {
+  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%) !important;
+  border-color: #d97706 !important;
+  color: #78350f !important;
+  font-weight: 750;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+}
+
+.inquiries-gmail-composer__header {
+  padding: 0.65rem 0.95rem;
+  border-bottom: 1px solid rgba(120, 80, 0, 0.08);
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 0.82rem;
+}
+
+.inquiries-gmail-composer__to-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inquiries-gmail-composer__to-label {
+  color: #735936;
+  font-weight: 650;
+}
+
+.inquiries-gmail-composer__to-pill {
+  color: #1a1612;
+  font-weight: 600;
+}
+
+.inquiries-gmail-composer__subject-field {
+  padding: 0.5rem 0.95rem;
+  border-bottom: 1px solid rgba(120, 80, 0, 0.08);
+}
+
+.inquiries-gmail-composer__subject-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-ink, #1a1612);
+  outline: none;
+}
+
+.inquiries-gmail-composer__body-field {
+  padding: 0.85rem 0.95rem;
+}
+
+.inquiries-gmail-composer__textarea {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-ink, #1a1612);
+  outline: none;
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Right-aligned footer actions without delete button */
+.inquiries-gmail-composer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.75rem 1.15rem;
+  border-top: 1px solid rgba(120, 80, 0, 0.08);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.inquiries-gmail-composer__actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+/* Pill-shaped Glassmorphic Cancel Button */
+.inquiries-gmail-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.35rem;
+  padding: 0 1.25rem;
+  border-radius: 9999px; /* Pill-shaped */
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(120, 80, 0, 0.16);
+  color: #45341f;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.inquiries-gmail-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(120, 80, 0, 0.32);
+  color: #1e1403;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(103, 76, 21, 0.06);
+}
+
+.inquiries-gmail-cancel-btn:active {
+  transform: translateY(0);
+}
+
+/* Pill-shaped Gradient Send Button */
+.inquiries-gmail-send-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.35rem;
+  padding: 0 1.35rem;
+  border-radius: 9999px; /* Pill-shaped */
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
+  border: 1px solid rgba(180, 83, 9, 0.45);
+  color: #1e1403;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow:
+    0 2px 8px rgba(245, 158, 11, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55);
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.inquiries-gmail-send-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 14px rgba(245, 158, 11, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.65);
+  filter: brightness(1.04);
+}
+
+.inquiries-gmail-send-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow:
+    0 1px 4px rgba(245, 158, 11, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.inquiries-gmail-send-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Security Audit Reference */
+.inquiries-modal__audit-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: #8c7353;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(217, 190, 140, 0.25);
+}
+
+.inquiries-modal__audit-footer code {
+  font-size: 0.72rem;
+  background: rgba(103, 76, 21, 0.08);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+}
+
+/* Toast */
+.inquiries-toast {
+  position: fixed;
+  z-index: 10000;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: 24rem;
+  padding: 0.75rem 1.15rem;
+  border-radius: 1rem;
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  font-size: 0.86rem;
+  font-weight: 650;
+  animation: inquiries-toast-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes inquiries-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.inquiries-toast--success {
+  background: rgba(235, 248, 238, 0.95);
+  border: 1px solid #34a853;
+  color: #14532d;
+}
+
+.inquiries-toast--error {
+  background: rgba(254, 242, 242, 0.95);
+  border: 1px solid #ef4444;
+  color: #7f1d1d;
+}
+
+.inquiries-toast__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: currentColor;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.inquiries-toast p {
+  margin: 0;
+  flex: 1;
+}
+
+.inquiries-toast__close {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.inquiries-toast__close:hover {
+  opacity: 1;
+}
+
+/* Responsive queries */
+@media (max-width: 960px) {
+  .inquiries-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.15rem;
+  }
+
+  .inquiries-header-content {
+    max-width: 100%;
+  }
+
+  .inquiries-header-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .inquiries-search-box {
+    flex: 1 1 auto;
+    width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .inquiries-header-controls,
+  .inquiries-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inquiries-search-box {
+    width: 100%;
+    max-width: none;
+  }
+
+  .inquiries-pill-filter__trigger {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .inquiries-pill-filter__menu {
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+
+  .inquiries-inbox-table th:nth-child(4),
+  .inquiries-inbox-table td:nth-child(4) {
+    display: none;
+  }
+
+  .inquiries-message-preview-container {
+    max-width: none;
+  }
+}
