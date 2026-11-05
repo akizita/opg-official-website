@@ -10,9 +10,14 @@ import {
 import type { CareerJob, CareerQuestion, CareersFeed } from '@/lib/jazzhr/types'
 
 const JAZZHR_API_BASE_URL = 'https://api.resumatorapi.com/v1'
-const JAZZHR_REVALIDATE_SECONDS = 900
 const JAZZHR_PAGE_SIZE = 100
 const JAZZHR_MAX_PAGES = 25
+
+const TALENT_POOL_JOB_IDS = [
+  'job_20251203043549_1EKIK1MUNLB7HIHQ', // Loan Associate (Pooling)
+  'job_20251203223256_4SVMCPDQS2ZVFLDC', // Loan Settlement Officer (Pooling)
+  'job_20251203232902_2PLJFVRKRVTKDYLG', // Senior Loan Associate - Parabroker (Pooling)
+] as const
 
 export class JazzHrApiError extends Error {
   status: number | null
@@ -35,9 +40,50 @@ function extractRows(payload: unknown, resource: string): unknown[] {
     if (Array.isArray(object[key])) return object[key]
   }
 
+  // Handle single record object returned by JazzHR when matching count is 1
+  if (typeof object.id === 'string' && object.id.trim()) {
+    return [object]
+  }
+
+  // Handle dictionary of records { [id]: { id, ... } }
+  const values = Object.values(object)
+  if (
+    values.length > 0 &&
+    values.every((v) => v && typeof v === 'object' && 'id' in (v as object))
+  ) {
+    return values
+  }
+
+  // Handle empty object {} returned by JazzHR when 0 records match
+  if (Object.keys(object).length === 0) {
+    return []
+  }
+
   throw new JazzHrApiError(
     `JazzHR returned an unrecognized ${resource} payload.`,
   )
+}
+
+async function fetchJazzHrJobById(
+  apiKey: string,
+  id: string,
+): Promise<unknown | null> {
+  const endpoint = new URL(
+    `${JAZZHR_API_BASE_URL}/jobs/${encodeURIComponent(id)}`,
+  )
+  endpoint.searchParams.set('apikey', apiKey)
+
+  try {
+    const response = await fetch(endpoint, {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(8_000),
+    })
+    if (!response.ok) return null
+    return await response.json()
+  } catch {
+    return null
+  }
 }
 
 async function fetchJazzHrPage(
@@ -52,11 +98,8 @@ async function fetchJazzHrPage(
   let response: Response
   try {
     response = await fetch(endpoint, {
+      cache: 'no-store',
       headers: { Accept: 'application/json' },
-      next: {
-        revalidate: JAZZHR_REVALIDATE_SECONDS,
-        tags: ['jazzhr-jobs'],
-      },
       signal: AbortSignal.timeout(8_000),
     })
   } catch (error) {
@@ -104,6 +147,17 @@ async function fetchAllJazzHrJobs(apiKey: string): Promise<CareerJob[]> {
     }
   }
 
+  // Ensure active talent pooling opportunities are accessible for candidates
+  for (const poolId of TALENT_POOL_JOB_IDS) {
+    if (!jobs.has(poolId)) {
+      const raw = await fetchJazzHrJobById(apiKey, poolId)
+      if (isJazzHrRecord(raw)) {
+        const job = normalizeJazzHrJob(raw, { allowPooling: true })
+        if (job) jobs.set(job.id, job)
+      }
+    }
+  }
+
   return [...jobs.values()].sort((left, right) => {
     const leftDate = left.publishedAt ? Date.parse(left.publishedAt) : 0
     const rightDate = right.publishedAt ? Date.parse(right.publishedAt) : 0
@@ -123,11 +177,8 @@ async function fetchQuestionnaireQuestions(
   let response: Response
   try {
     response = await fetch(endpoint, {
+      cache: 'no-store',
       headers: { Accept: 'application/json' },
-      next: {
-        revalidate: JAZZHR_REVALIDATE_SECONDS,
-        tags: [`jazzhr-questionnaire-${questionnaireId}`],
-      },
       signal: AbortSignal.timeout(8_000),
     })
   } catch (error) {
@@ -175,11 +226,19 @@ export const getCareersFeed = cache(async (): Promise<CareersFeed> => {
     return { configured: false, fetchedAt: null, jobs: [] }
   }
 
-  const jobs = await fetchAllJazzHrJobs(apiKey)
-  return {
-    configured: true,
-    fetchedAt: new Date().toISOString(),
-    jobs,
+  try {
+    const jobs = await fetchAllJazzHrJobs(apiKey)
+    return {
+      configured: true,
+      fetchedAt: new Date().toISOString(),
+      jobs,
+    }
+  } catch {
+    return {
+      configured: true,
+      fetchedAt: null,
+      jobs: [],
+    }
   }
 })
 

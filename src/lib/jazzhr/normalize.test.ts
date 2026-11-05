@@ -46,6 +46,13 @@ describe('JazzHR job normalization', () => {
     }
 
     expect(normalizeJazzHrJob({ ...base, status: 'Closed' })).toBeNull()
+    expect(normalizeJazzHrJob({ ...base, status: 'Filled' })).toBeNull()
+    expect(normalizeJazzHrJob({ ...base, status: 'Cancelled' })).toBeNull()
+    expect(normalizeJazzHrJob({ ...base, status: 'Drafting' })).toBeNull()
+    expect(normalizeJazzHrJob({ ...base, status: '' })).toBeNull()
+    expect(normalizeJazzHrJob({ ...base, closed: 'Yes' })).toBeNull()
+    expect(normalizeJazzHrJob({ ...base, closed: true })).toBeNull()
+    expect(normalizeJazzHrJob({ ...base, close_date: '2020-01-01' })).toBeNull()
     expect(normalizeJazzHrJob({ ...base, private: 'Yes' })).toBeNull()
     expect(normalizeJazzHrJob({ ...base, confidential: true })).toBeNull()
     expect(normalizeJazzHrJob({ ...base, board_code: '' })).toBeNull()
@@ -85,5 +92,62 @@ describe('JazzHR job normalization', () => {
       options: ['Yes', 'No'],
       order: 3,
     })
+  })
+
+  it('normalizes various compensation patterns and formats them consistently', async () => {
+    const { formatCareerCompensation, parseCareerCompensation } =
+      await import('@/lib/jazzhr/normalize')
+
+    // Pattern 1: Php with range and per month
+    const comp1 = parseCareerCompensation(
+      'Service Fee: Php 35,000 - Php 45,000 per month',
+    )
+    expect(comp1).toEqual({
+      currency: 'PHP',
+      minimum: 35000,
+      maximum: 45000,
+      payPeriod: 'month',
+      variesByExperience: false,
+    })
+    expect(formatCareerCompensation(comp1!)).toBe('₱35,000–₱45,000 / month')
+
+    // Pattern 2: USD range with /mo and depending on experience
+    const comp2 = parseCareerCompensation(
+      'Salary: $1,200 - $1,800 USD / mo (Depending on experience)',
+    )
+    expect(comp2).toEqual({
+      currency: 'USD',
+      minimum: 1200,
+      maximum: 1800,
+      payPeriod: 'month',
+      variesByExperience: true,
+    })
+    expect(formatCareerCompensation(comp2!)).toBe(
+      '$1,200–$1,800 / month · Depending on experience',
+    )
+
+    // Pattern 3: Awkward "Benefits: • Service Fee: Php 35,000"
+    const comp3 = parseCareerCompensation('Benefits: • Service Fee: Php 35,000')
+    expect(comp3?.currency).toBe('PHP')
+    expect(comp3?.minimum).toBe(35000)
+    expect(comp3?.payPeriod).toBe('month')
+  })
+
+  it('cleans awkward "Benefits: • Service Fee:" and removes empty Benefits labels', () => {
+    const job = normalizeJazzHrJob({
+      board_code: 'Clean123',
+      id: 'job_clean',
+      status: 'Open',
+      title: 'QA Specialist',
+      department: 'General', // Should be normalized away as generic
+      description:
+        '<p>Benefits: • Service Fee: Php 40,000</p><p>About the role: Test features.</p>',
+    })
+
+    expect(job).not.toBeNull()
+    expect(job?.department).toBeNull() // "General" stripped
+    expect(job?.descriptionText).not.toContain('Benefits: • Service Fee:')
+    expect(job?.descriptionText).toContain('Compensation:')
+    expect(job?.compensation?.minimum).toBe(40000)
   })
 })

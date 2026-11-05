@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   experimental: {
+    staticGenerationMaxConcurrency: 1,
     serverActions: {
       // Allow up to 6 MB to safely accommodate 5 MB image uploads
       // plus multipart form overhead. Default is 1 MB.

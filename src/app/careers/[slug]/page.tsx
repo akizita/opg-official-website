@@ -1,22 +1,26 @@
 import {
   Briefcase01Icon,
-  Building03Icon,
   Calendar03Icon,
   Location01Icon,
+  Money01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 
-import { ButtonLink } from '@/components/ui/button-link'
-import { Notice } from '@/components/ui/notice'
-import { RichText } from '@/components/ui/rich-text'
-import { getCareerJobBySlug, getCareersFeed } from '@/lib/jazzhr/client'
+import { CareerApplicationForm } from '@/app/careers/[slug]/apply/application-form'
+import { JobDescription } from '@/app/careers/[slug]/job-description'
+import { getCareerJobBySlug, getCareerQuestions } from '@/lib/jazzhr/client'
+import { formatCareerCompensation } from '@/lib/jazzhr/normalize'
 import type { CareerEmploymentType } from '@/lib/jazzhr/types'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 
-export const revalidate = 900
+import styles from './job-detail.module.css'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const dynamicParams = true
 
 type JobDetailPageProps = {
   params: Promise<{ slug: string }>
@@ -46,13 +50,8 @@ function formatDate(value: string): string {
   }).format(new Date(value))
 }
 
-export async function generateStaticParams() {
-  try {
-    const { jobs } = await getCareersFeed()
-    return jobs.map((job) => ({ slug: job.slug }))
-  } catch {
-    return []
-  }
+export function generateStaticParams() {
+  return []
 }
 
 export async function generateMetadata({
@@ -91,18 +90,20 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   if (!job) notFound()
   if (job.slug !== slug) permanentRedirect(`/careers/${job.slug}`)
 
+  const questions = await getCareerQuestions(job)
   const siteUrl = getSiteUrl()
   const pageUrl = new URL(`/careers/${job.slug}`, siteUrl).toString()
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
-    directApply: true,
     applicantLocationRequirements:
       job.workArrangement === 'remote' && job.country
         ? { '@type': 'Country', name: job.country }
         : undefined,
     datePosted: job.publishedAt || undefined,
     description: job.descriptionText || job.summary || job.title,
+    directApply: true,
     employmentType: SCHEMA_EMPLOYMENT_TYPE[job.employmentType],
     hiringOrganization: {
       '@type': 'Organization',
@@ -128,7 +129,19 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   }
 
   return (
-    <main id="main-content" className="job-detail-page">
+    <div className={`${styles.page} career-detail-page`}>
+      {/* Ambient background glows matching Articles page with rich golden auroras */}
+      <div className={styles.glowPrimary} aria-hidden="true" />
+      <div className={styles.glowSecondary} aria-hidden="true" />
+      <div className={styles.glowTertiary} aria-hidden="true" />
+      <div className={styles.glowQuaternary} aria-hidden="true" />
+      <div className={styles.glowMiddleRight} aria-hidden="true" />
+      <div className={styles.glowMiddleLeft} aria-hidden="true" />
+      <div className={styles.glowLowerCenter} aria-hidden="true" />
+      <div className={styles.glowBottomPrimary} aria-hidden="true" />
+      <div className={styles.glowBottomSecondary} aria-hidden="true" />
+      <div className={styles.glowBottomCenter} aria-hidden="true" />
+
       <script
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
@@ -136,124 +149,135 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         type="application/ld+json"
       />
 
-      <section className="job-detail-hero">
-        <div className="container">
-          <nav aria-label="Breadcrumbs" className="breadcrumbs">
-            <Link href="/">Home</Link>
-            <span aria-hidden="true">/</span>
-            <Link href="/careers">Careers</Link>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">{job.title}</span>
-          </nav>
-
-          <div className="job-detail-hero__layout">
-            <div>
-              <div className="job-detail__badges">
-                {job.department ? (
-                  <span className="job-badge job-badge--dept">
-                    {job.department}
-                  </span>
-                ) : null}
-                {job.workArrangement !== 'unspecified' ? (
-                  <span className="job-badge job-badge--arrangement">
-                    {job.workArrangement === 'onsite'
-                      ? 'On-site'
-                      : job.workArrangement}
-                  </span>
-                ) : null}
-                <span className="job-badge job-badge--type">
-                  {job.employmentTypeLabel}
-                </span>
-              </div>
-              <h1 className="job-detail__title">{job.title}</h1>
-              {job.summary ? (
-                <p className="job-detail__lead">{job.summary}</p>
-              ) : null}
-            </div>
-
-            <div className="job-detail__cta-card">
-              <p>Ready to make an impact?</p>
-              <ButtonLink href={job.applyPath}>
-                Apply for this position →
-              </ButtonLink>
-              <small>Apply securely without leaving the OPG website.</small>
-            </div>
+      <header className={styles.hero}>
+        <div className={styles.contentContainer}>
+          {/* Back button on top left, separated from tags */}
+          <div className={styles.topNav}>
+            <Link className={styles.backLink} href="/careers">
+              <span className={styles.backArrow} aria-hidden="true">
+                ←
+              </span>
+              <span>Back to all opportunities</span>
+            </Link>
           </div>
 
-          <div className="job-detail__meta">
-            <span>
-              <HugeiconsIcon icon={Location01Icon} size={19} />
-              <span>
-                <small>Location</small>
-                {job.location}
-              </span>
-            </span>
+          <div className={styles.heroContent}>
+            {/* Single department tag retained only (no redundant tags) */}
             {job.department ? (
-              <span>
-                <HugeiconsIcon icon={Building03Icon} size={19} />
-                <span>
-                  <small>Department</small>
+              <div className={styles.badges}>
+                <span className={`${styles.badge} ${styles.badgeDept}`}>
                   {job.department}
                 </span>
-              </span>
+              </div>
             ) : null}
-            <span>
-              <HugeiconsIcon icon={Briefcase01Icon} size={19} />
-              <span>
-                <small>Employment</small>
-                {job.employmentTypeLabel}
-              </span>
-            </span>
-            {job.publishedAt ? (
-              <span>
-                <HugeiconsIcon icon={Calendar03Icon} size={19} />
-                <span>
-                  <small>Posted</small>
-                  {formatDate(job.publishedAt)}
+
+            {/* One-lined job title header */}
+            <h1 className={styles.title}>{job.title}</h1>
+          </div>
+
+          {/* Quick metadata strip in 1 row with see-through glassmorphic style */}
+          <div className={styles.metaBar}>
+            <div className={styles.metaItems}>
+              <div className={styles.metaItem}>
+                <span className={styles.metaIcon}>
+                  <HugeiconsIcon icon={Location01Icon} size={18} />
                 </span>
-              </span>
-            ) : null}
+                <div className={styles.metaText}>
+                  <span className={styles.metaLabel}>Location</span>
+                  <span className={styles.metaValue}>{job.location}</span>
+                </div>
+              </div>
+
+              <div className={styles.metaItem}>
+                <span className={styles.metaIcon}>
+                  <HugeiconsIcon icon={Briefcase01Icon} size={18} />
+                </span>
+                <div className={styles.metaText}>
+                  <span className={styles.metaLabel}>Employment</span>
+                  <span className={styles.metaValue}>
+                    {job.employmentTypeLabel}
+                  </span>
+                </div>
+              </div>
+
+              {job.compensation ? (
+                <div className={styles.metaItem}>
+                  <span className={styles.metaIcon}>
+                    <HugeiconsIcon icon={Money01Icon} size={18} />
+                  </span>
+                  <div className={styles.metaText}>
+                    <span className={styles.metaLabel}>Compensation</span>
+                    <span className={styles.metaValue}>
+                      {formatCareerCompensation(job.compensation)}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+
+              {job.publishedAt ? (
+                <div className={styles.metaItem}>
+                  <span className={styles.metaIcon}>
+                    <HugeiconsIcon icon={Calendar03Icon} size={18} />
+                  </span>
+                  <div className={styles.metaText}>
+                    <span className={styles.metaLabel}>Posted</span>
+                    <span className={styles.metaValue}>
+                      {formatDate(job.publishedAt)}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <section className="job-detail-body">
-        <div className="container job-detail-body__layout">
-          <article className="job-detail__content">
-            <p className="careers-eyebrow">The opportunity</p>
-            <h2>About this role</h2>
-            {job.descriptionText ? (
-              <RichText content={job.descriptionText} />
-            ) : (
-              <p>
-                Full role details are available on the official application
-                page.
-              </p>
-            )}
-          </article>
+      {/* Main unified section: Details & Application Form side by side */}
+      <section className={styles.mainSection}>
+        <div className={`${styles.contentContainer} ${styles.layout}`}>
+          {/* Left: Organized Job Description in See-Through Glassmorphic Card */}
+          <div className={styles.descriptionColumn}>
+            <article className={styles.descriptionCard}>
+              <div className={styles.descriptionHeader}>
+                <p className={styles.descriptionEyebrow}>Role Specification</p>
+                <h2 className={styles.descriptionHeading}>
+                  About This Position
+                </h2>
+              </div>
 
-          <aside className="job-detail__aside">
-            <div className="job-detail__sticky-card">
-              <h2>Join OPG</h2>
-              <p>
-                Build a meaningful career alongside global teams that value
-                growth, integrity, and excellent work.
+              <JobDescription text={job.descriptionText} />
+            </article>
+          </div>
+
+          {/* Right: Application Form (Unboxed - Not in a double card) */}
+          <aside className={styles.applyColumn} id="apply">
+            <div className={styles.applyHeader}>
+              <span className={styles.applyBadge}>Direct Application</span>
+              <h2 className={styles.applyTitle}>Submit Application</h2>
+              <p className={styles.applySubtitle}>
+                Apply directly for {job.title}. Our talent acquisition team
+                reviews every candidate profile.
               </p>
-              <ButtonLink href={job.applyPath}>Apply now →</ButtonLink>
-              <Link href="/careers">← View all open roles</Link>
             </div>
+
+            <CareerApplicationForm
+              jobSlug={job.slug}
+              jobTitle={job.title}
+              questions={questions}
+            />
           </aside>
         </div>
       </section>
 
-      <section className="container job-detail__security">
-        <Notice variant="info" title="Application security notice">
-          OPG conducts recruitment through verified `@opglobal.com.hk` email
-          addresses and this official OPG website. We never charge recruitment
-          fees or ask candidates to transfer money. Submitted applications are
-          stored in our JazzHR recruitment workspace.
-        </Notice>
-      </section>
-    </main>
+      {/* Security notice as a subtle subtext instead of a disruptive bar */}
+      <div className={`${styles.contentContainer} ${styles.securitySubtext}`}>
+        <p>
+          <strong className={styles.securityBadge}>Security note:</strong>{' '}
+          OutPro Global conducts recruitment exclusively through verified{' '}
+          <code>@opglobal.com.hk</code> email addresses and this official website.
+          We never charge recruitment or placement fees.
+        </p>
+      </div>
+    </div>
   )
 }

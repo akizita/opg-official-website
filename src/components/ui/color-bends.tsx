@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
-import { Renderer, Program, Mesh, Triangle } from 'ogl'
+import { Color, Mesh, Program, Renderer, Triangle } from 'ogl'
 
 const MAX_COLORS = 8
 
@@ -19,13 +19,19 @@ void main() {
 const FRAG_SHADER = `
 precision highp float;
 
-#define MAX_COLORS ${MAX_COLORS}
 uniform vec2 uCanvas;
 uniform float uTime;
 uniform float uSpeed;
 uniform vec2 uRot;
 uniform int uColorCount;
-uniform vec3 uColors[MAX_COLORS];
+uniform vec3 uColor0;
+uniform vec3 uColor1;
+uniform vec3 uColor2;
+uniform vec3 uColor3;
+uniform vec3 uColor4;
+uniform vec3 uColor5;
+uniform vec3 uColor6;
+uniform vec3 uColor7;
 uniform int uTransparent;
 uniform float uScale;
 uniform float uFrequency;
@@ -39,6 +45,17 @@ uniform float uIntensity;
 uniform float uBandWidth;
 
 varying vec2 vUv;
+
+vec3 getColor(int idx) {
+  if (idx == 0) return uColor0;
+  if (idx == 1) return uColor1;
+  if (idx == 2) return uColor2;
+  if (idx == 3) return uColor3;
+  if (idx == 4) return uColor4;
+  if (idx == 5) return uColor5;
+  if (idx == 6) return uColor6;
+  return uColor7;
+}
 
 void main() {
   float t = uTime * uSpeed;
@@ -65,7 +82,7 @@ void main() {
     vec2 s = q;
     vec3 sumCol = vec3(0.0);
     float cover = 0.0;
-    for (int i = 0; i < MAX_COLORS; ++i) {
+    for (int i = 0; i < 8; ++i) {
       if (i >= uColorCount) break;
       s -= 0.01;
       vec2 r = sin(1.5 * (s.yx * uFrequency) + 2.0 * cos(s * uFrequency));
@@ -78,30 +95,17 @@ void main() {
       float m1 = length(warped + sin(5.0 * warped.y * uFrequency - 3.0 * t + float(i)) / 4.0);
       float m = mix(m0, m1, kMix);
       float w = 1.0 - exp(-uBandWidth / exp(uBandWidth * m));
-      sumCol += uColors[i] * w;
+      sumCol += getColor(i) * w;
       cover = max(cover, w);
     }
-    col = clamp(sumCol, 0.0, 1.0);
-    a = uTransparent > 0 ? cover : 1.0;
-  } else {
-    vec2 s = q;
-    for (int k = 0; k < 3; ++k) {
-      s -= 0.01;
-      vec2 r = sin(1.5 * (s.yx * uFrequency) + 2.0 * cos(s * uFrequency));
-      float m0 = length(r + sin(5.0 * r.y * uFrequency - 3.0 * t + float(k)) / 4.0);
-      float kBelow = clamp(uWarpStrength, 0.0, 1.0);
-      float kMix = pow(kBelow, 0.3);
-      float gain = 1.0 + max(uWarpStrength - 1.0, 0.0);
-      vec2 disp = (r - s) * kBelow;
-      vec2 warped = s + disp * gain;
-      float m1 = length(warped + sin(5.0 * warped.y * uFrequency - 3.0 * t + float(k)) / 4.0);
-      float m = mix(m0, m1, kMix);
-      col[k] = 1.0 - exp(-uBandWidth / exp(uBandWidth * m));
+    sumCol *= uIntensity;
+    float maxCh = max(sumCol.r, max(sumCol.g, sumCol.b));
+    if (maxCh > 1.0) {
+      sumCol /= maxCh;
     }
-    a = uTransparent > 0 ? max(max(col.r, col.g), col.b) : 1.0;
+    col = sumCol;
+    a = (uTransparent > 0) ? min(cover * min(uIntensity, 1.5), 1.0) : 1.0;
   }
-
-  col *= uIntensity;
 
   if (uNoise > 0.0001) {
     float n = fract(sin(dot(gl_FragCoord.xy + vec2(uTime), vec2(12.9898, 78.233))) * 43758.5453123);
@@ -131,39 +135,23 @@ export interface ColorBendsProps extends React.HTMLAttributes<HTMLDivElement> {
   bandWidth?: number
 }
 
-function parseHexToRgb(hex: string): [number, number, number] {
-  const clean = hex.replace('#', '').trim()
-  if (clean.length === 3) {
-    return [
-      parseInt(clean[0] + clean[0], 16) / 255,
-      parseInt(clean[1] + clean[1], 16) / 255,
-      parseInt(clean[2] + clean[2], 16) / 255,
-    ]
-  }
-  return [
-    parseInt(clean.slice(0, 2), 16) / 255,
-    parseInt(clean.slice(2, 4), 16) / 255,
-    parseInt(clean.slice(4, 6), 16) / 255,
-  ]
-}
-
 export function ColorBends({
   className = '',
   style,
-  rotation = 90,
-  speed = 0.22,
-  colors = ['#f29f04', '#f2b705', '#c77800', '#221508', '#ffd159'],
+  rotation = 45,
+  speed = 0.25,
+  colors = ['#f29f04', '#fbbf24', '#f59e0b', '#d97706', '#ea580c'],
   transparent = true,
   autoRotate = 2,
-  scale = 1.1,
-  frequency = 0.9,
-  warpStrength = 1.15,
-  mouseInfluence = 0.6,
-  parallax = 0.35,
-  noise = 0.12,
+  scale = 1.2,
+  frequency = 1.0,
+  warpStrength = 1.25,
+  mouseInfluence = 0.5,
+  parallax = 0.3,
+  noise = 0.04,
   iterations = 2,
-  intensity = 1.35,
-  bandWidth = 5.2,
+  intensity = 1.65,
+  bandWidth = 2.4,
   ...rest
 }: ColorBendsProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -229,6 +217,8 @@ export function ColorBends({
       renderer = new Renderer({
         alpha: true,
         antialias: false,
+        depth: false,
+        dpr: 1.0,
         powerPreference: 'high-performance',
       })
     } catch {
@@ -236,37 +226,49 @@ export function ColorBends({
     }
 
     const gl = renderer.gl
-    gl.clearColor(0, 0, 0, propsRef.current.transparent ? 0 : 1)
-    if (propsRef.current.transparent) {
-      gl.enable(gl.BLEND)
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-    }
+    gl.clearColor(0.0, 0.0, 0.0, 0.0)
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-    const colorsFlattened = new Float32Array(MAX_COLORS * 3)
     const validColors = propsRef.current.colors.slice(0, MAX_COLORS)
-    validColors.forEach((hex, i) => {
-      const [r, g, b] = parseHexToRgb(hex)
-      colorsFlattened[i * 3] = r
-      colorsFlattened[i * 3 + 1] = g
-      colorsFlattened[i * 3 + 2] = b
-    })
+    const colorValues: [number, number, number][] = []
+    for (let i = 0; i < MAX_COLORS; i++) {
+      if (i < validColors.length) {
+        const c = new Color(validColors[i])
+        colorValues.push([c.r, c.g, c.b])
+      } else {
+        colorValues.push([0, 0, 0])
+      }
+    }
 
     const geometry = new Triangle(gl)
     const program = new Program(gl, {
       vertex: VERT_SHADER,
       fragment: FRAG_SHADER,
       uniforms: {
-        uCanvas: { value: new Float32Array([container.clientWidth || 1, container.clientHeight || 1]) },
+        uCanvas: {
+          value: [
+            container.clientWidth || 300,
+            container.clientHeight || 150,
+          ],
+        },
         uTime: { value: 0 },
         uSpeed: { value: propsRef.current.speed },
-        uRot: { value: new Float32Array([1, 0]) },
+        uRot: { value: [1, 0] },
         uColorCount: { value: validColors.length },
-        uColors: { value: colorsFlattened },
+        uColor0: { value: colorValues[0] },
+        uColor1: { value: colorValues[1] },
+        uColor2: { value: colorValues[2] },
+        uColor3: { value: colorValues[3] },
+        uColor4: { value: colorValues[4] },
+        uColor5: { value: colorValues[5] },
+        uColor6: { value: colorValues[6] },
+        uColor7: { value: colorValues[7] },
         uTransparent: { value: propsRef.current.transparent ? 1 : 0 },
         uScale: { value: propsRef.current.scale },
         uFrequency: { value: propsRef.current.frequency },
         uWarpStrength: { value: propsRef.current.warpStrength },
-        uPointer: { value: new Float32Array([0, 0]) },
+        uPointer: { value: [0, 0] },
         uMouseInfluence: { value: propsRef.current.mouseInfluence },
         uParallax: { value: propsRef.current.parallax },
         uNoise: { value: propsRef.current.noise },
@@ -286,46 +288,72 @@ export function ColorBends({
     gl.canvas.style.pointerEvents = 'none'
     container.appendChild(gl.canvas)
 
-    const MAX_RENDER_DIM = 1920
+    const targetEl =
+      (container.parentElement as HTMLElement | null) || container
+
     const handleResize = () => {
       if (!container || !renderer) return
-      const w = container.clientWidth || 1
-      const h = container.clientHeight || 1
-      const baseDpr = Math.min(window.devicePixelRatio || 1, 2)
-      const longest = Math.max(w, h) * baseDpr
-      renderer.dpr = longest > MAX_RENDER_DIM ? (baseDpr * MAX_RENDER_DIM) / longest : baseDpr
+      const w = container.clientWidth || targetEl.clientWidth || 300
+      const h = container.clientHeight || targetEl.clientHeight || 150
       renderer.setSize(w, h)
       program.uniforms.uCanvas.value[0] = gl.canvas.width
       program.uniforms.uCanvas.value[1] = gl.canvas.height
+      try {
+        renderer.render({ scene: mesh })
+      } catch {
+        // Safe fallback
+      }
     }
 
     handleResize()
+    requestAnimationFrame(handleResize)
 
     let resizeObserver: ResizeObserver | null = null
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(handleResize)
       resizeObserver.observe(container)
+      if (targetEl !== container) {
+        resizeObserver.observe(targetEl)
+      }
     }
     window.addEventListener('resize', handleResize)
 
     const targetPointer = [0, 0]
     const currentPointer = [0, 0]
 
+    let cachedRect: DOMRect | null = null
+    const updateRect = () => {
+      cachedRect = targetEl.getBoundingClientRect()
+    }
+    updateRect()
+
     const handlePointerMove = (e: PointerEvent) => {
-      if (!container) return
-      const rect = container.getBoundingClientRect()
-      const x = ((e.clientX - rect.left) / (rect.width || 1)) * 2 - 1
-      const y = -(((e.clientY - rect.top) / (rect.height || 1)) * 2 - 1)
-      targetPointer[0] = x
-      targetPointer[1] = y
+      if (!cachedRect) updateRect()
+      if (!cachedRect) return
+      const x = ((e.clientX - cachedRect.left) / (cachedRect.width || 1)) * 2 - 1
+      const y = -(((e.clientY - cachedRect.top) / (cachedRect.height || 1)) * 2 - 1)
+      targetPointer[0] = Math.max(-1, Math.min(1, x))
+      targetPointer[1] = Math.max(-1, Math.min(1, y))
     }
 
-    container.addEventListener('pointermove', handlePointerMove)
+    const handlePointerLeave = () => {
+      targetPointer[0] = 0
+      targetPointer[1] = 0
+    }
+
+    targetEl.addEventListener('pointermove', handlePointerMove as EventListener, {
+      passive: true,
+    })
+    targetEl.addEventListener('pointerleave', handlePointerLeave, {
+      passive: true,
+    })
 
     const startTime = performance.now()
     let lastTime = startTime
 
     const renderLoop = (now: number) => {
+      animFrameRef.current = requestAnimationFrame(renderLoop)
+
       const dt = Math.min((now - lastTime) / 1000, 0.1)
       lastTime = now
       const elapsed = (now - startTime) / 1000
@@ -342,6 +370,17 @@ export function ColorBends({
       program.uniforms.uIterations.value = p.iterations
       program.uniforms.uIntensity.value = p.intensity
       program.uniforms.uBandWidth.value = p.bandWidth
+      program.uniforms.uColorCount.value = Math.min(p.colors.length, MAX_COLORS)
+
+      for (let i = 0; i < MAX_COLORS; i++) {
+        const uKey = `uColor${i}` as keyof typeof program.uniforms
+        if (i < p.colors.length) {
+          const c = new Color(p.colors[i])
+          program.uniforms[uKey].value[0] = c.r
+          program.uniforms[uKey].value[1] = c.g
+          program.uniforms[uKey].value[2] = c.b
+        }
+      }
 
       const deg = (p.rotation % 360) + p.autoRotate * elapsed
       const rad = (deg * Math.PI) / 180
@@ -354,8 +393,18 @@ export function ColorBends({
       program.uniforms.uPointer.value[0] = currentPointer[0]
       program.uniforms.uPointer.value[1] = currentPointer[1]
 
-      renderer?.render({ scene: mesh })
-      animFrameRef.current = requestAnimationFrame(renderLoop)
+      try {
+        renderer?.render({ scene: mesh })
+      } catch {
+        // Fallback gracefully without breaking render loop
+      }
+    }
+
+    // Render initial frame immediately
+    try {
+      renderer.render({ scene: mesh })
+    } catch {
+      // Ignore initial render errors
     }
 
     animFrameRef.current = requestAnimationFrame(renderLoop)
@@ -368,11 +417,14 @@ export function ColorBends({
         resizeObserver.disconnect()
       }
       window.removeEventListener('resize', handleResize)
-      container.removeEventListener('pointermove', handlePointerMove)
+      targetEl.removeEventListener(
+        'pointermove',
+        handlePointerMove as EventListener,
+      )
+      targetEl.removeEventListener('pointerleave', handlePointerLeave)
       if (gl.canvas && gl.canvas.parentElement === container) {
         container.removeChild(gl.canvas)
       }
-      gl.getExtension('WEBGL_lose_context')?.loseContext()
     }
   }, [])
 

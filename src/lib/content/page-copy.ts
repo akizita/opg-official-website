@@ -941,7 +941,7 @@ export const CAREERS_COPY_SECTIONS: readonly CopySection[] = [
       field(
         'openingsLead',
         'Introduction',
-        'All applications are processed securely via our official talent channel.',
+        'Explore open roles across our global partner network. All applications are reviewed directly by our recruitment team.',
         true,
       ),
       field('filterAll', 'All roles filter', 'All Roles'),

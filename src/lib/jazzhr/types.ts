@@ -28,10 +28,19 @@ export type CareerQuestion = {
   order: number
 }
 
+export type CareerCompensation = {
+  currency: 'PHP' | 'USD'
+  maximum: number | null
+  minimum: number
+  payPeriod: 'hour' | 'day' | 'week' | 'month' | 'year' | null
+  variesByExperience: boolean
+}
+
 export type CareerJob = {
   applyPath: string
   boardCode: string
   city: string | null
+  compensation: CareerCompensation | null
   country: string | null
   department: string | null
   descriptionText: string

@@ -1,15 +1,12 @@
-import {
-  ArrowDown01Icon,
-  Globe02Icon,
-  Rocket01Icon,
-  UserGroupIcon,
-} from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import type { Metadata } from 'next'
 
 import { CareerOpeningsExplorer } from '@/app/careers/career-openings-explorer'
+import {
+  ApplicationSteps,
+  RecruitmentCTA,
+  WhyJoin,
+} from '@/app/careers/careers-sections'
 import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
-import { ButtonLink } from '@/components/ui/button-link'
 import { Notice } from '@/components/ui/notice'
 import { CAREERS_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
 import type { PageDocument } from '@/lib/content/page-documents'
@@ -19,7 +16,10 @@ import { getCareersFeed } from '@/lib/jazzhr/client'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 import { createClient } from '@/lib/supabase/server'
 
-export const revalidate = 900
+import styles from './careers.module.css'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 type CareersPageProps = {
   searchParams: Promise<{ opgPreview?: string }>
@@ -73,100 +73,50 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
   const copy = getPageCopy(doc?.content, CAREERS_COPY_SECTIONS)
 
   return (
-    <main id="main-content" className="careers-page">
+    <div className={`${styles.page} careers-page`}>
+      {/* Subtle, restrained ambient warmth */}
+      <div className={styles.careersGlow} aria-hidden="true" />
+      <div className={styles.careersGlowSecondary} aria-hidden="true" />
+
       <PageVisualRuntime
         page="careers"
         config={getPageVisualConfig(doc?.content)}
       />
 
-      <section className="careers-hero">
-        <div className="container careers-hero__layout">
-          <div className="careers-hero__content">
-            <p className="careers-eyebrow">Careers at OPG</p>
-            <h1 className="careers-hero__title">{copy.heroTitle}</h1>
-            <p className="careers-hero__lead">{copy.heroLead}</p>
-            <div className="careers-hero__actions">
-              <ButtonLink href="#open-roles-title">
-                Explore open roles
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={ArrowDown01Icon}
-                  size={18}
-                />
-              </ButtonLink>
-              <ButtonLink href="/about" variant="secondary">
-                Discover life at OPG
-              </ButtonLink>
-            </div>
-            <p className="careers-hero__microcopy">
-              Global teams · Meaningful work · Long-term growth
-            </p>
-          </div>
+      <section className={styles.openings} aria-labelledby="open-roles-title">
+        {/* Vibrant aurora gradients behind glassmorphic job cards and filters */}
+        <div className={styles.openingsGlowTopRight} aria-hidden="true" />
+        <div className={styles.openingsGlowTopLeft} aria-hidden="true" />
+        <div className={styles.openingsGlowCenter} aria-hidden="true" />
+        <div className={styles.openingsGlowMidLeft} aria-hidden="true" />
+        <div className={styles.openingsGlowMidRight} aria-hidden="true" />
 
-          <aside
-            aria-label="Careers at a glance"
-            className="careers-hero__panel"
-          >
-            <div className="careers-hero__panel-heading">
-              <span>Open opportunities</span>
-              <strong>{feed.jobs.length}</strong>
-              <p>Current roles across our growing global teams.</p>
-            </div>
-            <div className="careers-hero__panel-list">
-              <div>
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={Globe02Icon}
-                  size={22}
-                />
-                <span>
-                  <strong>Global collaboration</strong>
-                  Work with international teams and clients.
-                </span>
-              </div>
-              <div>
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={Rocket01Icon}
-                  size={22}
-                />
-                <span>
-                  <strong>Room to grow</strong>
-                  Develop your craft through meaningful work.
-                </span>
-              </div>
-              <div>
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={UserGroupIcon}
-                  size={22}
-                />
-                <span>
-                  <strong>People-first culture</strong>
-                  Join a team that values your contribution.
-                </span>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <section className="careers-openings" aria-labelledby="open-roles-title">
         <div className="container">
-          <div className="careers-openings__heading">
-            <div>
-              <p className="careers-eyebrow">Open positions</p>
-              <h2 id="open-roles-title">{copy.openingsTitle}</h2>
-              <p>{copy.openingsLead}</p>
+          <header className={styles.pageHeader}>
+            <div className={styles.pageHeaderContent}>
+              <p className={styles.eyebrow}>Careers at OPG</p>
+              <h1 className={styles.pageTitle} id="open-roles-title">
+                {copy.openingsTitle || 'Explore Open Roles'}
+              </h1>
+              <p className={styles.pageLead}>
+                {!copy.openingsLead ||
+                copy.openingsLead.includes('verified talent portal')
+                  ? 'Explore open roles across our global partner network. All applications are reviewed directly by our recruitment team.'
+                  : copy.openingsLead}
+              </p>
             </div>
-            <span className="careers-openings__count">
-              {feed.jobs.length} {feed.jobs.length === 1 ? 'role' : 'roles'}
-            </span>
-          </div>
+            <div className={styles.openingsCountBadge}>
+              <span className={styles.openingsPulse} aria-hidden="true" />
+              <span>
+                {feed.jobs.length} {feed.jobs.length === 1 ? 'role' : 'roles'}{' '}
+                available
+              </span>
+            </div>
+          </header>
 
           {!feed.configured ? (
             <Notice
-              className="careers-config-notice"
+              className={styles.configNotice}
               title="Live role sync is being configured"
               variant="warning"
             >
@@ -190,116 +140,18 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
         </div>
       </section>
 
-      <section className="careers-benefits" aria-labelledby="why-join-title">
-        <div className="container">
-          <div className="careers-section-heading careers-section-heading--split">
-            <div>
-              <p className="careers-eyebrow">Why join us</p>
-              <h2 id="why-join-title">{copy.benefitsTitle}</h2>
-            </div>
-            <p>
-              Join a culture where your ideas matter, your ambitions are
-              supported, and your growth has no limits.
-            </p>
-          </div>
-
-          <div className="careers-benefits__grid">
-            <article className="careers-benefit-card">
-              <span className="careers-benefit-card__icon">
-                <HugeiconsIcon icon={Globe02Icon} size={25} />
-              </span>
-              <div>
-                <h3>{copy.benefit1Title}</h3>
-                <p>{copy.benefit1Body}</p>
-              </div>
-            </article>
-            <article className="careers-benefit-card">
-              <span className="careers-benefit-card__icon">
-                <HugeiconsIcon icon={Rocket01Icon} size={25} />
-              </span>
-              <div>
-                <h3>{copy.benefit2Title}</h3>
-                <p>{copy.benefit2Body}</p>
-              </div>
-            </article>
-            <article className="careers-benefit-card">
-              <span className="careers-benefit-card__icon">
-                <HugeiconsIcon icon={UserGroupIcon} size={25} />
-              </span>
-              <div>
-                <h3>{copy.benefit3Title}</h3>
-                <p>{copy.benefit3Body}</p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section
-        aria-labelledby="careers-process-title"
-        className="careers-process"
-      >
-        <div className="container careers-process__layout">
-          <div className="careers-process__intro">
-            <p className="careers-eyebrow">What happens next</p>
-            <h2 id="careers-process-title">A straightforward path to OPG.</h2>
-            <p>
-              We keep the application experience clear, focused, and respectful
-              of your time.
-            </p>
-          </div>
-          <ol className="careers-process__steps">
-            <li>
-              <span>01</span>
-              <div>
-                <h3>Find your role</h3>
-                <p>Review the opportunity, requirements, and working setup.</p>
-              </div>
-            </li>
-            <li>
-              <span>02</span>
-              <div>
-                <h3>Apply online</h3>
-                <p>Send your résumé and answers securely through this website.</p>
-              </div>
-            </li>
-            <li>
-              <span>03</span>
-              <div>
-                <h3>Connect with us</h3>
-                <p>
-                  Our recruitment team reviews suitable applications and follows
-                  up.
-                </p>
-              </div>
-            </li>
-          </ol>
-        </div>
-      </section>
-
-      <section className="careers-closing">
-        <div className="container careers-closing__inner">
-          <div>
-            <p className="careers-eyebrow">Stay connected</p>
-            <h2>Do not see the right role yet?</h2>
-            <p>
-              Our opportunities evolve with our global partners. Check back soon
-              or introduce yourself to our recruitment team.
-            </p>
-          </div>
-          <div className="button-row">
-            <ButtonLink href="#open-roles-title">
-              Review current openings
-            </ButtonLink>
-            <ButtonLink
-              href="mailto:recruitment@opglobal.com.hk"
-              variant="secondary"
-            >
-              Contact recruitment
-            </ButtonLink>
-          </div>
-        </div>
-      </section>
-    </main>
+      <WhyJoin
+        benefits={[
+          { title: copy.benefit1Title, body: copy.benefit1Body },
+          { title: copy.benefit2Title, body: copy.benefit2Body },
+          { title: copy.benefit3Title, body: copy.benefit3Body },
+        ]}
+        title={copy.benefitsTitle}
+      />
+      <div className={styles.processAndCtaWrapper}>
+        <ApplicationSteps />
+        <RecruitmentCTA />
+      </div>
+    </div>
   )
 }

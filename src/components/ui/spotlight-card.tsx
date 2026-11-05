@@ -31,6 +31,7 @@ export function SpotlightCard({
 
     const rect = divRef.current.getBoundingClientRect()
     setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+    setOpacity(1)
   }
 
   const handleFocus: React.FocusEventHandler<HTMLDivElement> = (e) => {
@@ -43,7 +44,7 @@ export function SpotlightCard({
         y: target.top + target.height / 2 - card.top,
       })
     }
-    setOpacity(0.65)
+    setOpacity(1)
   }
 
   const handleBlur: React.FocusEventHandler<HTMLDivElement> = (e) => {
@@ -54,7 +55,7 @@ export function SpotlightCard({
   }
 
   const handleMouseEnter = () => {
-    setOpacity(0.65)
+    setOpacity(1)
   }
 
   const handleMouseLeave = () => {
@@ -77,7 +78,7 @@ export function SpotlightCard({
         className="rb-spotlight-card__spotlight"
         style={{
           opacity,
-          background: `radial-gradient(circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 75%)`,
+          background: `radial-gradient(circle 320px at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 80%)`,
         }}
       />
       <div className="rb-spotlight-card__content">{children}</div>
