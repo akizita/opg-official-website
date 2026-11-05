@@ -1,4 +1,8 @@
+'use client'
+
+import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const footerGroups = [
   {
@@ -27,14 +31,34 @@ const footerGroups = [
   },
 ] as const
 
-import { NewsletterForm } from '@/components/site/newsletter-form'
-
 export function SiteFooter() {
+  const pathname = usePathname()
+
+  if (
+    pathname === '/sign-in' ||
+    pathname === '/sign-up' ||
+    pathname?.startsWith('/sign-in/') ||
+    pathname?.startsWith('/sign-up/')
+  ) {
+    return null
+  }
   return (
     <footer className="site-footer">
       <div className="container site-footer__grid">
         <div>
-          <p className="brand brand--footer">OPG</p>
+          <Link
+            aria-label="Return to Outsource Pro Global home"
+            className="brand site-footer__brand"
+            href="/"
+          >
+            <Image
+              alt="Outsource Pro Global"
+              className="site-footer__logo"
+              height={150}
+              src="/images/opg-logo-white-text.png"
+              width={150}
+            />
+          </Link>
           <p className="site-footer__summary">
             Global talent solutions with a human point of view.
           </p>
@@ -49,9 +73,6 @@ export function SiteFooter() {
             ))}
           </nav>
         ))}
-      </div>
-      <div className="container site-footer__newsletter">
-        <NewsletterForm />
       </div>
       <div className="container site-footer__bottom">
         <small>© {new Date().getFullYear()} Outsourced Pro Global.</small>

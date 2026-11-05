@@ -2,11 +2,15 @@
 
 import Link from 'next/link'
 import Script from 'next/script'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import {
   ArrowRight01Icon,
+  Cancel01Icon,
   FlashIcon,
+  InformationCircleIcon,
   Layers01Icon,
+  LockKeyIcon,
+  Login01Icon,
   Mail01Icon,
   Tag01Icon,
   UserIcon,
@@ -15,6 +19,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 
 import { submitContactAction } from '@/app/contact/actions'
 import type { InquiryIntent } from '@/lib/content/inquiries'
+import { createClient } from '@/lib/supabase/client'
 
 type TurnstileWindow = Window & {
   turnstile?: {
@@ -26,18 +31,44 @@ type TurnstileWindow = Window & {
   }
 }
 
+const DRAFT_KEY = 'opg_contact_draft_v1'
+
 export function ContactForm({
   copy,
-  signedInEmail,
+  signedInEmail = '',
 }: {
   copy: Record<string, string>
-  signedInEmail: string
+  signedInEmail?: string
 }) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()
-  const [intent, setIntent] = useState<InquiryIntent>('client')
+
+  const [draft] = useState<{
+    fullName?: string
+    intent?: InquiryIntent
+    subject?: string
+    message?: string
+  } | null>(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const saved = sessionStorage.getItem(DRAFT_KEY)
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
+
+  const [intent, setIntent] = useState<InquiryIntent>(() =>
+    draft?.intent === 'talent' ? 'talent' : 'client',
+  )
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [turnstileReady, setTurnstileReady] = useState(false)
-  const [messageLength, setMessageLength] = useState(0)
+  const [messageLength, setMessageLength] = useState(
+    () => draft?.message?.length || 0,
+  )
+  const [showSignInModal, setShowSignInModal] = useState(false)
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>(
+    () => signedInEmail?.trim().toLowerCase() || '',
+  )
   const [isPending, startTransition] = useTransition()
   const [result, setResult] = useState<{
     success: boolean
@@ -50,9 +81,84 @@ export function ContactForm({
   const dropdownRef = useRef<HTMLDivElement>(null)
   const submittingRef = useRef(false)
 
+  const saveDraftToStorage = useCallback(() => {
+    if (typeof window === 'undefined' || !formRef.current) return
+    try {
+      const data = {
+        fullName:
+          (formRef.current.querySelector('#fullName') as HTMLInputElement)
+            ?.value || '',
+        intent,
+        subject:
+          (formRef.current.querySelector('#subject') as HTMLInputElement)
+            ?.value || '',
+        message:
+          (formRef.current.querySelector('#message') as HTMLTextAreaElement)
+            ?.value || '',
+      }
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(data))
+    } catch {
+      // ignore
+    }
+  }, [intent])
+
   useEffect(() => {
     mountTimeRef.current = Date.now()
   }, [])
+
+  useEffect(() => {
+    let active = true
+    const supabase = createClient()
+
+    void supabase.auth
+      .getClaims()
+      .then(({ data, error }) => {
+        if (!active) return
+        const email = data?.claims?.email
+        if (!error && typeof email === 'string' && email.trim()) {
+          setCurrentUserEmail(email.trim().toLowerCase())
+        } else {
+          setCurrentUserEmail('')
+        }
+      })
+      .catch(() => {
+        if (active) setCurrentUserEmail('')
+      })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return
+      const email = session?.user?.email
+      if (email && email.trim()) {
+        setCurrentUserEmail(email.trim().toLowerCase())
+      } else {
+        setCurrentUserEmail('')
+      }
+    })
+
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
+  }, [signedInEmail])
+
+  // Modal keyboard handling and scroll lock
+  useEffect(() => {
+    if (!showSignInModal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowSignInModal(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = originalOverflow
+    }
+  }, [showSignInModal])
 
   useEffect(() => {
     if (!dropdownOpen) return
@@ -87,6 +193,14 @@ export function ContactForm({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
+    // If not signed in, show alert modal encouraging sign-in
+    if (!currentUserEmail || !currentUserEmail.trim()) {
+      saveDraftToStorage()
+      setShowSignInModal(true)
+      return
+    }
+
     if (submittingRef.current) return
     submittingRef.current = true
     setResult(null)
@@ -99,6 +213,7 @@ export function ContactForm({
       : 5
     formData.set('elapsedSeconds', String(elapsedSeconds))
     formData.set('intent', intent)
+    formData.set('email', currentUserEmail)
 
     startTransition(async () => {
       try {
@@ -108,6 +223,11 @@ export function ContactForm({
           formRef.current.reset()
           setIntent('client')
           setMessageLength(0)
+          try {
+            sessionStorage.removeItem(DRAFT_KEY)
+          } catch {
+            // ignore
+          }
         }
       } catch {
         setResult({
@@ -211,6 +331,7 @@ export function ContactForm({
                   }
                   aria-invalid={Boolean(result?.errors?.fullName)}
                   autoComplete="name"
+                  defaultValue={draft?.fullName}
                   disabled={isPending}
                   id="fullName"
                   maxLength={100}
@@ -229,30 +350,63 @@ export function ContactForm({
             </div>
 
             <div className="form-field">
-              <label htmlFor="email">
+              <label htmlFor={currentUserEmail ? 'email' : undefined}>
                 {copy.emailLabel} <span className="field-required">*</span>
               </label>
-              <div className="contact-input-wrapper contact-input-wrapper--readonly">
-                <span aria-hidden="true" className="contact-input-icon">
-                  <HugeiconsIcon icon={Mail01Icon} size={18} strokeWidth={1.8} />
-                </span>
-                <input
-                  aria-describedby={
-                    result?.errors?.email ? 'email-error' : undefined
-                  }
-                  aria-invalid={Boolean(result?.errors?.email)}
-                  autoComplete="email"
-                  defaultValue={signedInEmail}
-                  disabled={isPending}
-                  id="email"
-                  maxLength={254}
-                  name="email"
-                  readOnly
-                  required
-                  title={signedInEmail}
-                  type="email"
-                />
-              </div>
+              {currentUserEmail ? (
+                <div className="contact-input-wrapper contact-input-wrapper--readonly">
+                  <span aria-hidden="true" className="contact-input-icon">
+                    <HugeiconsIcon icon={Mail01Icon} size={18} strokeWidth={1.8} />
+                  </span>
+                  <input
+                    aria-describedby={
+                      result?.errors?.email ? 'email-error' : undefined
+                    }
+                    aria-invalid={Boolean(result?.errors?.email)}
+                    autoComplete="email"
+                    defaultValue={currentUserEmail}
+                    disabled={isPending}
+                    id="email"
+                    maxLength={254}
+                    name="email"
+                    readOnly
+                    required
+                    title={`Signed in as ${currentUserEmail}`}
+                    type="email"
+                  />
+                  <span className="contact-verified-badge" title="Verified OPG Account">
+                    <HugeiconsIcon icon={LockKeyIcon} size={13} strokeWidth={2.2} />
+                    <span>Verified</span>
+                  </span>
+                </div>
+              ) : (
+                <div className="contact-input-wrapper contact-input-wrapper--signin-trigger">
+                  <Link
+                    aria-label="Sign in to link your work email address"
+                    className="contact-signin-field-btn"
+                    href="/sign-in?next=/contact"
+                    onClick={saveDraftToStorage}
+                  >
+                    <span className="contact-signin-field-left">
+                      <span
+                        aria-hidden="true"
+                        className="contact-signin-field-icon"
+                      >
+                        <HugeiconsIcon icon={Login01Icon} size={18} strokeWidth={2} />
+                      </span>
+                      <span className="contact-signin-field-text">
+                        Sign-in
+                      </span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="contact-signin-field-arrow"
+                    >
+                      <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2.2} />
+                    </span>
+                  </Link>
+                </div>
+              )}
               {result?.errors?.email && (
                 <p className="field-error" id="email-error">
                   <span aria-hidden="true" className="field-error__icon">!</span>
@@ -422,6 +576,7 @@ export function ContactForm({
                     result?.errors?.subject ? 'subject-error' : undefined
                   }
                   aria-invalid={Boolean(result?.errors?.subject)}
+                  defaultValue={draft?.subject}
                   disabled={isPending}
                   id="subject"
                   maxLength={111}
@@ -468,6 +623,7 @@ export function ContactForm({
                 result?.errors?.message ? 'message-error' : 'message-hint'
               }
               aria-invalid={Boolean(result?.errors?.message)}
+              defaultValue={draft?.message}
               disabled={isPending}
               id="message"
               maxLength={5000}
@@ -583,6 +739,82 @@ export function ContactForm({
             </button>
           </div>
         </form>
+      )}
+
+      {/* Alert Modal encouraging sign-in when submitting as guest */}
+      {showSignInModal && (
+        <div
+          aria-labelledby="contact-signin-modal-title"
+          aria-modal="true"
+          className="contact-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowSignInModal(false)
+            }
+          }}
+          role="dialog"
+        >
+          <div className="contact-modal-card">
+            <button
+              aria-label="Close modal"
+              className="contact-modal-close"
+              onClick={() => setShowSignInModal(false)}
+              type="button"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} size={20} />
+            </button>
+
+            <div className="contact-modal-icon-wrap">
+              <HugeiconsIcon icon={LockKeyIcon} size={28} />
+            </div>
+
+            <h3
+              className="contact-modal-title"
+              id="contact-signin-modal-title"
+            >
+              Sign in to send your message
+            </h3>
+
+            <p
+              className="contact-modal-desc"
+              id="contact-signin-modal-desc"
+            >
+              To ensure secure delivery and verify inquiry routing, an Outsource
+              Pro Global account is required before submitting.
+            </p>
+
+            <div className="contact-modal-draft-note">
+              <HugeiconsIcon icon={InformationCircleIcon} size={16} />
+              <span>Your message draft has been saved.</span>
+            </div>
+
+            <div className="contact-modal-actions">
+              <Link
+                className="contact-modal-btn contact-modal-btn--primary"
+                href="/sign-in?next=/contact"
+                onClick={saveDraftToStorage}
+              >
+                <span>Sign in</span>
+                <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+              </Link>
+              <Link
+                className="contact-modal-btn contact-modal-btn--secondary"
+                href="/sign-in?tab=signup&next=/contact"
+                onClick={saveDraftToStorage}
+              >
+                <span>Create an account</span>
+              </Link>
+            </div>
+
+            <button
+              className="contact-modal-dismiss"
+              onClick={() => setShowSignInModal(false)}
+              type="button"
+            >
+              Continue editing draft
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -251,7 +251,7 @@ button:disabled {
   border-radius: 9999px;
   flex-shrink: 0;
   height: 2.5rem;
-  width: 10rem;
+  width: 5.5rem;
 }
 
 .site-header__auth a,
@@ -264,9 +264,10 @@ button:disabled {
   font-weight: 750;
   justify-content: center;
   min-height: 2.5rem;
-  padding: 0.45rem 1rem;
+  padding: 0.45rem 1.15rem;
   text-decoration: none;
   white-space: nowrap;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
 }
 
 .site-header__auth .site-header__login,
@@ -278,10 +279,18 @@ button:disabled {
 
 .site-header__auth .site-header__signup,
 .mobile-nav__auth .site-header__signup {
-  background: linear-gradient(135deg, #f7c94b, #f2a900);
-  border-color: #d18b00;
-  box-shadow: 0 3px 10px rgb(181 121 0 / 18%);
-  color: var(--color-ink);
+  background: #0a0a0a;
+  border-color: #0a0a0a;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  color: #ffffff;
+}
+
+.site-header__auth .site-header__signup:hover,
+.mobile-nav__auth .site-header__signup:hover {
+  background: #212121;
+  border-color: #212121;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .site-header__auth a:hover,
@@ -289,19 +298,12 @@ button:disabled {
   filter: brightness(0.96);
 }
 
-.site-header__auth--quiet .site-header__login,
 .site-header__auth--quiet .site-header__signup {
-  background: transparent;
-  border-color: #c7bfae;
-  box-shadow: none;
-  color: #4d473d;
-  font-weight: 650;
-}
-
-.site-header__auth--quiet .site-header__signup {
-  background: #201d18;
-  border-color: #201d18;
-  color: #fff;
+  background: #0a0a0a;
+  border-color: #0a0a0a;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .site-account-menu {
@@ -5220,6 +5222,37 @@ h3 {
   color: var(--palette-golden-orange);
 }
 
+.site-footer__brand {
+  align-items: center;
+  background: transparent;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 2.85rem;
+  justify-content: center;
+  line-height: 1;
+  margin-bottom: 0.85rem;
+  overflow: hidden;
+  position: relative;
+  text-decoration: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  width: 7.6rem;
+}
+
+.site-footer__brand:hover {
+  opacity: 0.88;
+  transform: scale(1.02);
+}
+
+.site-footer__logo {
+  display: block;
+  height: 2.85rem;
+  object-fit: contain;
+  pointer-events: none;
+  transform: scale(2.45);
+  transform-origin: center center;
+  width: 2.85rem;
+}
+
 .site-footer__summary {
   color: #a6a6a6;
   max-width: 22rem;
@@ -5249,10 +5282,10 @@ h3 {
 
 .site-footer__bottom {
   align-items: center;
-  border-top: 1px solid #334e68;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   justify-content: space-between;
-  margin-top: var(--space-12);
+  margin-top: var(--space-8);
   padding-top: var(--space-6);
 }
 
@@ -14883,6 +14916,326 @@ h3 {
   border-color: rgba(120, 80, 0, 0.12);
   color: #63533c;
   cursor: default;
+}
+
+/* Sign-in button replacement for email field when guest */
+.contact-input-wrapper--signin-trigger {
+  align-items: stretch;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  display: flex;
+  height: 3.125rem;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+
+.contact-signin-field-btn {
+  align-items: center;
+  background: #0a0a0a;
+  border: 1px solid #0a0a0a;
+  border-radius: 13px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.16);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.94rem;
+  font-weight: 750;
+  gap: 0.65rem;
+  height: 3.125rem;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 140ms ease;
+  width: 100%;
+}
+
+.contact-signin-field-btn:hover {
+  background: #212121;
+  border-color: #212121;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.contact-signin-field-btn:active {
+  background: #000000;
+  transform: scale(0.99);
+}
+
+.contact-signin-field-left {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.65rem;
+}
+
+.contact-signin-field-icon {
+  align-items: center;
+  color: #f29f04;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
+.contact-signin-field-text {
+  color: #ffffff;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.contact-signin-field-arrow {
+  align-items: center;
+  color: rgba(255, 255, 255, 0.75);
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+.contact-signin-field-btn:hover .contact-signin-field-arrow {
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+/* Verified Badge in Email Field */
+.contact-verified-badge {
+  align-items: center;
+  background: rgba(240, 253, 244, 0.95);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  border-radius: 9999px;
+  color: #15803d;
+  display: inline-flex;
+  font-size: 0.74rem;
+  font-weight: 700;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem;
+  pointer-events: none;
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.contact-input-wrapper--readonly input {
+  padding-right: 5.5rem !important;
+}
+
+/* Contact Alert Modal (Sign in prompt) */
+.contact-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 12, 8, 0.58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  animation: contactModalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes contactModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.contact-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 27rem;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 1.65rem;
+  box-shadow:
+    0 24px 65px -12px rgba(45, 26, 0, 0.25),
+    0 8px 24px -4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+  padding: clamp(1.75rem, 3.5vw, 2.25rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: contactModalScaleIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes contactModalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.contact-modal-close {
+  position: absolute;
+  top: 1.15rem;
+  right: 1.15rem;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #78716c;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.contact-modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1c1917;
+}
+
+.contact-modal-close:active {
+  transform: scale(0.92);
+}
+
+.contact-modal-icon-wrap {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: rgba(254, 240, 138, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  color: #b45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.2);
+}
+
+.contact-modal-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1c1917;
+  margin: 0 0 0.5rem;
+  line-height: 1.25;
+}
+
+.contact-modal-desc {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #57534e;
+  margin: 0 0 1rem;
+}
+
+.contact-modal-draft-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #15803d;
+  background: rgba(240, 253, 244, 0.85);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  margin-bottom: 1.35rem;
+}
+
+.contact-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.contact-modal-btn {
+  width: 100%;
+  height: 3.15rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.contact-modal-btn--primary {
+  background: #0a0a0a;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.28);
+}
+
+.contact-modal-btn--primary:hover {
+  background: #212121;
+  transform: translateY(-1.5px);
+  box-shadow: 0 12px 26px -4px rgba(0, 0, 0, 0.35);
+}
+
+.contact-modal-btn--primary:active {
+  background: #000000;
+  transform: scale(0.985);
+}
+
+.contact-modal-btn--secondary {
+  background: rgba(255, 255, 255, 0.85);
+  color: #1c1917;
+  border: 1.5px solid rgba(214, 211, 209, 0.9);
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+}
+
+.contact-modal-btn--secondary:hover {
+  background: #ffffff;
+  border-color: #a8a29e;
+  transform: translateY(-1px);
+}
+
+.contact-modal-btn--secondary:active {
+  transform: scale(0.985);
+}
+
+.contact-modal-dismiss {
+  margin-top: 0.9rem;
+  background: transparent;
+  border: none;
+  color: #78716c;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  border-radius: 9999px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.contact-modal-dismiss:hover {
+  color: #1c1917;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-modal-backdrop,
+  .contact-modal-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Custom Dropdown Selection */

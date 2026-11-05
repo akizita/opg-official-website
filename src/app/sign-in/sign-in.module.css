@@ -1,0 +1,1093 @@
+/* ==========================================================================
+   Sign In Page Styles (Outsource Pro Global Portal)
+   - Centered viewport layout with zero unwanted scrollbar on desktop
+   - Plain white base with articles page aurora gradients
+   - Left-aligned left hero content and clean split layout
+   - Pure see-through glassmorphic login card (no orange accent card behind)
+   - Pill-shaped inputs, pill-shaped Google button, pill-shaped black submit button
+   ========================================================================== */
+
+.signInPage {
+  align-items: center;
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(ellipse at 8% 5%, rgba(255, 179, 0, 0.4) 0%, transparent 29rem),
+    radial-gradient(ellipse at 92% 30%, rgba(255, 220, 88, 0.36) 0%, transparent 31rem),
+    radial-gradient(ellipse at 45% 76%, rgba(255, 167, 22, 0.22) 0%, transparent 34rem),
+    radial-gradient(circle at 1px 1px, rgba(217, 136, 0, 0.12) 1px, transparent 1px),
+    linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
+  background-size: auto, auto, auto, 24px 24px, 100% 100%;
+  box-sizing: border-box;
+  color: #1c1917;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: clip;
+  padding: clamp(4.5rem, 8vh, 5.5rem) clamp(1rem, 3.5vw, 2.5rem) clamp(1.5rem, 3vh, 2.5rem);
+  position: relative;
+  width: 100%;
+}
+
+@media (min-width: 1025px) and (min-height: 600px) {
+  .signInPage {
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: hidden;
+  }
+}
+
+/* Atmospheric aurora glows matching the articles page */
+.signInPage::before {
+  background: conic-gradient(
+    from 205deg,
+    transparent 0deg,
+    rgba(255, 188, 31, 0.32) 72deg,
+    rgba(255, 226, 132, 0.22) 128deg,
+    transparent 205deg
+  );
+  border-radius: 50%;
+  content: '';
+  filter: blur(44px);
+  height: 42rem;
+  pointer-events: none;
+  position: absolute;
+  right: -10rem;
+  top: 4rem;
+  transform: rotate(-12deg);
+  width: 58rem;
+  z-index: 0;
+}
+
+.signInPage::after {
+  background: radial-gradient(
+    ellipse,
+    rgba(255, 174, 0, 0.24) 0%,
+    rgba(255, 216, 77, 0.1) 44%,
+    transparent 72%
+  );
+  border-radius: 50%;
+  bottom: 2rem;
+  content: '';
+  filter: blur(36px);
+  height: 38rem;
+  left: -12rem;
+  pointer-events: none;
+  position: absolute;
+  width: 48rem;
+  z-index: 0;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-inline: auto;
+  max-width: min(100%, 74rem);
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Top Bar - Always pinned at the top-left corner
+   -------------------------------------------------------------------------- */
+.topStatusRow {
+  align-items: center;
+  display: flex;
+  justify-content: flex-start;
+  left: clamp(1.25rem, 3.5vw, 3.25rem);
+  margin: 0;
+  position: absolute;
+  top: clamp(1.25rem, 2.8vh, 2.5rem);
+  width: auto;
+  z-index: 50;
+}
+
+/* Unboxed Logo directly linking to Home page */
+.brandLink {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 2.85rem;
+  justify-content: center;
+  line-height: 1;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  text-decoration: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  width: 7.6rem;
+}
+
+.brandLink:hover {
+  opacity: 0.88;
+  transform: scale(1.02);
+}
+
+.brandLogoImg {
+  display: block;
+  height: 2.85rem;
+  object-fit: contain;
+  pointer-events: none;
+  transform: scale(2.45);
+  transform-origin: center center;
+  width: 2.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   Split Layout (2 Columns - Left Content Aligned Left)
+   -------------------------------------------------------------------------- */
+.splitLayout {
+  align-items: center;
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 3.25rem);
+  grid-template-columns: 1.08fr 0.92fr;
+  justify-content: center;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Left Column: Hero Copy & Security Cards (Aligned Left)
+   -------------------------------------------------------------------------- */
+.leftColumn {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  max-width: 35rem;
+  text-align: left;
+}
+
+.eyebrowBadge {
+  align-items: center;
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 9999px;
+  box-shadow:
+    0 2px 10px -2px rgba(74, 55, 20, 0.06),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  color: #b45309;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 700;
+  gap: 0.45rem;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.65rem;
+  padding: 0.3rem 0.85rem;
+}
+
+.heroHeadline {
+  color: #1c1917;
+  font-size: clamp(1.85rem, 2.7vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.14;
+  margin: 0 0 0.65rem;
+  text-align: left;
+  text-wrap: balance;
+}
+
+.highlightText {
+  background: linear-gradient(135deg, #f29f04 0%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline;
+}
+
+.heroSubtext {
+  color: #57534e;
+  font-size: clamp(0.88rem, 1vw, 0.98rem);
+  line-height: 1.5;
+  margin: 0 0 1.15rem;
+  max-width: 31rem;
+  text-align: left;
+  text-wrap: pretty;
+}
+
+/* 3 Feature/Security Cards in a Row (See-Through Glassmorphism) */
+.securityCardsGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.securityCard {
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: 1rem;
+  box-shadow:
+    0 8px 20px -4px rgba(74, 55, 20, 0.06),
+    0 2px 6px -1px rgba(0, 0, 0, 0.02),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 0.75rem;
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.securityCard:hover {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow:
+    0 12px 28px -4px rgba(74, 55, 20, 0.12),
+    0 4px 10px -2px rgba(0, 0, 0, 0.03),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+}
+
+.securityCardIconWrap {
+  align-items: center;
+  background: rgba(254, 240, 138, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 0.55rem;
+  color: #b45309;
+  display: flex;
+  height: 1.95rem;
+  justify-content: center;
+  width: 1.95rem;
+}
+
+.securityCardTitle {
+  color: #1c1917;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-align: left;
+}
+
+.securityCardSub {
+  color: #57534e;
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  text-align: left;
+}
+
+.leftColumnFooter {
+  border-top: 1px solid rgba(217, 119, 6, 0.15);
+  color: #78716c;
+  display: flex;
+  font-size: 0.76rem;
+  justify-content: flex-start;
+  padding-top: 0.75rem;
+  text-align: left;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Right Column: Elevated Form Card (See-Through Glassmorphism)
+   -------------------------------------------------------------------------- */
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+}
+
+/* Elevated Primary Login Card (Glassmorphic) */
+.loginCard {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(26px) saturate(190%);
+  -webkit-backdrop-filter: blur(26px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 20px 50px -15px rgba(74, 55, 20, 0.12),
+    0 6px 18px -4px rgba(0, 0, 0, 0.04),
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1);
+  padding: clamp(1.15rem, 1.8vh, 1.65rem) clamp(1.25rem, 2.2vw, 2rem);
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Card Header: Yellow Logo & Outsource Pro Global Title */
+.cardHeader {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.85rem;
+  text-align: center;
+}
+
+.cardLogoWrap {
+  align-items: center;
+  display: flex;
+  height: 4.5rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  position: relative;
+  width: 4.5rem;
+}
+
+.cardLogoImg {
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+  filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.22));
+}
+
+.cardTitle {
+  color: #1c1917;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 0 0 0.2rem;
+}
+
+.cardSubtitle {
+  color: #57534e;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* Session Notice */
+.sessionNotice {
+  background: rgba(254, 243, 199, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 0.85rem;
+  color: #92400e;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin-bottom: 0.85rem;
+  padding: 0.65rem 0.85rem;
+}
+
+.sessionActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.35rem;
+}
+
+.sessionActions a,
+.sessionActions button {
+  background: transparent;
+  border: none;
+  color: #b45309;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* Error Alert */
+.errorAlert {
+  align-items: center;
+  background: rgba(254, 242, 242, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 0.85rem;
+  color: #b91c1c;
+  display: flex;
+  font-size: 0.78rem;
+  font-weight: 600;
+  gap: 0.55rem;
+  line-height: 1.4;
+  margin-bottom: 0.85rem;
+  padding: 0.65rem 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   Segmented Tab Switcher (Sign In vs Sign Up)
+   -------------------------------------------------------------------------- */
+.authTabsRoot {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.tabContainer {
+  margin-bottom: 0.85rem;
+  width: 100%;
+}
+
+.tabList {
+  align-items: center;
+  background: rgba(245, 245, 244, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(231, 229, 228, 0.9);
+  border-radius: 9999px;
+  display: grid;
+  gap: 3px;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  position: relative;
+  user-select: none;
+}
+
+.tabButton {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 9999px;
+  color: #78716c;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.84rem;
+  font-weight: 600;
+  gap: 0.45rem;
+  height: 2.35rem;
+  justify-content: center;
+  line-height: 1;
+  outline: none;
+  padding: 0 0.85rem;
+  position: relative;
+  transition:
+    background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.14s ease;
+  z-index: 1;
+}
+
+.tabButton:hover:not(.tabButtonActive) {
+  background: rgba(255, 255, 255, 0.55);
+  color: #1c1917;
+}
+
+.tabButton:active {
+  transform: scale(0.97);
+}
+
+.tabButton:focus-visible {
+  box-shadow: 0 0 0 2px #f29f04;
+}
+
+.tabButtonActive {
+  background: #ffffff;
+  box-shadow:
+    0 2px 8px -1px rgba(74, 55, 20, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  color: #1c1917;
+  font-weight: 700;
+}
+
+.tabButtonIcon {
+  color: #f29f04;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.tabButtonActive .tabButtonIcon {
+  color: #d97706;
+  transform: scale(1.05);
+}
+
+/* Tab Panel Transition Animation */
+.tabPanel {
+  animation: tabSlideFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  width: 100%;
+}
+
+@keyframes tabSlideFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* OAuth Google Form (Pill-Shaped) */
+.oauthSection {
+  margin-bottom: 0.75rem;
+  width: 100%;
+}
+
+.oauthSection :global(.auth-oauth-form) {
+  width: 100%;
+}
+
+.oauthSection :global(.button--oauth) {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(231, 229, 228, 0.9);
+  border-radius: 9999px; /* Pill-shaped Google button */
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+  color: #292524;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.88rem;
+  font-weight: 700;
+  gap: 0.65rem;
+  height: 2.65rem;
+  justify-content: center;
+  padding: 0 1.25rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.oauthSection :global(.button--oauth:hover) {
+  background: #ffffff;
+  border-color: #d6d3d1;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+}
+
+.oauthSection :global(.button--oauth:active) {
+  transform: scale(0.985);
+}
+
+/* Divider */
+.divider {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.65rem 0 0.75rem;
+  width: 100%;
+}
+
+.dividerLine {
+  background: rgba(231, 229, 228, 0.8);
+  flex: 1;
+  height: 1px;
+}
+
+.dividerText {
+  color: #78716c;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Input Fields & Form Styles (Pill-Shaped Fields)
+   -------------------------------------------------------------------------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: 100%;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fieldLabel {
+  color: #292524;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Pill-shaped Input Wrapper */
+.inputWrapper {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(231, 229, 228, 0.85);
+  border-radius: 9999px; /* Pill-shaped inputs */
+  box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  height: 2.65rem;
+  padding: 0 1.15rem;
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  width: 100%;
+}
+
+.inputWrapper:focus-within {
+  background: #ffffff;
+  border-color: #f29f04;
+  box-shadow:
+    0 0 0 3px rgba(242, 159, 4, 0.18),
+    inset 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.inputIcon {
+  color: #78716c;
+  flex-shrink: 0;
+  margin-right: 0.55rem;
+}
+
+.inputControl {
+  background: transparent;
+  border: none;
+  color: #1c1917;
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 500;
+  height: 100%;
+  outline: none;
+  width: 100%;
+}
+
+.inputControl::placeholder {
+  color: #78716c;
+  font-weight: 400;
+}
+
+.passwordToggleBtn {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: #78716c;
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  padding: 0.2rem;
+  transition: color 0.15s ease, transform 0.12s ease;
+}
+
+.passwordToggleBtn:hover {
+  color: #1c1917;
+}
+
+.passwordToggleBtn:active {
+  transform: scale(0.9);
+}
+
+/* Utilities Row: Remember Me & Forgot Password */
+.utilitiesRow {
+  align-items: center;
+  display: flex;
+  font-size: 0.8rem;
+  justify-content: space-between;
+  margin-top: -0.15rem;
+  width: 100%;
+}
+
+.rememberMeLabel {
+  align-items: center;
+  color: #57534e;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 500;
+  gap: 0.45rem;
+  user-select: none;
+}
+
+.rememberMeCheckbox {
+  accent-color: #f29f04;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  height: 1rem;
+  width: 1rem;
+}
+
+.forgotPasswordLink {
+  color: #d97706;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.forgotPasswordLink:hover {
+  color: #b45309;
+  text-decoration: underline;
+}
+
+/* Submit Button (Pill-Shaped and Black) */
+.submitButton {
+  align-items: center;
+  background: #0a0a0a; /* Black */
+  border: none;
+  border-radius: 9999px; /* Pill-shaped */
+  box-shadow:
+    0 8px 22px -4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.92rem;
+  font-weight: 700;
+  gap: 0.55rem;
+  height: 2.75rem;
+  justify-content: center;
+  margin-top: 0.2rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  width: 100%;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #212121;
+  box-shadow:
+    0 12px 28px -4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transform: translateY(-1.5px);
+}
+
+.submitButton:active:not(:disabled) {
+  background: #000000;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.3);
+  transform: scale(0.985) translateY(0);
+}
+
+.submitButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Micro Trust Badges Inside Card */
+.cardSecurityRow {
+  align-items: center;
+  border-top: 1px solid rgba(231, 229, 228, 0.6);
+  color: #57534e;
+  display: flex;
+  font-size: 0.72rem;
+  font-weight: 600;
+  gap: 0.95rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  width: 100%;
+}
+
+.microBadge {
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.microBadgeIcon {
+  color: #f29f04;
+}
+
+/* Card Bottom Notice & Create Account */
+.cardFooterLinks {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+.signupPrompt {
+  color: #57534e;
+  font-size: 0.82rem;
+}
+
+.signupPrompt a {
+  color: #d97706;
+  font-weight: 800;
+  margin-left: 0.35rem;
+  text-decoration: none;
+}
+
+.signupPrompt a:hover {
+  text-decoration: underline;
+}
+
+.switchTabLink {
+  background: transparent;
+  border: none;
+  color: #d97706;
+  cursor: pointer;
+  display: inline;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 800;
+  margin-left: 0.35rem;
+  padding: 0;
+  text-decoration: none;
+  transition: color 0.15s ease, transform 0.12s ease;
+}
+
+.switchTabLink:hover {
+  color: #b45309;
+  text-decoration: underline;
+}
+
+.switchTabLink:active {
+  transform: scale(0.96);
+}
+
+/* Password Requirement Helper Hint */
+.fieldHint {
+  align-items: flex-start;
+  color: #78716c;
+  display: flex;
+  font-size: 0.74rem;
+  gap: 0.4rem;
+  line-height: 1.4;
+  margin: -0.15rem 0 0.2rem;
+  padding: 0 0.5rem;
+}
+
+.fieldHintIcon {
+  color: #f29f04;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* Sign Up Success Feedback Card */
+.successCard {
+  align-items: center;
+  animation: tabSlideFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  background: rgba(240, 253, 244, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  border-radius: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.5rem 1.15rem;
+  text-align: center;
+  width: 100%;
+}
+
+.successIconWrap {
+  align-items: center;
+  background: #dcfce7;
+  border-radius: 50%;
+  color: #16a34a;
+  display: flex;
+  height: 3rem;
+  justify-content: center;
+  margin-bottom: 0.2rem;
+  width: 3rem;
+}
+
+.successTitle {
+  color: #15803d;
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.successMessage {
+  color: #166534;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0 0 0.55rem;
+  max-width: 22rem;
+}
+
+/* Out-of-card bottom footer */
+.cardOuterFooter {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+  text-align: center;
+  width: 100%;
+}
+
+.termsNotice {
+  color: #78716c;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.termsNotice a {
+  color: #57534e;
+  text-decoration: underline;
+}
+
+.termsNotice a:hover {
+  color: #1c1917;
+}
+
+.mobileCopyright {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Media Queries (Fully responsive up to mobile)
+   - On tablet & mobile (<=1024px), the left column is removed to focus solely on the login form
+   - Login card remains cleanly centered with zero awkward horizontal scrolling
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .signInPage {
+    align-items: center;
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding-bottom: 2.5rem;
+    padding-top: clamp(4.25rem, 8vh, 5.25rem);
+  }
+
+  .topStatusRow {
+    left: 1.25rem;
+    top: 1.25rem;
+  }
+
+  .leftColumn {
+    display: none !important;
+  }
+
+  .splitLayout {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  .rightColumn {
+    margin-inline: auto;
+    max-width: 28rem;
+    width: 100%;
+  }
+
+  .mobileCopyright {
+    color: #78716c;
+    display: block;
+    font-size: 0.74rem;
+    margin-top: 0.45rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .signInPage {
+    align-items: flex-start;
+    padding-bottom: 2rem;
+    padding-inline: clamp(0.75rem, 3.5vw, 1.25rem);
+    padding-top: 4.25rem;
+  }
+
+  .topStatusRow {
+    left: 1rem;
+    top: 1rem;
+  }
+
+  .brandLink {
+    height: 2.5rem;
+    width: 6.8rem;
+  }
+
+  .brandLogoImg {
+    height: 2.5rem;
+    transform: scale(2.3);
+    width: 2.5rem;
+  }
+
+  .rightColumn {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .loginCard {
+    border-radius: 1.35rem;
+    box-sizing: border-box;
+    padding: 1.35rem 1rem;
+    width: 100%;
+  }
+
+  .cardLogoWrap {
+    height: 3.85rem;
+    margin-bottom: 0.35rem;
+    width: 3.85rem;
+  }
+
+  .cardTitle {
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  .cardSubtitle {
+    font-size: 0.78rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .tabContainer {
+    margin-bottom: 0.85rem;
+  }
+
+  .tabButton {
+    font-size: 0.88rem;
+    padding: 0.45rem 0.65rem;
+  }
+
+  .inputControl {
+    font-size: 1rem; /* Prevents auto-zoom on iOS Safari */
+  }
+
+  .inputWrapper {
+    height: 2.85rem;
+  }
+
+  .submitButton {
+    height: 2.85rem;
+  }
+
+  .cardSecurityRow {
+    flex-wrap: wrap;
+    gap: 0.45rem 0.85rem;
+    justify-content: center;
+  }
+
+  .cardSecurityItem {
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .loginCard {
+    padding: 1.15rem 0.85rem;
+  }
+
+  .cardTitle {
+    font-size: 1.15rem;
+  }
+
+  .tabButton {
+    font-size: 0.82rem;
+    gap: 0.35rem;
+  }
+
+  .formField label {
+    font-size: 0.78rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabPanel,
+  .successCard {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .tabButton,
+  .submitButton,
+  .switchTabLink,
+  .passwordToggleBtn {
+    transition: none;
+    transform: none !important;
+  }
+}

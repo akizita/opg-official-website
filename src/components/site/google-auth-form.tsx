@@ -1,10 +1,23 @@
 import { visitorGoogleSignInAction } from '@/app/sign-in/actions'
 
-export function GoogleAuthForm({ next = '/contact' }: { next?: string }) {
+export function GoogleAuthForm({
+  next = '/contact',
+  compact = false,
+  buttonClassName,
+}: {
+  next?: string
+  compact?: boolean
+  buttonClassName?: string
+} = {}) {
   return (
     <form action={visitorGoogleSignInAction} className="auth-oauth-form">
       <input name="next" type="hidden" value={next} />
-      <button className="button button--oauth" type="submit">
+      <button
+        aria-label="Continue with Google"
+        className={buttonClassName || 'button button--oauth'}
+        title="Continue with Google"
+        type="submit"
+      >
         <svg
           aria-hidden="true"
           className="button__icon"
@@ -29,7 +42,7 @@ export function GoogleAuthForm({ next = '/contact' }: { next?: string }) {
             fill="#EA4335"
           />
         </svg>
-        <span>Continue with Google</span>
+        {!compact && <span>Continue with Google</span>}
       </button>
     </form>
   )

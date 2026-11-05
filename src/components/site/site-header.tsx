@@ -100,6 +100,15 @@ export function SiteHeader() {
     }
   }, [pathname])
 
+  if (
+    pathname === '/sign-in' ||
+    pathname === '/sign-up' ||
+    pathname.startsWith('/sign-in/') ||
+    pathname.startsWith('/sign-up/')
+  ) {
+    return null
+  }
+
   const currentAuth = auth?.pathname === pathname ? auth : null
   const isCareersRoute = pathname.startsWith('/careers')
 
@@ -152,11 +161,8 @@ export function SiteHeader() {
           <div
             className={`site-header__auth ${isCareersRoute ? 'site-header__auth--quiet' : ''}`.trim()}
           >
-            <Link className="site-header__login" href="/sign-in">
-              Log in
-            </Link>
-            <Link className="site-header__signup" href="/sign-up">
-              Sign up
+            <Link className="site-header__signup" href="/sign-in">
+              Sign-in
             </Link>
           </div>
         ) : (
@@ -212,20 +218,12 @@ export function SiteHeader() {
             {currentAuth && !currentAuth.email && (
               <div className="mobile-nav__auth">
                 <Link
-                  className="site-header__login"
+                  className="site-header__signup"
                   href="/sign-in"
                   onClick={() => setMobileOpen(false)}
                   tabIndex={mobileOpen ? undefined : -1}
                 >
-                  Log in
-                </Link>
-                <Link
-                  className="site-header__signup"
-                  href="/sign-up"
-                  onClick={() => setMobileOpen(false)}
-                  tabIndex={mobileOpen ? undefined : -1}
-                >
-                  Sign up
+                  Sign-in
                 </Link>
               </div>
             )}

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { ArrowUpRight01Icon, Mail01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
@@ -17,6 +16,7 @@ import { getVisitorSession } from '@/lib/auth/visitor-session'
 import { createClient } from '@/lib/supabase/server'
 
 export const revalidate = 3600 // 1 hour ISR
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
@@ -169,31 +169,10 @@ export default async function ContactPage({
               tabIndex={-1}
               trackPointerWhileFocused
             >
-              {visitor ? (
-                <ContactForm copy={copy} signedInEmail={visitor.email} />
-              ) : (
-                <div className="contact-signin">
-                  <h2>Sign in to send a message</h2>
-                  <p>
-                    Use your OPG account to send an inquiry and help us reply to
-                    the right address.
-                  </p>
-                  <div className="public-account-actions">
-                    <Link
-                      className="button-link button-link--primary"
-                      href="/sign-in?next=/contact"
-                    >
-                      Sign in
-                    </Link>
-                    <Link
-                      className="button-link button-link--secondary"
-                      href="/sign-up"
-                    >
-                      Create an account
-                    </Link>
-                  </div>
-                </div>
-              )}
+              <ContactForm
+                copy={copy}
+                signedInEmail={visitor?.email || ''}
+              />
             </SpotlightCard>
           </div>
         </div>
