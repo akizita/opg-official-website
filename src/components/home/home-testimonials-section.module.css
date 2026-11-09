@@ -1,0 +1,389 @@
+/* ==========================================================================
+   Home Testimonials Section Styles
+   - Radiant yellow aurora background with soft ambient glowing patches
+   - 2-column layout: Refined copy & CTA on left, cascading glassmorphic cards on right
+   - See-through glassmorphic cards with crisp borders and warm gold accents
+   - Fully responsive for mobile and tablet
+   ========================================================================== */
+
+.testimonialsSection {
+  background-color: #fffaf0;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 15% 25%, rgba(254, 240, 138, 0.65) 0%, transparent 65%),
+    radial-gradient(ellipse 75% 60% at 85% 45%, rgba(253, 224, 71, 0.45) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 50% 80%, rgba(251, 191, 36, 0.3) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 85% 85%, rgba(254, 240, 138, 0.5) 0%, transparent 60%),
+    linear-gradient(180deg, #fffaf0 0%, #fffdf8 30%, #fffdf8 70%, #fffaf0 100%);
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: clamp(4.5rem, 8vw, 7rem) 0;
+  position: relative;
+  width: 100%;
+}
+
+/* Seamless soft blend overlay at the top connecting with Careers section */
+.testimonialsSection::before {
+  background: linear-gradient(
+    to bottom,
+    #fffaf0 0%,
+    rgba(255, 250, 240, 0.5) 50%,
+    transparent 100%
+  );
+  content: '';
+  height: clamp(6rem, 12vw, 12rem);
+  inset: 0 0 auto 0;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Seamless soft blend overlay at the bottom connecting with CTA section */
+.testimonialsSection::after {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 250, 240, 0.5) 50%,
+    #fffaf0 100%
+  );
+  bottom: 0;
+  content: '';
+  height: clamp(6rem, 12vw, 12rem);
+  inset: auto 0 0 0;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Ambient Yellow Aurora Glow Patches
+   -------------------------------------------------------------------------- */
+.auroraGlow1 {
+  background: radial-gradient(circle, rgba(253, 224, 71, 0.45) 0%, rgba(251, 191, 36, 0.18) 50%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(80px);
+  height: clamp(24rem, 40vw, 36rem);
+  opacity: 0.75;
+  pointer-events: none;
+  position: absolute;
+  right: -5%;
+  top: 5%;
+  width: clamp(24rem, 40vw, 36rem);
+  z-index: 0;
+}
+
+.auroraGlow2 {
+  background: radial-gradient(circle, rgba(254, 240, 138, 0.6) 0%, rgba(245, 158, 11, 0.2) 50%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(85px);
+  height: clamp(26rem, 42vw, 38rem);
+  left: -8%;
+  opacity: 0.7;
+  pointer-events: none;
+  position: absolute;
+  top: 40%;
+  width: clamp(26rem, 42vw, 38rem);
+  z-index: 0;
+}
+
+.auroraGlow3 {
+  background: radial-gradient(circle, rgba(254, 243, 199, 0.55) 0%, rgba(251, 191, 36, 0.16) 45%, transparent 70%);
+  border-radius: 50%;
+  bottom: -10%;
+  filter: blur(75px);
+  height: clamp(20rem, 32vw, 30rem);
+  opacity: 0.65;
+  pointer-events: none;
+  position: absolute;
+  right: 25%;
+  width: clamp(20rem, 32vw, 30rem);
+  z-index: 0;
+}
+
+.container {
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
+  position: relative;
+  z-index: 1;
+}
+
+.splitGrid {
+  align-items: center;
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 5rem);
+  grid-template-columns: 0.95fr 1.05fr;
+  width: 100%;
+}
+
+@media (max-width: 991px) {
+  .splitGrid {
+    gap: 3rem;
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Left Column: Copy & Action
+   -------------------------------------------------------------------------- */
+.leftColumn {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  text-align: left;
+}
+
+.eyebrowBadge {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(254, 240, 138, 0.6);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 9999px;
+  color: #b45309;
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 750;
+  gap: 0.45rem;
+  letter-spacing: 0.03em;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem 0.95rem;
+  text-transform: uppercase;
+}
+
+.headline {
+  color: #1c1917;
+  font-size: clamp(2.4rem, 4.2vw, 3.4rem);
+  font-weight: 850;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  margin: 0 0 1.25rem;
+  text-wrap: balance;
+}
+
+.headlineHighlight {
+  background: linear-gradient(135deg, #1c1917 0%, #44403c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline;
+}
+
+.description {
+  color: #57534e;
+  font-size: clamp(0.95rem, 1.15vw, 1.06rem);
+  line-height: 1.65;
+  margin: 0 0 2rem;
+  max-width: 29rem;
+}
+
+.viewMoreBtn {
+  align-items: center;
+  background: linear-gradient(135deg, #f29f04 0%, #ea580c 100%);
+  border: none;
+  border-radius: 9999px;
+  box-shadow:
+    0 10px 25px -5px rgba(234, 88, 12, 0.4),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.95rem;
+  font-weight: 750;
+  gap: 0.55rem;
+  height: 3.125rem;
+  justify-content: center;
+  padding: 0 1.85rem;
+  text-decoration: none;
+  transition:
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.viewMoreBtn:hover {
+  box-shadow:
+    0 14px 32px -4px rgba(234, 88, 12, 0.52),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
+  filter: brightness(1.04);
+  transform: translateY(-2px);
+}
+
+.viewMoreBtn:active {
+  transform: scale(0.98);
+}
+
+/* --------------------------------------------------------------------------
+   Right Column: Cascading Floating Glassmorphic Cards
+   -------------------------------------------------------------------------- */
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.35rem);
+  position: relative;
+  width: 100%;
+}
+
+.cardsCascade {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.35rem);
+  position: relative;
+  width: 100%;
+}
+
+/* Card Outer Wrapper for Staggered Offsets */
+.cardWrapper {
+  position: relative;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+/* Offset 1 (Top Card shifted slightly right) */
+.cardWrapperOffset1 {
+  padding-left: clamp(1.25rem, 3.5vw, 3.25rem);
+}
+
+/* Offset 2 (Middle Card shifted slightly left) */
+.cardWrapperOffset2 {
+  padding-right: clamp(1.25rem, 3.5vw, 3.25rem);
+}
+
+/* Offset 3 (Bottom Card shifted slightly right) */
+.cardWrapperOffset3 {
+  padding-left: clamp(1.75rem, 4.5vw, 4.25rem);
+}
+
+@media (max-width: 991px) {
+  .cardWrapperOffset1,
+  .cardWrapperOffset2,
+  .cardWrapperOffset3 {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   See-Through Glassmorphism Card Component
+   -------------------------------------------------------------------------- */
+.card {
+  align-items: flex-start;
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 18px 40px -12px rgba(180, 83, 9, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.02),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  display: flex;
+  gap: 1.15rem;
+  padding: clamp(1.15rem, 2vw, 1.45rem);
+  position: relative;
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    background-color 220ms ease;
+  user-select: none;
+  width: 100%;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.74);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow:
+    0 24px 50px -12px rgba(245, 158, 11, 0.16),
+    0 6px 20px rgba(0, 0, 0, 0.03),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+}
+
+/* Active Highlight Card (Clean glass halo, no vertical vibe lines) */
+.cardActive {
+  background: rgba(255, 255, 255, 0.76);
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow:
+    0 26px 56px -12px rgba(245, 158, 11, 0.22),
+    0 8px 24px -4px rgba(0, 0, 0, 0.04),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+
+/* Circular Avatar */
+.avatarWrap {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+  height: clamp(3.25rem, 4.2vw, 3.75rem);
+  overflow: hidden;
+  position: relative;
+  width: clamp(3.25rem, 4.2vw, 3.75rem);
+}
+
+.avatarImg {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+/* Card Text Body */
+.cardBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cardHeaderRow {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.authorName {
+  color: #1c1917;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.quoteMark {
+  color: rgba(245, 158, 11, 0.35);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.85;
+  transition: color 180ms ease, transform 180ms ease;
+  user-select: none;
+}
+
+.cardActive .quoteMark {
+  color: #f59e0b;
+  transform: scale(1.08);
+}
+
+.authorRole {
+  color: #b45309;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+}
+
+.quoteText {
+  color: #44403c;
+  font-size: clamp(0.85rem, 1vw, 0.92rem);
+  line-height: 1.55;
+  margin: 0;
+}

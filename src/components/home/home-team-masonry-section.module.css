@@ -1,0 +1,266 @@
+/* ==========================================================================
+   Home Team Masonry Section Styles
+   - 2-column layout: Equal-height narrative on left and compact photo gallery on right
+   - Yellow glass effect CTA button
+   - Fully responsive for mobile, tablet, and desktop
+   ========================================================================== */
+
+.teamSection {
+  position: relative;
+  width: 100%;
+  margin-top: clamp(3rem, 5vw, 4.5rem);
+  padding-top: clamp(2.5rem, 4vw, 3.5rem);
+  border-top: 1px solid rgba(242, 159, 4, 0.2);
+  box-sizing: border-box;
+}
+
+.teamGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  gap: clamp(2rem, 3.5vw, 3.5rem);
+  align-items: stretch;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Left Column: Header, Highlights & CTA (Equal Height with Masonry)
+   -------------------------------------------------------------------------- */
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+.leftContentTop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.eyebrowBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #8c5300;
+  background: rgba(242, 159, 4, 0.12);
+  border: 1px solid rgba(242, 159, 4, 0.25);
+  padding: 0.22rem 0.75rem;
+  border-radius: 9999px;
+  margin-bottom: 0.65rem;
+  box-shadow: 0 1px 4px rgba(242, 159, 4, 0.08);
+}
+
+.eyebrowDot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: #f59e0b;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+
+.title {
+  font-size: clamp(1.8rem, 2.7vw, 2.4rem);
+  line-height: 1.16;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  font-weight: 800;
+  margin: 0 0 0.65rem;
+}
+
+.titleAccent {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline;
+}
+
+.description {
+  font-size: clamp(0.85rem, 1vw, 0.95rem);
+  line-height: 1.55;
+  color: #475569;
+  margin: 0 0 1rem;
+}
+
+/* Feature Highlights */
+.highlightsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  margin: 0 0 1rem;
+}
+
+.highlightItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 4px 12px rgba(217, 130, 0, 0.05),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.9);
+}
+
+.highlightIcon {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: rgba(242, 159, 4, 0.14);
+  border: 1px solid rgba(242, 159, 4, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8c5300;
+}
+
+.highlightText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.highlightTitle {
+  font-size: 0.82rem;
+  font-weight: 750;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.highlightDesc {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* --------------------------------------------------------------------------
+   CTA Action: Yellow Glass Effect Button
+   -------------------------------------------------------------------------- */
+.actionRow {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.teamGlassBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 9999px;
+  padding: 0.75rem 2.1rem;
+  font-weight: 750;
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+  color: #1a1400 !important;
+  text-decoration: none;
+  background: linear-gradient(
+    135deg,
+    rgba(245, 166, 35, 0.9) 0%,
+    rgba(242, 183, 5, 0.8) 100%
+  );
+  backdrop-filter: blur(16px) saturate(190%);
+  -webkit-backdrop-filter: blur(16px) saturate(190%);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 2px 0 rgba(180, 83, 9, 0.2),
+    0 8px 22px -4px rgba(217, 130, 0, 0.35),
+    0 2px 6px 0 rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.teamGlassBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.65) 0%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.teamGlassBtn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(234, 150, 0, 0.96) 0%,
+    rgba(245, 175, 4, 0.88) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.95);
+  color: #0d0d0d !important;
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 1),
+    0 12px 28px -4px rgba(217, 130, 0, 0.45),
+    0 0 16px rgba(242, 159, 4, 0.35);
+}
+
+.teamGlassBtn:active {
+  transform: scale(0.98);
+}
+
+.btnArrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.teamGlassBtn:hover .btnArrow {
+  transform: translateX(3px);
+}
+
+/* --------------------------------------------------------------------------
+   Right Column: Masonry Wrapper
+   -------------------------------------------------------------------------- */
+.rightColumn {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 2;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Breakpoints
+   -------------------------------------------------------------------------- */
+@media (max-width: 64rem) {
+  .teamGrid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: flex-start;
+  }
+
+  .leftColumn {
+    height: auto;
+  }
+
+  .actionRow {
+    margin-top: 1.25rem;
+  }
+}

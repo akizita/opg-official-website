@@ -6,17 +6,19 @@ import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { Aurora } from '@/components/ui/aurora'
 import { ButtonLink } from '@/components/ui/button-link'
 import { DotField } from '@/components/ui/dot-field'
+import { HomeCareersCarousel } from '@/components/home/home-careers-carousel'
+import { HomeCandidateTestimonialsSection } from '@/components/home/home-candidate-testimonials-section'
+import { HomeContactCtaSection } from '@/components/home/home-contact-cta-section'
+import { HomeTeamMasonrySection } from '@/components/home/home-team-masonry-section'
+import { HomeTestimonialsSection } from '@/components/home/home-testimonials-section'
 import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { SpotlightCard } from '@/components/ui/spotlight-card'
-import { Threads } from '@/components/ui/threads'
-import {
-  getPublishedTestimonials,
-  getVisibleClients,
-} from '@/lib/content/clients'
+import { getVisibleClients } from '@/lib/content/clients'
 import type { PageDocument } from '@/lib/content/page-documents'
 import { getPageCopy, HOME_COPY_SECTIONS } from '@/lib/content/page-copy'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
 import { getVisiblePageDocument } from '@/lib/content/visible-page-document'
+import { getCareersFeed } from '@/lib/jazzhr/client'
 import { createClient } from '@/lib/supabase/server'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 
@@ -70,10 +72,14 @@ export default async function HomePage({
   const { opgPreview } = await searchParams
   const supabase = await createClient()
 
-  const [homeDoc, clients, testimonials] = await Promise.all([
+  const [homeDoc, clients, careersFeed] = await Promise.all([
     getVisiblePageDocument(supabase, 'home', opgPreview === '1'),
     getVisibleClients(),
-    getPublishedTestimonials(),
+    getCareersFeed().catch(() => ({
+      configured: false,
+      fetchedAt: null,
+      jobs: [],
+    })),
   ])
 
   const heroTitle =
@@ -82,8 +88,6 @@ export default async function HomePage({
     homeDoc?.summary ||
     'Outsourced Pro Global helps organizations build strong teams and helps professionals discover their next opportunity.'
   const copy = getPageCopy(homeDoc?.content, HOME_COPY_SECTIONS)
-
-  const featuredTestimonial = testimonials[0]
 
   return (
     <>
@@ -264,10 +268,15 @@ export default async function HomePage({
               {copy.aboutEmphasis}
             </p>
             <div className="about-overview__action">
-              <ButtonLink href="/about">{copy.aboutCta}</ButtonLink>
+              <ButtonLink className="about-overview__glass-btn" href="/about">
+                {copy.aboutCta}
+              </ButtonLink>
             </div>
           </div>
         </div>
+
+        {/* Extended Team Overview Section: 2-Column with Header/Copy and React Bits Masonry Gallery */}
+        <HomeTeamMasonrySection />
       </section>
 
       {/* Global Showcase Band: Unified Background extending across Offshore Map, Mission, Vision & Core Values */}
@@ -292,6 +301,8 @@ export default async function HomePage({
           hideDotField
           layout="two-column"
           variant="overview"
+          showEyebrow={false}
+          showTabs={false}
           ctaHref="/about"
           ctaText={copy.networkCta}
           title={
@@ -306,6 +317,23 @@ export default async function HomePage({
           copy={copy}
         />
       </div>
+
+      {/* Careers Overview Section (Modern Carousel right after Global Reach) */}
+      <HomeCareersCarousel initialJobs={careersFeed.jobs} />
+
+      {/* Testimonials Section (Cascading Inspo Design right after Careers) */}
+      <HomeTestimonialsSection />
+
+      {/* Candidate Testimonials Section (Bento Grid Inspo Design with Golden Aurora & Glassmorphism) */}
+      <HomeCandidateTestimonialsSection />
+
+      {/* Strategic Contact Us CTA Section (Matching Inspo with DotField and Sweeping Golden Torus Arcs) */}
+      <HomeContactCtaSection
+        description={copy.ctaBody}
+        eyebrow={copy.ctaEyebrow}
+        primaryCtaText={copy.ctaPrimary}
+        title={copy.ctaTitle}
+      />
 
       {/* Social Proof Strip */}
       {clients.length > 0 && (
@@ -328,101 +356,6 @@ export default async function HomePage({
           </div>
         </section>
       )}
-
-      {/* Featured Testimonial Quote */}
-      {featuredTestimonial && (
-        <section
-          className="section section--ink"
-          aria-labelledby="testimonial-heading"
-        >
-          <div className="container split-panel">
-            <div>
-              <p className="eyebrow eyebrow--light">
-                {copy.testimonialEyebrow}
-              </p>
-              <h2 id="testimonial-heading">
-                &ldquo;{featuredTestimonial.quote}&rdquo;
-              </h2>
-              <p className="testimonial-author">
-                — {featuredTestimonial.author_name},{' '}
-                {featuredTestimonial.author_role} (
-                {featuredTestimonial.author_company})
-              </p>
-            </div>
-            <div>
-              <p>{copy.testimonialBody}</p>
-              <ButtonLink href="/clients" variant="secondary">
-                {copy.testimonialCta}
-              </ButtonLink>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Final Dual-Conversion CTA Section — Liquid Glass + Photo Layout */}
-      <section className="cta-section" aria-labelledby="cta-heading">
-        <div aria-hidden="true" className="cta-section__threads">
-          <Threads
-            color={[1, 1, 1]}
-            amplitude={1.35}
-            distance={0.25}
-            enableMouseInteraction={true}
-          />
-        </div>
-        <div className="container cta-section__container">
-          <div className="cta-liquid-card">
-            {/* Left: Photo Panel */}
-            <div className="cta-liquid-card__photo" aria-hidden="true">
-              <Image
-                src="https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/general/logo-1789740351319.png"
-                alt="Outsource Pro Global"
-                fill
-                className="cta-liquid-card__img"
-                sizes="(max-width: 62rem) 100vw, 45vw"
-              />
-              {/* Liquid glass glare overlay on photo */}
-              <div
-                aria-hidden="true"
-                className="cta-liquid-card__photo-glare"
-              />
-            </div>
-
-            {/* Right: Content Panel */}
-            <div className="cta-liquid-card__body">
-              <div className="cta-glass-card__badge">
-                <span
-                  aria-hidden="true"
-                  className="cta-glass-card__badge-dot"
-                />
-                <span>{copy.ctaEyebrow}</span>
-              </div>
-              <h2
-                id="cta-heading"
-                className="cta-liquid-card__title"
-                style={{ whiteSpace: 'pre-line' }}
-              >
-                {copy.ctaTitle}
-              </h2>
-              <p className="cta-liquid-card__desc">{copy.ctaBody}</p>
-              <div className="cta-liquid-card__actions">
-                <ButtonLink
-                  href="/contact"
-                  className="cta-pill-btn cta-pill-btn--primary"
-                >
-                  {copy.ctaPrimary}
-                </ButtonLink>
-                <ButtonLink
-                  href="/careers"
-                  variant="secondary"
-                  className="cta-pill-btn cta-pill-btn--ghost"
-                >
-                  {copy.ctaSecondary}
-                </ButtonLink>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </>
   )
 }

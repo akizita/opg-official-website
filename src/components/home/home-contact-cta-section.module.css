@@ -1,0 +1,289 @@
+/* ==========================================================================
+   Home Contact Us CTA Section Styles
+   - Dot-field interactive background with ambient yellow aurora glow
+   - Smooth soft-blending connection with Testimonials section (#fffaf0)
+   - Matches inspo layout with dual sweeping 3D torus arcs (golden amber)
+   - Luminous framed banner card with rounded corners and see-through glass
+   - Center-focused conversion layout with pill badge, title, subtitle & CTA
+   - High-contrast, polished typography following OPG brand guidelines
+   ========================================================================== */
+
+.ctaSection {
+  background-color: #fffaf0;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 50% 50%, rgba(254, 240, 138, 0.55) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 15% 30%, rgba(251, 191, 36, 0.25) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 85% 70%, rgba(245, 158, 11, 0.2) 0%, transparent 65%),
+    linear-gradient(180deg, #fffaf0 0%, #fffbf2 30%, #fffdf8 70%, #ffffff 100%);
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: clamp(4.5rem, 8vw, 7.5rem) 0;
+  position: relative;
+  width: 100%;
+}
+
+/* Seamless soft blend overlay at the top connecting with Testimonials section */
+.ctaSection::before {
+  background: linear-gradient(
+    to bottom,
+    #fffaf0 0%,
+    rgba(255, 250, 240, 0.55) 50%,
+    transparent 100%
+  );
+  content: '';
+  height: clamp(6rem, 12vw, 12rem);
+  inset: 0 0 auto 0;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Interactive Dot-Field Background
+   -------------------------------------------------------------------------- */
+.ctaDotField {
+  height: 100%;
+  inset: 0;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.3) 6%,
+    rgba(0, 0, 0, 0.9) 15%,
+    rgba(0, 0, 0, 1) 25%,
+    rgba(0, 0, 0, 1) 75%,
+    rgba(0, 0, 0, 0.9) 85%,
+    rgba(0, 0, 0, 0.3) 94%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.3) 6%,
+    rgba(0, 0, 0, 0.9) 15%,
+    rgba(0, 0, 0, 1) 25%,
+    rgba(0, 0, 0, 1) 75%,
+    rgba(0, 0, 0, 0.9) 85%,
+    rgba(0, 0, 0, 0.3) 94%,
+    transparent 100%
+  );
+  opacity: 0.88;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  z-index: 0;
+}
+
+/* Ambient Section Aurora Glows */
+.sectionAurora1 {
+  background: radial-gradient(circle, rgba(254, 240, 138, 0.7) 0%, rgba(251, 191, 36, 0.22) 50%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(85px);
+  height: clamp(24rem, 40vw, 36rem);
+  left: 5%;
+  opacity: 0.65;
+  pointer-events: none;
+  position: absolute;
+  top: 10%;
+  width: clamp(24rem, 40vw, 36rem);
+  z-index: 1;
+}
+
+.sectionAurora2 {
+  background: radial-gradient(circle, rgba(253, 224, 71, 0.6) 0%, rgba(245, 158, 11, 0.2) 50%, transparent 70%);
+  border-radius: 50%;
+  bottom: 10%;
+  filter: blur(80px);
+  height: clamp(24rem, 40vw, 36rem);
+  opacity: 0.6;
+  pointer-events: none;
+  position: absolute;
+  right: 5%;
+  width: clamp(24rem, 40vw, 36rem);
+  z-index: 1;
+}
+
+.container {
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
+  position: relative;
+  z-index: 2;
+}
+
+/* --------------------------------------------------------------------------
+   Framed Hero CTA Banner Card
+   -------------------------------------------------------------------------- */
+.ctaCard {
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: clamp(1.75rem, 3.5vw, 2.5rem);
+  box-shadow:
+    0 24px 60px -15px rgba(245, 158, 11, 0.12),
+    0 6px 22px rgba(0, 0, 0, 0.03),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: clamp(3.5rem, 6.5vw, 5.5rem) clamp(1.5rem, 4vw, 3.5rem);
+  position: relative;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Sweeping 3D Torus Arcs (Inspo Graphic)
+   -------------------------------------------------------------------------- */
+.leftArcWrapper {
+  filter: drop-shadow(0 16px 36px rgba(234, 88, 12, 0.35));
+  height: auto;
+  left: clamp(-3.5rem, -3vw, -1rem);
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(16rem, 28vw, 24rem);
+  z-index: 1;
+}
+
+.rightArcWrapper {
+  filter: drop-shadow(0 16px 36px rgba(245, 158, 11, 0.35));
+  height: auto;
+  pointer-events: none;
+  position: absolute;
+  right: clamp(-3.5rem, -3vw, -1rem);
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(16rem, 28vw, 24rem);
+  z-index: 1;
+}
+
+.arcSvg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+@media (max-width: 991px) {
+  .leftArcWrapper,
+  .rightArcWrapper {
+    opacity: 0.45;
+    width: clamp(12rem, 24vw, 18rem);
+  }
+
+  .leftArcWrapper {
+    left: -2.5rem;
+  }
+
+  .rightArcWrapper {
+    right: -2.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .leftArcWrapper,
+  .rightArcWrapper {
+    opacity: 0.3;
+    width: 11rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Center Content Block
+   -------------------------------------------------------------------------- */
+.contentWrap {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  max-width: 44rem;
+  position: relative;
+  text-align: center;
+  z-index: 2;
+}
+
+.eyebrowChip {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(254, 240, 138, 0.6);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 9999px;
+  color: #b45309;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 750;
+  gap: 0.5rem;
+  letter-spacing: 0.03em;
+  margin-bottom: 1.35rem;
+  padding: 0.4rem 1.05rem;
+  text-transform: uppercase;
+}
+
+.chipGlowDot {
+  align-items: center;
+  color: #ea580c;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.headline {
+  color: #1c1917;
+  font-size: clamp(2.3rem, 4.4vw, 3.6rem);
+  font-weight: 850;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  margin: 0 0 1.25rem;
+  text-wrap: balance;
+  white-space: pre-line;
+}
+
+.description {
+  color: #57534e;
+  font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+  line-height: 1.65;
+  margin: 0 0 2.25rem;
+  max-width: 36rem;
+}
+
+.actionsRow {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.primaryCtaBtn {
+  align-items: center;
+  background: linear-gradient(135deg, #f29f04 0%, #ea580c 100%);
+  border: none;
+  border-radius: 9999px;
+  box-shadow:
+    0 12px 28px -5px rgba(234, 88, 12, 0.45),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.38);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: 750;
+  gap: 0.6rem;
+  height: 3.35rem;
+  justify-content: center;
+  padding: 0 2.25rem;
+  text-decoration: none;
+  transition:
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.primaryCtaBtn:hover {
+  box-shadow:
+    0 16px 36px -4px rgba(234, 88, 12, 0.55),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
+  filter: brightness(1.04);
+  transform: translateY(-2px);
+}
+
+.primaryCtaBtn:active {
+  transform: scale(0.98);
+}

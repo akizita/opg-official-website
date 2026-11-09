@@ -561,31 +561,6 @@ export function OffshoreMapSection({
 
               <p className="offshore-hub__split-summary">{resolvedSummary}</p>
 
-              {/* Interactive Region Chips for Quick Overview Filtering */}
-              <div
-                className="offshore-hub__split-filters"
-                role="tablist"
-                aria-label="Filter offshore locations by region"
-              >
-                {regions.map((region) => {
-                  const isActive = activeRegion === region
-                  return (
-                    <button
-                      key={region}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      className={`offshore-hub__split-chip ${
-                        isActive ? 'offshore-hub__split-chip--active' : ''
-                      }`}
-                      onClick={() => setActiveRegion(region)}
-                    >
-                      {region}
-                    </button>
-                  )
-                })}
-              </div>
-
               {/* Quick Metrics */}
               <div className="offshore-hub__split-metrics">
                 <div className="offshore-hub__split-metric-item">
@@ -614,17 +589,20 @@ export function OffshoreMapSection({
                 </div>
               </div>
 
-              {/* Action Button */}
+              {/* Action Button: Pill-shaped black with glass effect */}
               {ctaHref && (
                 <div className="offshore-hub__split-cta">
-                  <ButtonLink href={ctaHref} variant="secondary">
+                  <ButtonLink
+                    className="offshore-hub__pill-glass-btn"
+                    href={ctaHref}
+                  >
                     {ctaText || 'Explore our complete offshore model →'}
                   </ButtonLink>
                 </div>
               )}
             </motion.div>
 
-            {/* Right Column: World Map Viewport responding to active region */}
+            {/* Right Column: Interactive Region Selector + World Map Viewport */}
             <motion.div
               className="offshore-hub__split-right"
               initial={
@@ -634,6 +612,33 @@ export function OffshoreMapSection({
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
             >
+              {/* Interactive Region Chips positioned at the top of the map */}
+              {showTabs && (
+                <div
+                  className="offshore-hub__split-filters"
+                  role="tablist"
+                  aria-label="Filter offshore locations by region"
+                >
+                  {regions.map((region) => {
+                    const isActive = activeRegion === region
+                    return (
+                      <button
+                        key={region}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        className={`offshore-hub__split-chip ${
+                          isActive ? 'offshore-hub__split-chip--active' : ''
+                        }`}
+                        onClick={() => setActiveRegion(region)}
+                      >
+                        {region}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
               {mapViewport}
             </motion.div>
           </div>
