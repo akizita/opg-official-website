@@ -407,6 +407,7 @@ export const ABOUT_COPY_SECTIONS: readonly CopySection[] = [
         'Meet the leaders and domain specialists orchestrating seamless cross-border recruitment, airtight compliance, and sustained remote team retention.',
         true,
       ),
+      field('teamCta', 'Showcase button', 'Explore Careers'),
       field('directoryEyebrow', 'Directory eyebrow', 'Our People'),
       field(
         'directoryTitle',

@@ -9,6 +9,7 @@ import {
   type TouchEvent as ReactTouchEvent,
 } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 
 export interface TeamMemberData {
@@ -214,161 +215,193 @@ export function AboutTeamShowcase({
       aria-label="Our People Leadership Showcase"
     >
       <div className="container about-team-showcase__container">
+        {/* Ambient Yellow Aurora Glow Patches */}
+        <div
+          aria-hidden="true"
+          className="about-team-showcase__aurora-blob about-team-showcase__aurora-blob--left"
+        />
+        <div
+          aria-hidden="true"
+          className="about-team-showcase__aurora-blob about-team-showcase__aurora-blob--right"
+        />
+
+        {/* Section Header */}
+        <header className="about-team-header">
+          <div className="about-team-header__content">
+            <div className="about-team-badge" role="text">
+              <span aria-hidden="true" className="about-team-badge__dot" />
+              <span>{copy.teamEyebrow}</span>
+            </div>
+
+            <h2 className="about-team-title" id="about-team-showcase-title">
+              {copy.teamTitlePrefix}{' '}
+              <span className="about-team-title__accent">
+                {copy.teamTitleAccent}
+              </span>
+            </h2>
+
+            <p className="about-team-lead">{copy.teamLead}</p>
+          </div>
+
+          <div className="about-team-header__action">
+            <Link
+              className="about-team-cta-btn"
+              href="/careers"
+              aria-label="Explore career opportunities at Outsourced Pro Global"
+            >
+              <span>{copy.teamCta || 'Explore Careers'}</span>
+              <svg
+                aria-hidden="true"
+                className="about-team-cta-btn__arrow"
+                fill="none"
+                height="15"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.2"
+                viewBox="0 0 24 24"
+                width="15"
+              >
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </header>
+
         <div className="about-team-showcase__grid">
-          {/* Left Column: Headline, High-Contrast Paragraph & Info Card */}
+          {/* Left Column: Member Details Glass Card */}
           <div className="about-team-showcase__content-col">
-            {/* Soft Radial Backdrop to fade out dots behind headline & paragraph */}
-            <div
-              aria-hidden="true"
-              className="about-team-showcase__text-backdrop"
-            />
-
-            <header className="about-team-header">
-              <div className="about-team-badge" role="text">
-                <span aria-hidden="true" className="about-team-badge__dot" />
-                <span>{copy.teamEyebrow}</span>
-              </div>
-
-              <h2 className="about-team-title" id="about-team-showcase-title">
-                {copy.teamTitlePrefix}{' '}
-                <span className="about-team-title__accent">
-                  {copy.teamTitleAccent}
-                </span>
-              </h2>
-
-              {/* High contrast paragraph meeting WCAG AAA (>7:1) */}
-              <p className="about-team-lead">{copy.teamLead}</p>
-            </header>
-
-            {/* Member Details Card with Live Counter, 2-line Bio & LinkedIn Link */}
             <div aria-live="polite" className="about-team-card">
-              {/* Card Meta Top: Pill + Animated Zero-Padded Live Counter */}
-              <div className="about-team-card__meta">
-                <span className="about-team-card__pill">Leadership Pod</span>
+              <div className="about-team-card__body">
+                {/* Card Meta Top: Pill + Animated Zero-Padded Live Counter */}
+                <div className="about-team-card__meta">
+                  <span className="about-team-card__pill">Leadership Pod</span>
 
-                {/* Tabular numbers live counter with smooth roll */}
-                <div className="about-team-card__counter">
-                  <span className="about-team-card__counter-curr-box">
-                    <AnimatePresence mode="popLayout" initial={false}>
-                      <motion.span
-                        key={activeIndex}
-                        initial={
-                          shouldReduceMotion ? false : { y: -14, opacity: 0 }
-                        }
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={
-                          shouldReduceMotion ? undefined : { y: 14, opacity: 0 }
-                        }
-                        transition={{ duration: 0.2 }}
-                        className="about-team-card__counter-curr"
-                      >
-                        {String(activeIndex + 1).padStart(2, '0')}
-                      </motion.span>
-                    </AnimatePresence>
-                  </span>
-                  <span className="about-team-card__counter-sep">/</span>
-                  <span className="about-team-card__counter-total">
-                    {String(count).padStart(2, '0')}
-                  </span>
+                  {/* Tabular numbers live counter with smooth roll */}
+                  <div className="about-team-card__counter">
+                    <span className="about-team-card__counter-curr-box">
+                      <AnimatePresence mode="popLayout" initial={false}>
+                        <motion.span
+                          key={activeIndex}
+                          initial={
+                            shouldReduceMotion ? false : { y: -14, opacity: 0 }
+                          }
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={
+                            shouldReduceMotion ? undefined : { y: 14, opacity: 0 }
+                          }
+                          transition={{ duration: 0.2 }}
+                          className="about-team-card__counter-curr"
+                        >
+                          {String(activeIndex + 1).padStart(2, '0')}
+                        </motion.span>
+                      </AnimatePresence>
+                    </span>
+                    <span className="about-team-card__counter-sep">/</span>
+                    <span className="about-team-card__counter-total">
+                      {String(count).padStart(2, '0')}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Group Tagline Header */}
-              <h3 className="about-team-card__group-title">
-                Dedicated Specialist Leadership
-              </h3>
+                {/* Group Tagline Header */}
+                <h3 className="about-team-card__group-title">
+                  Dedicated Specialist Leadership
+                </h3>
 
-              {/* Subtle Warm Divider */}
-              <div aria-hidden="true" className="about-team-card__divider" />
+                {/* Subtle Warm Divider */}
+                <div aria-hidden="true" className="about-team-card__divider" />
 
-              {/* Person Info: Crossfade with AnimatePresence and strictly clamped height for ZERO layout shift */}
-              <div className="about-team-card__person-wrap">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeMember.id}
-                    initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={
-                      shouldReduceMotion ? undefined : { opacity: 0, y: -6 }
-                    }
-                    transition={{ duration: 0.22, ease: 'easeOut' }}
-                    className="about-team-card__person"
-                  >
-                    <div className="about-team-card__name-row">
-                      <h4 className="about-team-card__name">
-                        {activeMember.name}
-                      </h4>
-                    </div>
-
-                    {/* Role text: text-lg font-semibold with brand amber-700 color */}
-                    <p className="about-team-card__role">
-                      {activeMember.position}
-                    </p>
-
-                    {/* 2-line bio: line-clamp-2 guarantees no layout shift */}
-                    <p className="about-team-card__bio">{activeMember.bio}</p>
-
-                    <dl className="about-team-card__credentials">
-                      <div>
-                        <dt>Experience</dt>
-                        <dd>{activeMember.experience}</dd>
+                {/* Person Info: Crossfade with AnimatePresence */}
+                <div className="about-team-card__person-wrap">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeMember.id}
+                      initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={
+                        shouldReduceMotion ? undefined : { opacity: 0, y: -6 }
+                      }
+                      transition={{ duration: 0.22, ease: 'easeOut' }}
+                      className="about-team-card__person"
+                    >
+                      <div className="about-team-card__name-row">
+                        <h4 className="about-team-card__name">
+                          {activeMember.name}
+                        </h4>
                       </div>
-                      <div>
-                        <dt>Operating hub</dt>
-                        <dd>{activeMember.location}</dd>
-                      </div>
-                      <div>
-                        <dt>Specialization</dt>
-                        <dd>{activeMember.specialty}</dd>
-                      </div>
-                    </dl>
 
-                    {/* Highly visible LinkedIn button placed under member description */}
-                    <div className="about-team-card__actions">
-                      <a
-                        href={
-                          activeMember.linkedin ||
-                          'https://www.linkedin.com/company/outsourced-pro-global'
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`View ${activeMember.name}'s LinkedIn profile`}
-                        className="about-team-card__linkedin-btn"
-                      >
-                        <span
-                          className="about-team-card__linkedin-btn-icon"
-                          aria-hidden="true"
+                      {/* Role text */}
+                      <p className="about-team-card__role">
+                        {activeMember.position}
+                      </p>
+
+                      {/* Bio text */}
+                      <p className="about-team-card__bio">{activeMember.bio}</p>
+
+                      <dl className="about-team-card__credentials">
+                        <div>
+                          <dt>Experience</dt>
+                          <dd>{activeMember.experience}</dd>
+                        </div>
+                        <div>
+                          <dt>Operating hub</dt>
+                          <dd>{activeMember.location}</dd>
+                        </div>
+                        <div>
+                          <dt>Specialization</dt>
+                          <dd>{activeMember.specialty}</dd>
+                        </div>
+                      </dl>
+
+                      {/* LinkedIn button */}
+                      <div className="about-team-card__actions">
+                        <a
+                          href={
+                            activeMember.linkedin ||
+                            'https://www.linkedin.com/company/outsourced-pro-global'
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`View ${activeMember.name}'s LinkedIn profile`}
+                          className="about-team-card__linkedin-btn"
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            width="14"
-                            height="14"
+                          <span
+                            className="about-team-card__linkedin-btn-icon"
+                            aria-hidden="true"
                           >
-                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              width="14"
+                              height="14"
+                            >
+                              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                            </svg>
+                          </span>
+                          <span className="about-team-card__linkedin-btn-label">
+                            Connect on LinkedIn
+                          </span>
+                          <svg
+                            className="about-team-card__linkedin-btn-arrow"
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M7 17L17 7M17 7H7M17 7V17" />
                           </svg>
-                        </span>
-                        <span className="about-team-card__linkedin-btn-label">
-                          Connect on LinkedIn
-                        </span>
-                        <svg
-                          className="about-team-card__linkedin-btn-arrow"
-                          width="13"
-                          height="13"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
-                        >
-                          <path d="M7 17L17 7M17 7H7M17 7V17" />
-                        </svg>
-                      </a>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
+                        </a>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
               </div>
 
               {/* Carousel Controls: Left-aligned Progress Indicator Dots */}

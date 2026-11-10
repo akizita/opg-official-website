@@ -1,0 +1,853 @@
+/* ==========================================================================
+   About Us Hero Section Stylesheet (Bento Collage Layout)
+   - Inspired by modern bento showcase aesthetic (warm golden-ivory theme)
+   - Left column: Eyebrow badge, authoritative headline, value proposition,
+     dual CTA (yellow glass button + arrow pill), trust proof strip
+   - Right column: Multi-element bento collage with amber stat & growth card,
+     circular rotating seal, portrait photo, stacked dark glass metric chips,
+     and wide collaboration team photo
+   ========================================================================== */
+
+.heroSection {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  background-color: #fffaf0;
+  background-image:
+    radial-gradient(ellipse 75% 60% at 12% 25%, rgba(254, 240, 138, 0.8) 0%, transparent 65%),
+    radial-gradient(ellipse 80% 65% at 88% 30%, rgba(253, 224, 71, 0.65) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 55% at 45% 75%, rgba(251, 191, 36, 0.45) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 90% 85%, rgba(254, 240, 138, 0.6) 0%, transparent 60%),
+    linear-gradient(180deg, #fffaf0 0%, #fffdf8 35%, #fffdf8 70%, #fffaf0 100%);
+  margin-top: calc(-1 * (clamp(0.75rem, 2vw, 1.25rem) + 4.15rem));
+  padding-top: calc(
+    clamp(0.75rem, 2vw, 1.25rem) + 4.15rem + clamp(2.25rem, 4.5vw, 4rem)
+  );
+  padding-bottom: clamp(3.5rem, 6.5vw, 5.5rem);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: none;
+}
+
+/* Ambient Yellow Aurora Glow Patches */
+.auroraBlob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(85px);
+}
+
+.auroraBlobLeft {
+  top: 10%;
+  left: -8%;
+  width: clamp(26rem, 45vw, 42rem);
+  height: clamp(26rem, 45vw, 42rem);
+  background: radial-gradient(
+    circle,
+    rgba(254, 240, 138, 0.75) 0%,
+    rgba(251, 191, 36, 0.35) 45%,
+    transparent 70%
+  );
+  opacity: 0.85;
+}
+
+.auroraBlobRight {
+  top: 15%;
+  right: -8%;
+  width: clamp(26rem, 45vw, 40rem);
+  height: clamp(26rem, 45vw, 40rem);
+  background: radial-gradient(
+    circle,
+    rgba(253, 224, 71, 0.7) 0%,
+    rgba(245, 158, 11, 0.28) 45%,
+    transparent 70%
+  );
+  opacity: 0.85;
+}
+
+/* Seamless soft blend overlay at the bottom */
+.heroSection::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: clamp(6rem, 10vw, 10rem);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 250, 240, 0.45) 35%,
+    rgba(255, 250, 240, 0.85) 70%,
+    #fffaf0 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Subtle background grid pattern for depth */
+.heroSection::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle,
+    rgba(217, 130, 0, 0.16) 1.1px,
+    transparent 1.2px
+  );
+  background-size: 26px 26px;
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.6) 12%,
+    black 40%,
+    black 75%,
+    rgba(0, 0, 0, 0.35) 88%,
+    transparent 98%
+  );
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.6) 12%,
+    black 40%,
+    black 75%,
+    rgba(0, 0, 0, 0.35) 88%,
+    transparent 98%
+  );
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  width: min(100% - 2.5rem, 78rem);
+  margin-inline: auto;
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.12fr);
+  gap: clamp(2.5rem, 4.5vw, 4.75rem);
+  align-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   Left Column: Typography & CTAs
+   -------------------------------------------------------------------------- */
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 37rem;
+}
+
+/* Eyebrow Badge */
+.eyebrowBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.38rem 0.95rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.12);
+  margin-bottom: 1.25rem;
+}
+
+.pulseDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #f29f04;
+  box-shadow: 0 0 10px rgba(242, 159, 4, 0.95);
+  animation: pulseAmber 2.2s ease-in-out infinite;
+}
+
+@keyframes pulseAmber {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.75;
+  }
+}
+
+.eyebrowText {
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b45309;
+}
+
+/* Main Headline */
+.heroTitle {
+  font-size: clamp(2.35rem, 4vw, 3.5rem);
+  font-weight: 850;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: #0f172a;
+  margin: 0 0 1.25rem;
+}
+
+.titlePrefix {
+  display: block;
+  color: #0f172a;
+}
+
+.titleAccent {
+  display: inline-block;
+  background: linear-gradient(
+    125deg,
+    #d97706 0%,
+    #f59e0b 28%,
+    #fbbf24 60%,
+    #ffd453 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Description / Lead */
+.heroLead {
+  font-size: clamp(1.02rem, 1.22vw, 1.14rem);
+  line-height: 1.68;
+  color: #475569;
+  margin: 0 0 1.85rem;
+  font-weight: 450;
+}
+
+/* Actions Row */
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  margin-bottom: clamp(2rem, 3.5vw, 2.75rem);
+}
+
+/* Primary Action: Sleek Black Button */
+.primaryGlassBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.82rem 2.25rem;
+  font-weight: 750;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  color: #ffffff !important;
+  text-decoration: none;
+  background: #0d1117;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.22),
+    0 10px 24px -4px rgba(15, 23, 42, 0.4),
+    0 2px 6px 0 rgba(0, 0, 0, 0.12);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.primaryGlassBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 9999px 9999px 0 0;
+  pointer-events: none;
+}
+
+.primaryGlassBtn:hover {
+  background: #000000;
+  border-color: rgba(255, 255, 255, 0.36);
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.3),
+    0 14px 32px -4px rgba(0, 0, 0, 0.55),
+    0 4px 10px 0 rgba(0, 0, 0, 0.2);
+}
+
+.primaryGlassBtn:active {
+  transform: scale(0.98);
+}
+
+/* Secondary Action: See-Through Glassmorphism Pill */
+.secondaryArrowPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.48rem 1.25rem 0.48rem 0.6rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  box-shadow:
+    0 8px 22px -6px rgba(217, 130, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.03),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.arrowCircle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(217, 130, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.arrowCircle svg {
+  width: 14px;
+  height: 14px;
+  stroke: #ffffff;
+  stroke-width: 2.6;
+  fill: none;
+}
+
+.secondaryArrowPill:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #92400e;
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 28px -6px rgba(217, 130, 0, 0.2),
+    inset 0 1.5px 2px rgba(255, 255, 255, 1);
+}
+
+.secondaryArrowPill:hover .arrowCircle {
+  background: linear-gradient(135deg, #fbbf24 0%, #ea580c 100%);
+  transform: rotate(45deg);
+  box-shadow: 0 4px 12px rgba(217, 130, 0, 0.45);
+}
+
+/* Trust Proof Strip */
+.trustStrip {
+  width: 100%;
+  padding-top: 1.35rem;
+  border-top: 1px solid rgba(217, 130, 0, 0.12);
+}
+
+.trustLabel {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #8b7355;
+  margin-bottom: 0.85rem;
+}
+
+.trustBadges {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* Country Tags: See-Through Glassmorphism Pills */
+.trustPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
+  padding: 0.42rem 0.95rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.88);
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: #1e293b;
+  box-shadow:
+    0 3px 10px -2px rgba(217, 130, 0, 0.08),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.95);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trustPill:hover {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 18px -3px rgba(217, 130, 0, 0.16),
+    inset 0 1px 1.5px rgba(255, 255, 255, 1);
+}
+
+.trustFlag {
+  font-size: 0.95rem;
+}
+
+/* --------------------------------------------------------------------------
+   Right Column: Bento Collage Showcase
+   -------------------------------------------------------------------------- */
+.rightCol {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.bentoContainer {
+  position: relative;
+  width: 100%;
+  max-width: 535px;
+}
+
+/* Top Row of Bento */
+.bentoTopRow {
+  position: relative;
+  display: grid;
+  grid-template-columns: 215px 1fr;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+/* Card 1: Sleek Black Glassmorphic Stat & Growth Card with White Text */
+.statGrowthCard {
+  position: relative;
+  background: linear-gradient(
+    155deg,
+    #181e28 0%,
+    #0d1117 55%,
+    #090d12 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 22px;
+  padding: 1.25rem 1.15rem;
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 20px 42px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.statGrowthCard::after {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -40%;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.avatarStack {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.avatarItem {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #1f2937;
+  overflow: hidden;
+  margin-right: -8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  background: #0f172a;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.statMetric {
+  font-size: 2.25rem;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #ffffff;
+  margin: 0 0 0.3rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.statLabel {
+  font-size: 0.76rem;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.35;
+  margin: 0 0 0.95rem;
+}
+
+/* Embedded Growth Sub-card */
+.growthSubcard {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 0.65rem 0.8rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.growthLeft {
+  display: flex;
+  flex-direction: column;
+}
+
+.growthTitle {
+  font-size: 0.72rem;
+  font-weight: 750;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.growthTag {
+  font-size: 0.65rem;
+  font-weight: 750;
+  color: #4ade80;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
+}
+
+.growthChartBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 28px;
+  padding-bottom: 2px;
+}
+
+.chartBar {
+  width: 5px;
+  border-radius: 2px;
+  background: linear-gradient(to top, #d97706, #f59e0b);
+}
+
+/* Floating Circular Rotating Stamp / Badge - Warm Amber Glass */
+.circularStampBadge {
+  position: absolute;
+  left: 178px;
+  top: 110px;
+  z-index: 10;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(245, 158, 11, 0.45);
+  box-shadow:
+    0 12px 28px rgba(217, 130, 0, 0.18),
+    inset 0 1.5px 2px rgba(255, 255, 255, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.rotatingSvg {
+  width: 100%;
+  height: 100%;
+  animation: rotateStamp 22s linear infinite;
+  transform-origin: center center;
+}
+
+@keyframes rotateStamp {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.stampCenterIcon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d97706;
+  font-size: 1.15rem;
+  pointer-events: none;
+}
+
+/* Card 2: Right Portrait Photo + Floating Metric Stack */
+.portraitWrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.portraitCard {
+  position: relative;
+  width: 100%;
+  min-height: 290px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 20px 45px -12px rgba(217, 130, 0, 0.14),
+    0 4px 12px rgba(0, 0, 0, 0.05);
+  background: #fefbf6;
+}
+
+.portraitImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.portraitCard:hover .portraitImg {
+  transform: scale(1.03);
+}
+
+.portraitOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 65%,
+    rgba(180, 83, 9, 0.14) 100%
+  );
+  pointer-events: none;
+}
+
+/* Floating Metric Chips Stack: See-Through Glassmorphism Cards */
+.metricsStack {
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.metricChip {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  padding: 0.55rem 0.95rem;
+  min-width: 115px;
+  box-shadow:
+    0 12px 28px -6px rgba(217, 130, 0, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1.5px 2px rgba(255, 255, 255, 1);
+  display: flex;
+  flex-direction: column;
+  color: #0f172a;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.metricChip:hover {
+  transform: translateX(-3px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 16px 32px -6px rgba(217, 130, 0, 0.22),
+    inset 0 1.5px 2px rgba(255, 255, 255, 1);
+}
+
+.chipNumber {
+  font-size: 1.15rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: #0f172a;
+}
+
+.chipNumberHighlight {
+  color: #d97706;
+}
+
+.chipLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+/* Card 3: Bottom Wide Team Collaboration Photo Card */
+.bottomTeamCard {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 0.95rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 18px 40px -12px rgba(180, 83, 9, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  background: #fef3c7;
+}
+
+.teamImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bottomTeamCard:hover .teamImg {
+  transform: scale(1.03);
+}
+
+.teamOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 70%,
+    rgba(180, 83, 9, 0.12) 100%
+  );
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Media Queries
+   -------------------------------------------------------------------------- */
+@media (max-width: 64rem) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+    gap: 3.5rem;
+  }
+
+  .leftCol {
+    max-width: 100%;
+    text-align: center;
+    align-items: center;
+  }
+
+  .heroTitle {
+    font-size: clamp(2.35rem, 6vw, 3.25rem);
+  }
+
+  .heroLead {
+    max-width: 36rem;
+  }
+
+  .actionsRow {
+    justify-content: center;
+  }
+
+  .trustStrip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .trustBadges {
+    justify-content: center;
+  }
+
+  .bentoContainer {
+    max-width: 480px;
+  }
+}
+
+@media (max-width: 36rem) {
+  .heroSection {
+    padding-top: calc(
+      clamp(0.75rem, 2vw, 1.25rem) + 4.15rem + 1.5rem
+    );
+    padding-bottom: 2.75rem;
+    border-bottom-left-radius: 1.75rem;
+    border-bottom-right-radius: 1.75rem;
+  }
+
+  .heroTitle {
+    font-size: clamp(2rem, 8.5vw, 2.5rem);
+  }
+
+  .actionsRow {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.85rem;
+  }
+
+  .primaryGlassBtn,
+  .secondaryArrowPill {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .bentoTopRow {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .circularStampBadge {
+    display: none;
+  }
+
+  .metricsStack {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+    width: 100%;
+  }
+
+  .metricChip {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 120px;
+  }
+
+  .portraitCard {
+    min-height: 240px;
+  }
+
+  .bottomTeamCard {
+    height: 160px;
+  }
+}
+

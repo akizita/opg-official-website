@@ -3,14 +3,14 @@ import Image from 'next/image'
 
 import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { AboutCtaCard } from '@/components/ui/about-cta-card'
-import { AboutHeroGlobe } from '@/components/ui/about-hero-globe'
+import { AboutHeroSection } from '@/components/ui/about-hero-section'
 import { AboutServicesSection } from '@/components/ui/about-services-section'
 import { AboutTeamShowcase } from '@/components/ui/about-team-showcase'
 import { ButtonLink } from '@/components/ui/button-link'
 import { Card } from '@/components/ui/card'
+import { DotField } from '@/components/ui/dot-field'
 import { EmptyState } from '@/components/ui/empty-state'
 import { MissionVisionSection } from '@/components/ui/mission-vision-section'
-import { Notice } from '@/components/ui/notice'
 import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { ResponsiveImage } from '@/components/ui/responsive-image'
 import { SpotlightCard } from '@/components/ui/spotlight-card'
@@ -28,8 +28,6 @@ export const revalidate = 3600 // 1 hour ISR
 
 const ABOUT_IMAGE_URL =
   'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/hero/rs-1789740267024.png'
-
-const ABOUT_HERO_BG_URL = '/images/about-corporate-hero-mock.png'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
@@ -135,146 +133,18 @@ export default async function AboutPage() {
     ? story
     : ABOUT_PAGE_DEFAULTS.body.split(/\n\n+/)
 
-  const [summaryLead, summaryDetail] = heroSummary.includes('—')
-    ? heroSummary.split('—').map((s) => s.trim())
-    : [heroSummary, '']
-
   return (
     <main className="about-page">
       <PageVisualRuntime page="about" config={getPageVisualConfig(doc?.content)} />
-      {/* 1. Hero Section */}
-      <section className="about-hero-banner" aria-labelledby="about-hero-title">
-        <div aria-hidden="true" className="about-hero-banner__bg">
-          <div className="about-hero-banner__overlay" />
-          <div className="about-hero-banner__glow" />
-          <AboutHeroGlobe />
-        </div>
-
-        <div className="container about-hero-banner__container">
-          {/* Keep draft feedback visible without breaking the hero/nav overlap. */}
-          {isDraft && hasStaffAccess && (
-            <Notice
-              className="about-hero-banner__preview"
-              title="Internal Preview Mode"
-              variant="warning"
-            >
-              You are viewing the About page in staff preview mode. Status:{' '}
-              <strong>{doc.status}</strong> (v{doc.version}).
-            </Notice>
-          )}
-          <div className="about-hero-banner__grid">
-            <div className="about-hero-banner__left">
-              <div className="about-hero-banner__badge" role="text">
-                <span
-                  aria-hidden="true"
-                  className="about-hero-banner__badge-dot"
-                />
-                <span>{copy.heroBadge}</span>
-              </div>
-
-              <h1 id="about-hero-title" className="about-hero-banner__title">
-                {heroTitle.toLowerCase().startsWith('about ') ? (
-                  <>
-                    <span className="about-hero-banner__title-prefix">
-                      About
-                    </span>{' '}
-                    <span className="about-hero-banner__title-accent">
-                      {heroTitle.slice(6)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="about-hero-banner__title-prefix">
-                    {heroTitle}
-                  </span>
-                )}
-              </h1>
-
-              <p className="about-hero-banner__lead">
-                <span className="about-hero-banner__lead-primary">
-                  {summaryLead}
-                </span>
-                {summaryDetail && (
-                  <span className="about-hero-banner__lead-secondary">
-                    {summaryDetail}
-                  </span>
-                )}
-              </p>
-
-              <div className="about-hero-banner__actions">
-                <ButtonLink
-                  className="about-hero-banner__primary-action"
-                  href="/contact"
-                >
-                  {copy.heroCta}
-                  <span aria-hidden="true">↗</span>
-                </ButtonLink>
-                <a
-                  className="about-hero-banner__scroll-indicator"
-                  href="#who-we-are"
-                >
-                  <span className="about-hero-banner__scroll-text">
-                    {copy.heroScroll}
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    className="about-hero-banner__scroll-icon"
-                  >
-                    <svg
-                      fill="none"
-                      height="16"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2.5"
-                      viewBox="0 0 24 24"
-                      width="16"
-                    >
-                      <path d="M7 10l5 5 5-5" />
-                    </svg>
-                  </span>
-                </a>
-              </div>
-
-              <dl
-                className="about-hero-banner__proof"
-                aria-label="OPG at a glance"
-              >
-                <div>
-                  <dt>{copy.heroProof1Value}</dt>
-                  <dd>{copy.heroProof1Label}</dd>
-                </div>
-                <div>
-                  <dt>{copy.heroProof2Value}</dt>
-                  <dd>{copy.heroProof2Label}</dd>
-                </div>
-                <div>
-                  <dt>{copy.heroProof3Value}</dt>
-                  <dd>{copy.heroProof3Label}</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div className="about-hero-banner__media">
-              <Image
-                alt="A global business team collaborating around a conference table"
-                className="about-hero-banner__image"
-                fill
-                priority
-                sizes="(max-width: 62rem) 100vw, 48vw"
-                src={ABOUT_HERO_BG_URL}
-              />
-              <div
-                aria-hidden="true"
-                className="about-hero-banner__media-overlay"
-              />
-              <div className="about-hero-banner__media-caption">
-                <span>{copy.heroCaption}</span>
-                <strong>{copy.heroCaptionStrong}</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 1. Hero Section - Bento Showcase */}
+      <AboutHeroSection
+        doc={doc}
+        copy={copy}
+        heroTitle={heroTitle}
+        heroSummary={heroSummary}
+        isDraft={Boolean(isDraft)}
+        hasStaffAccess={Boolean(hasStaffAccess)}
+      />
 
       {/* Unified Showcase Band */}
       <div className="about-showcase-band about-showcase-band--who">
@@ -447,12 +317,13 @@ export default async function AboutPage() {
             copy={copy}
           />
         </section>
+      </div>
 
-        {/* 5. Team Showcase Section: 2-Column with 3D Depth Carousel (Our People) */}
-        <AboutTeamShowcase copy={copy} />
+      {/* 5. Team Showcase Section: 2-Column with 3D Depth Carousel (Our People) */}
+      <AboutTeamShowcase copy={copy} />
 
-        {/* 5.1 Leadership & Departments Directory (if available) */}
-        {departments.length > 0 && (
+      {/* 5.1 Leadership & Departments Directory (if available) */}
+      {departments.length > 0 && (
           <section
             aria-label="Leadership and Departments"
             className="about-team-section"
@@ -508,10 +379,23 @@ export default async function AboutPage() {
             </div>
           </section>
         )}
-      </div>
 
       {/* 6. Strategic Conversion CTA Section with Aurora-Toned Gradient Background */}
       <section aria-label="Get in Touch" className="about-cta-section">
+        <DotField
+          bulgeOnly={true}
+          bulgeStrength={85}
+          className="about-cta-section__dot-field"
+          cursorRadius={460}
+          dotRadius={2.4}
+          dotSpacing={20}
+          glowColor="#ffe773"
+          glowRadius={220}
+          gradientFrom="rgba(217, 130, 0, 0.78)"
+          gradientTo="rgba(242, 175, 5, 0.68)"
+          sparkle={true}
+          waveAmplitude={2.5}
+        />
         <div className="container about-cta-container">
           <AboutCtaCard copy={copy} />
         </div>

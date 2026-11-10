@@ -4,9 +4,9 @@ export function WorldMapPaths() {
   return (
     <g
       id="world-countries"
-      fill="rgba(242, 159, 4, 0.04)"
-      stroke="#d48a00"
-      strokeWidth="0.65"
+      fill="rgba(245, 175, 25, 0.035)"
+      stroke="rgba(217, 130, 0, 0.28)"
+      strokeWidth="0.38"
       strokeLinejoin="round"
       strokeLinecap="round"
     >

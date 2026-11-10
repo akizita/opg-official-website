@@ -103,6 +103,38 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
   },
 ]
 
+/**
+ * Computes elegant, concentric quadratic bezier curves connecting the
+ * Philippines HQ to each global destination, preventing crossing lines.
+ */
+function getHarmoniousArcPath(dest: OffshoreHubLocation): string {
+  const hqX = PHILIPPINES_HQ.svgX
+  const hqY = PHILIPPINES_HQ.svgY
+
+  // Handcrafted non-intersecting apex control points ensuring western arcs
+  // nest neatly inside each other without overlapping or crossing.
+  const customControlPoints: Record<string, { midX: number; midY: number }> = {
+    'us-west': { midX: 410, midY: 258 },
+    'us-east': { midX: 458, midY: 286 },
+    'uk-london': { midX: 540, midY: 338 },
+    'uae-dubai': { midX: 612, midY: 412 },
+    'in-mumbai': { midX: 636, midY: 452 },
+    'sg-singapore': { midX: 684, midY: 526 },
+    'au-sydney': { midX: 724, midY: 575 },
+  }
+
+  const cp = customControlPoints[dest.id]
+  if (cp) {
+    return `M ${hqX} ${hqY} Q ${cp.midX} ${cp.midY} ${dest.svgX} ${dest.svgY}`
+  }
+
+  const midX = (hqX + dest.svgX) / 2
+  const dx = dest.svgX - hqX
+  const arcBulge = Math.min(Math.abs(dx) * 0.28, 90)
+  const midY = Math.min(hqY, dest.svgY) - arcBulge - 15
+  return `M ${hqX} ${hqY} Q ${midX} ${midY} ${dest.svgX} ${dest.svgY}`
+}
+
 export interface OffshoreMapSectionProps {
   hideDotField?: boolean
   layout?: 'full' | 'two-column' | 'one-column'
@@ -171,7 +203,7 @@ export function OffshoreMapSection({
               <circle cx="9" cy="9" r="0.6" fill="rgba(13,13,13,0.06)" />
             </pattern>
 
-            {/* Golden Gradient for Connection Arcs */}
+            {/* Luminous Golden Gradient for Connection Arcs */}
             <linearGradient
               id="gold-arc-gradient"
               x1="0%"
@@ -179,9 +211,9 @@ export function OffshoreMapSection({
               x2="100%"
               y2="0%"
             >
-              <stop offset="0%" stopColor="#f29f04" stopOpacity="0.85" />
-              <stop offset="50%" stopColor="#f2b705" stopOpacity="0.65" />
-              <stop offset="100%" stopColor="#4d4d4d" stopOpacity="0.3" />
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.85" />
+              <stop offset="50%" stopColor="#d97706" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.85" />
             </linearGradient>
 
             {/* Radial Pulse Gradient for HQ Beacon */}
@@ -208,32 +240,26 @@ export function OffshoreMapSection({
           {/* Radiating Geodesic Curved Connection Lines from Philippines */}
           <g className="offshore-connection-arcs" pointerEvents="none">
             {filteredDestinations.map((dest) => {
-              const midX = (PHILIPPINES_HQ.svgX + dest.svgX) / 2
-              const dx = dest.svgX - PHILIPPINES_HQ.svgX
-              const arcBulge = Math.min(Math.abs(dx) * 0.28, 90)
-              const midY =
-                Math.min(PHILIPPINES_HQ.svgY, dest.svgY) - arcBulge - 15
-
-              const pathData = `M ${PHILIPPINES_HQ.svgX} ${PHILIPPINES_HQ.svgY} Q ${midX} ${midY} ${dest.svgX} ${dest.svgY}`
+              const pathData = getHarmoniousArcPath(dest)
 
               return (
                 <g key={`arc-group-${dest.id}`}>
-                  {/* Subtle Glow Underlay Arc */}
+                  {/* Delicate Guideline Track Arc */}
                   <path
                     d={pathData}
                     fill="none"
-                    stroke="rgba(242, 183, 5, 0.4)"
-                    strokeWidth="3.5"
+                    stroke="rgba(217, 130, 0, 0.16)"
+                    strokeWidth="1.0"
                     strokeLinecap="round"
-                    className="offshore-connection-arc-glow"
+                    className="offshore-connection-arc-track"
                   />
-                  {/* Dynamic Gradient Foreground Arc */}
+                  {/* Dynamic Gradient Foreground Streaming Arc */}
                   <path
                     d={pathData}
                     fill="none"
                     stroke="url(#gold-arc-gradient)"
-                    strokeWidth="1.8"
-                    strokeDasharray="4 3"
+                    strokeWidth="1.1"
+                    strokeDasharray="4 4"
                     strokeLinecap="round"
                     className="offshore-connection-arc-pulse"
                   />
@@ -258,19 +284,19 @@ export function OffshoreMapSection({
               r="12"
               fill="none"
               stroke="#f29f04"
-              strokeWidth="1.2"
+              strokeWidth="1.0"
               strokeDasharray="3 2"
               className="offshore-hq-ring"
             />
             {/* Core Golden Hub Badge */}
             <circle
-              r="6.5"
+              r="5.5"
               fill="#f29f04"
               stroke="#ffffff"
-              strokeWidth="2"
+              strokeWidth="1.6"
               className="offshore-hq-core"
             />
-            <circle r="2" fill="#ffffff" />
+            <circle r="1.8" fill="#ffffff" />
             {/* HQ Floating Badge */}
             <g
               transform="translate(0, -18)"
@@ -314,20 +340,20 @@ export function OffshoreMapSection({
               >
                 {/* Outer Glow on Hover */}
                 <circle
-                  r="14"
-                  fill="rgba(242, 159, 4, 0.16)"
+                  r="12"
+                  fill="rgba(242, 159, 4, 0.14)"
                   className="offshore-pin-glow"
                 />
                 {/* Outer Solid Ring */}
                 <circle
-                  r="5"
+                  r="4.5"
                   fill="#ffffff"
                   stroke="#f29f04"
-                  strokeWidth="2"
+                  strokeWidth="1.4"
                   className="offshore-pin-ring"
                 />
                 {/* Inner Accent Dot */}
-                <circle r="2.2" fill="#0d0d0d" />
+                <circle r="2" fill="#0d0d0d" />
 
                 {/* Permanent High-Legibility City Tag */}
                 <g
