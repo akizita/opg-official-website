@@ -10,11 +10,12 @@ import {
   ClientsPartnerProfiles,
   type PartnerProfileItem,
 } from '@/components/ui/clients-partner-profiles'
-import {
-  ClientsTestimonialCarousel,
-  type CarouselTestimonialItem,
-} from '@/components/ui/clients-testimonial-carousel'
+import { ClientsTestimonialCarousel, type CarouselTestimonialItem } from '@/components/ui/clients-testimonial-carousel'
 import { ClientsGlobeHero } from '@/components/ui/clients-globe-hero'
+import { ClientsCtaAsciiMapCorners } from '@/components/ui/clients-cta-ascii-map'
+import type { Article } from '@/lib/content/articles'
+import { getPublishedArticles } from '@/lib/content/articles'
+import { featuredArticles } from '@/lib/content/featured-articles'
 import {
   getPublishedTestimonials,
   type Testimonial,
@@ -231,6 +232,15 @@ const clientTestimonials: readonly ClientTestimonialItem[] = [
   },
 ]
 
+function formatArticleDate(value: string | null | undefined) {
+  if (!value) return ''
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(value))
+}
+
 function ArticleListItem({ text }: { text: string }) {
   const separator = text.indexOf(': ')
   if (separator < 0) return <li>{text}</li>
@@ -325,11 +335,30 @@ export default async function ClientsPage({
     }
   })
   let dbTestimonials: Testimonial[] = []
+  let publishedArticles: Article[] = []
   try {
-    dbTestimonials = await getPublishedTestimonials()
+    const [testimonials, articlesResult] = await Promise.all([
+      getPublishedTestimonials(),
+      getPublishedArticles({ page: 1, pageSize: 10 }),
+    ])
+    dbTestimonials = testimonials
+    publishedArticles = articlesResult.articles
   } catch {
     dbTestimonials = []
+    publishedArticles = []
   }
+
+  const editorialArticles = featuredArticles
+  const articleMap = new Map<string, Article>()
+  for (const article of [...editorialArticles, ...publishedArticles]) {
+    if (!articleMap.has(article.slug)) articleMap.set(article.slug, article)
+  }
+  const allArticles = [...articleMap.values()].sort(
+    (a, b) =>
+      new Date(b.published_at || b.created_at).getTime() -
+      new Date(a.published_at || a.created_at).getTime(),
+  )
+  const featuredArticle = allArticles[0]
 
   const combinedTestimonials: CarouselTestimonialItem[] = [
     ...featuredTestimonials,
@@ -435,60 +464,78 @@ export default async function ClientsPage({
                   <BlogShareButtons />
                 </div>
 
-                {/* Mini Related Playbook Card */}
-                <div className="clients-blog-sidebar-card">
-                  <div className="clients-blog-sidebar-card__media">
-                    <Image
-                      src="/images/opg-3d-centerpiece.jpg"
-                      alt="Dedicated Talent Economics"
-                      width={400}
-                      height={225}
-                      className="clients-blog-sidebar-card__img"
-                    />
+                {/* Actual Featured Article from Articles page */}
+                {featuredArticle && (
+                  <div className="clients-blog-sidebar-card">
+                    <div className="clients-blog-sidebar-card__media">
+                      <Image
+                        src={
+                          featuredArticle.cover_image_url ||
+                          '/images/clients-blog-secondary.jpg'
+                        }
+                        alt={featuredArticle.title}
+                        fill
+                        sizes="(max-width: 64rem) 100vw, 360px"
+                        className="clients-blog-sidebar-card__img"
+                        unoptimized={Boolean(
+                          featuredArticle.cover_image_url?.startsWith(
+                            'https://media.licdn.com',
+                          ),
+                        )}
+                      />
+                      <span className="clients-blog-sidebar-card__tag">
+                        Featured Article
+                      </span>
+                    </div>
+                    <div className="clients-blog-sidebar-card__body">
+                      <div className="clients-blog-sidebar-card__meta">
+                        <span className="clients-blog-sidebar-card__date">
+                          {formatArticleDate(
+                            featuredArticle.published_at ||
+                              featuredArticle.created_at,
+                          )}
+                        </span>
+                        <span
+                          className="clients-blog-sidebar-card__bullet"
+                          aria-hidden="true"
+                        >
+                          •
+                        </span>
+                        <span className="clients-blog-sidebar-card__read-time">
+                          {featuredArticle.reading_time_minutes} min read
+                        </span>
+                      </div>
+                      <h4 className="clients-blog-sidebar-card__title">
+                        {featuredArticle.title}
+                      </h4>
+                      {featuredArticle.excerpt && (
+                        <p className="clients-blog-sidebar-card__excerpt">
+                          {featuredArticle.excerpt}
+                        </p>
+                      )}
+                      <Link
+                        href={`/articles/${featuredArticle.slug}`}
+                        className="clients-blog-sidebar-card__btn"
+                      >
+                        Read Article →
+                      </Link>
+                    </div>
                   </div>
-                  <div className="clients-blog-sidebar-card__body">
-                    <span className="clients-blog-sidebar-card__date">
-                      {copy.relatedDate}
-                    </span>
-                    <h4 className="clients-blog-sidebar-card__title">
-                      {copy.relatedTitle}
-                    </h4>
-                    <Link
-                      href="/articles"
-                      className="clients-blog-sidebar-card__btn"
-                    >
-                      {copy.relatedCta}
-                    </Link>
-                  </div>
-                </div>
+                )}
 
-                {/* At-a-Glance Partnership Stats */}
-                <div className="clients-blog-sidebar-stats">
-                  <div className="clients-blog-stat-item">
-                    <span className="clients-blog-stat-val">
-                      {copy.stat1Value}
-                    </span>
-                    <span className="clients-blog-stat-lbl">
-                      {copy.stat1Label}
-                    </span>
-                  </div>
-                  <div className="clients-blog-stat-item">
-                    <span className="clients-blog-stat-val">
-                      {copy.stat2Value}
-                    </span>
-                    <span className="clients-blog-stat-lbl">
-                      {copy.stat2Label}
-                    </span>
-                  </div>
-                  <div className="clients-blog-stat-item">
-                    <span className="clients-blog-stat-val">
-                      {copy.stat3Value}
-                    </span>
-                    <span className="clients-blog-stat-lbl">
-                      {copy.stat3Label}
-                    </span>
-                  </div>
-                </div>
+                {/* View More Articles Link Button */}
+                <Link
+                  href="/articles"
+                  className="clients-blog-sidebar__view-more-btn"
+                >
+                  <span>View more articles</span>
+                  <span
+                    aria-hidden="true"
+                    className="clients-blog-sidebar__view-more-arrow"
+                  >
+                    →
+                  </span>
+                </Link>
               </aside>
 
               {/* Right Column: Editorial Article Body */}
@@ -581,12 +628,10 @@ export default async function ClientsPage({
         >
           <div className="container">
             <div className="clients-cta__glass">
+              {/* Dotted ASCII style map elements on bottom corners */}
+              <ClientsCtaAsciiMapCorners />
+
               <div className="clients-cta__copy">
-                <div className="clients-cta__eyebrow-row">
-                  <span aria-hidden="true" />
-                  <p className="eyebrow eyebrow--light">{copy.ctaEyebrow}</p>
-                  <span aria-hidden="true" />
-                </div>
                 <h2>{copy.ctaTitle}</h2>
                 <p>{copy.ctaBody}</p>
               </div>
