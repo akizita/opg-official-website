@@ -91,12 +91,10 @@ export function ClientLogo({ type, className = '' }: ClientLogoProps) {
               <stop offset="1" stopColor="#f2b705" />
             </linearGradient>
           </defs>
-          <rect
-            x="6"
-            y="6"
-            width="36"
-            height="36"
-            rx="12"
+          <circle
+            cx="24"
+            cy="24"
+            r="18"
             stroke="url(#client-logo-mh-border)"
             strokeWidth="3"
           />
