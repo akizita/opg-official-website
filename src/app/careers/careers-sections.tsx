@@ -9,21 +9,10 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import { ButtonLink } from '@/components/ui/button-link'
-import { ColorBends } from '@/components/ui/color-bends'
-import { Grainient } from '@/components/ui/grainient'
-import { SpotlightCard } from '@/components/ui/spotlight-card'
+import { AsciiGlobe } from '@/components/ui/ascii-globe'
 import { WorldMapPaths } from '@/components/ui/world-map-paths'
 
 import styles from './careers.module.css'
-
-type Benefit = {
-  body: string
-  title: string
-}
-
-function cleanBenefitTitle(value: string): string {
-  return value.replace(/^(?:🌍|🚀|📈)\s*/u, '').trim()
-}
 
 export function CareerStats({ openRoleCount }: { openRoleCount: number }) {
   const formattedCount = String(openRoleCount).padStart(2, '0')
@@ -137,72 +126,19 @@ export function CareersHero({
   )
 }
 
-export function WhyJoin({
-  benefits,
-  title,
-}: {
-  benefits: [Benefit, Benefit, Benefit]
-  title: string
-}) {
-  const icons = [Globe02Icon, Rocket01Icon, UserGroupIcon] as const
-
-  return (
-    <section className={styles.benefits} aria-labelledby="why-join-title">
-      {/* Deep, warm transitional backdrop glow bridging from openings into benefits */}
-      <div className={styles.benefitsBackdrop} aria-hidden="true" />
-      <Grainient
-        className={styles.grainientCanvas}
-        color1="#eab308"
-        color2="#ca8a04"
-        color3="#d97706"
-        color4="#facc15"
-        grainAmount={0.045}
-        scale={1.1}
-        speed={0.55}
-        warpStrength={1.2}
-      />
-      <div className={`container ${styles.benefitsContainer}`}>
-        <div className={styles.benefitsHeading}>
-          <div>
-            <p className={styles.benefitsEyebrow}>Why join us</p>
-            <h2 id="why-join-title">{title}</h2>
-          </div>
-          <p>
-            Join a culture where your ideas matter, your ambitions are
-            supported, and your growth has no limits.
-          </p>
-        </div>
-
-        <div className={styles.benefitsGrid}>
-          {benefits.map((benefit, index) => (
-            <SpotlightCard
-              className={styles.benefitCard}
-              key={benefit.title}
-              spotlightColor="rgba(245, 158, 11, 0.42)"
-              tabIndex={-1}
-            >
-              <span className={styles.benefitIcon}>
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={icons[index]}
-                  size={24}
-                />
-              </span>
-              <div className={styles.benefitContent}>
-                <h3>{cleanBenefitTitle(benefit.title)}</h3>
-                <p>{benefit.body}</p>
-              </div>
-            </SpotlightCard>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
 export function ApplicationSteps() {
   return (
     <section aria-labelledby="careers-process-title" className={styles.process}>
+      {/* Seamless top soft-blend dissolve connecting from Open Roles */}
+      <div className={styles.processTopBlend} aria-hidden="true" />
+
+      {/* Atmospheric ambient golden aurora glow patches */}
+      <div className={styles.processGlowRight} aria-hidden="true" />
+      <div className={styles.processGlowLeft} aria-hidden="true" />
+
+      {/* Seamless bottom soft-blend dissolve into Recruitment CTA */}
+      <div className={styles.processBottomBlend} aria-hidden="true" />
+
       <div className={`container ${styles.processLayout}`}>
         <div className={styles.processIntro}>
           <p className={styles.eyebrow}>What happens next</p>
@@ -243,54 +179,62 @@ export function ApplicationSteps() {
   )
 }
 
-export function RecruitmentCTA() {
+export function RecruitmentCTA({
+  copy,
+}: {
+  copy?: {
+    closingEyebrow?: string
+    closingTitle?: string
+    closingLead?: string
+  }
+} = {}) {
   return (
     <section
       className={styles.closingSection}
       aria-labelledby="recruitment-cta-title"
     >
+      {/* Seamless top soft-blend dissolve from Application Steps */}
+      <div className={styles.closingTopBlend} aria-hidden="true" />
+
+      {/* Atmospheric ambient golden aura surrounding the obsidian card */}
+      <div className={styles.closingBackdropAura} aria-hidden="true" />
+
+      {/* Seamless bottom soft-blend dissolve toward Site Footer */}
+      <div className={styles.closingBottomBlend} aria-hidden="true" />
+
       <div className={`container ${styles.closingContainer}`}>
         <div className={styles.closingCard}>
-          {/* React Bits ColorBends background in vibrant OPG golden ribbons */}
-          <ColorBends
-            aria-hidden="true"
-            autoRotate={2.0}
-            bandWidth={5.2}
-            className={styles.closingBends}
-            colors={[
-              '#f29f04',
-              '#fbbf24',
-              '#f59e0b',
-              '#d97706',
-              '#ea580c',
-            ]}
-            frequency={0.9}
-            intensity={1.35}
-            iterations={2}
-            mouseInfluence={0.5}
-            noise={0.08}
-            parallax={0.3}
-            rotation={90}
-            scale={1.1}
-            speed={0.22}
-            transparent={true}
-            warpStrength={1.15}
-          />
-          {/* Translucent overlay for deep contrast and readability */}
-          <div aria-hidden="true" className={styles.closingOverlay} />
+          {/* Left Interactive 3D ASCII Globe representing OPG Global Talent Network */}
+          <div className={styles.closingLeftVisual}>
+            <AsciiGlobe className={styles.closingAsciiGlobe} />
+          </div>
 
-          <div className={styles.closingInner}>
-            <div className={styles.closingCopy}>
-              <p className={styles.closingEyebrow}>Stay connected</p>
-              <h2 id="recruitment-cta-title">Do not see the right role yet?</h2>
-              <p>
-                Our opportunities evolve with our global partners. Check back
-                soon or introduce yourself to our recruitment team.
-              </p>
-            </div>
+          {/* Right Content Area: Focused Header, Subtext, and Action Buttons */}
+          <div className={styles.closingRightContent}>
+            {/* Header with Radiant Gold Gradient Accent */}
+            <h2 id="recruitment-cta-title" className={styles.closingTitle}>
+              {copy?.closingTitle ? (
+                copy.closingTitle
+              ) : (
+                <>
+                  Do not see the right role yet?{' '}
+                  <span className={styles.closingTitleAccent}>
+                    Let&apos;s build your future.
+                  </span>
+                </>
+              )}
+            </h2>
+
+            {/* Subtext */}
+            <p className={styles.closingDesc}>
+              {copy?.closingLead ||
+                'Our opportunities evolve with our global enterprise partners across Australia, APAC, the US, and Europe. Check back soon or introduce yourself directly to our recruitment team.'}
+            </p>
+
+            {/* Action Buttons */}
             <div className={styles.closingActions}>
               <ButtonLink
-                className={styles.closingGlassBtn}
+                className={styles.closingPrimaryBtn}
                 href="#open-roles-title"
               >
                 <HugeiconsIcon
@@ -301,7 +245,7 @@ export function RecruitmentCTA() {
                 Review current openings
               </ButtonLink>
               <ButtonLink
-                className={styles.closingGlassBtn}
+                className={styles.closingSecondaryBtn}
                 href="mailto:recruitment@opglobal.com.hk"
                 variant="secondary"
               >

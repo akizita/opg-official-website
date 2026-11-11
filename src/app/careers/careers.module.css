@@ -163,6 +163,23 @@
   z-index: 0;
 }
 
+/* Seamless bottom soft-blend dissolve into Application Steps */
+.openingsBottomBlend {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: clamp(5rem, 8vw, 8rem);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(252, 251, 248, 0.45) 45%,
+    #fcfbf8 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
 .pageHeader {
   align-items: flex-end;
   display: flex;
@@ -300,6 +317,11 @@
 .searchIcon {
   color: #8c8273;
   flex: 0 0 auto;
+  transition: color 160ms ease;
+}
+
+.searchIconActive {
+  color: #d97706 !important;
 }
 
 .searchField input {
@@ -315,6 +337,23 @@
 
 .searchField input::placeholder {
   color: #8a8274;
+}
+
+.searchSpinner {
+  animation: searchSpin 600ms linear infinite;
+  border: 1.5px solid rgba(217, 119, 6, 0.25);
+  border-top-color: #d97706;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 0.95rem;
+  width: 0.95rem;
+}
+
+@keyframes searchSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .clearSearchInput {
@@ -422,7 +461,7 @@
 
 /* Solid Opaque Dropdown Menu (Maximum readability and zero bleed-through) */
 .glassSelectMenu {
-  animation: dropdownFadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top center;
   background: #ffffff;
   border: 1px solid rgba(217, 119, 6, 0.25);
   border-radius: 16px;
@@ -502,8 +541,28 @@
   align-items: center;
   display: flex;
   gap: 0.75rem;
-  justify-content: flex-end;
-  padding: 0.25rem 0.35rem 0;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 0.35rem 0.35rem 0;
+  width: 100%;
+}
+
+.filterMatchCount {
+  align-items: center;
+  color: #78716c;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 650;
+  gap: 0.45rem;
+}
+
+.filterMatchDot {
+  animation: pulseDot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background-color: #16a34a;
+  border-radius: 50%;
+  display: inline-block;
+  height: 0.45rem;
+  width: 0.45rem;
 }
 
 .summaryCount {
@@ -604,6 +663,7 @@
   display: grid;
   gap: 1.15rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  position: relative;
 }
 
 .jobCard {
@@ -624,11 +684,12 @@
   overflow: hidden;
   padding: clamp(1rem, 1.5vw, 1.35rem);
   position: relative;
+  transform: translateZ(0);
+  will-change: transform, opacity;
   transition:
     background 180ms ease,
     border-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
+    box-shadow 180ms ease;
 }
 
 /* Glass specular shine highlight - translucent so auroras peek through */
@@ -636,7 +697,7 @@
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.35) 0%,
-    rgba(255, 255, 255, 0.0) 100%
+    rgba(255, 255, 255, 0) 100%
   );
   border-radius: inherit;
   content: '';
@@ -653,7 +714,6 @@
     0 16px 36px -4px rgba(217, 119, 6, 0.16),
     0 4px 12px -1px rgba(217, 119, 6, 0.08),
     inset 0 1.5px 2px 0 rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
 }
 
 .jobMain {
@@ -820,6 +880,15 @@
   width: 100%;
 }
 
+.applyAction svg {
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.applyAction:hover svg,
+.jobCard:hover .applyAction svg {
+  transform: translateX(3px);
+}
+
 .applyAction:hover {
   background: linear-gradient(
     135deg,
@@ -873,215 +942,6 @@
 }
 
 /* ==========================================================================
-   SUPPORTING SECTIONS (Why join leaning into golden yellow, Process, CTA)
-   ========================================================================== */
-
-.benefits {
-  background: transparent;
-  color: #171511;
-  overflow: visible;
-  padding-top: clamp(5rem, 7vw, 7.5rem);
-  padding-bottom: clamp(7.5rem, 10vw, 10.5rem);
-  position: relative;
-  z-index: 1;
-}
-
-/* Atmospheric transitional backdrop: deep, warm golden amber glow with zero seam */
-.benefitsBackdrop {
-  background: radial-gradient(
-    ellipse 90% 70% at 50% 50%,
-    rgba(234, 179, 8, 0.35) 0%,
-    rgba(217, 119, 6, 0.22) 38%,
-    rgba(245, 158, 11, 0.08) 60%,
-    transparent 80%
-  );
-  inset: -6% 0 -6% 0;
-  pointer-events: none;
-  position: absolute;
-  z-index: 0;
-}
-
-.grainientCanvas {
-  height: 100% !important;
-  inset: 0 !important;
-  mask-image: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(0, 0, 0, 0.08) 12%,
-    rgba(0, 0, 0, 0.28) 25%,
-    rgba(0, 0, 0, 0.65) 42%,
-    black 55%,
-    rgba(0, 0, 0, 0.65) 68%,
-    rgba(0, 0, 0, 0.28) 82%,
-    rgba(0, 0, 0, 0.08) 92%,
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(0, 0, 0, 0.08) 12%,
-    rgba(0, 0, 0, 0.28) 25%,
-    rgba(0, 0, 0, 0.65) 42%,
-    black 55%,
-    rgba(0, 0, 0, 0.65) 68%,
-    rgba(0, 0, 0, 0.28) 82%,
-    rgba(0, 0, 0, 0.08) 92%,
-    transparent 100%
-  );
-  opacity: 0.52;
-}
-
-.benefitsContainer {
-  position: relative;
-  z-index: 3;
-}
-
-.benefitsHeading {
-  align-items: flex-end;
-  display: flex;
-  gap: clamp(1.5rem, 4vw, 4rem);
-  justify-content: space-between;
-  margin-bottom: clamp(2rem, 3.5vw, 3rem);
-}
-
-.benefitsHeading > div {
-  max-width: 44rem;
-}
-
-.benefitsHeading h2 {
-  color: #14120e;
-  font-size: clamp(2rem, 3.5vw, 2.85rem);
-  letter-spacing: -0.04em;
-  line-height: 1.1;
-  margin: 0;
-  text-wrap: balance;
-}
-
-.benefitsEyebrow {
-  color: #8c4e00;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  margin: 0 0 0.6rem;
-  text-transform: uppercase;
-}
-
-.benefitsHeading > p:last-child {
-  color: #4a3e2e;
-  font-size: 0.96rem;
-  font-weight: 500;
-  line-height: 1.6;
-  margin: 0;
-  max-width: 28rem;
-}
-
-.benefitsGrid {
-  display: grid;
-  gap: 1.35rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.benefitCard {
-  background: rgba(255, 255, 255, 0.58) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.88) !important;
-  border-radius: 1.25rem !important;
-  box-shadow:
-    0 10px 30px -4px rgba(180, 100, 10, 0.08),
-    0 2px 8px -2px rgba(180, 100, 10, 0.04),
-    inset 0 1.5px 2px 0 rgba(255, 255, 255, 1) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100% !important;
-  overflow: hidden !important;
-  padding: 0 !important;
-  position: relative !important;
-  transition:
-    background 200ms ease,
-    border-color 200ms ease,
-    box-shadow 200ms ease,
-    transform 200ms ease !important;
-}
-
-/* Glass specular top reflection */
-.benefitCard::before {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
-  border-radius: inherit;
-  content: '';
-  height: 44%;
-  inset: 0 0 auto 0;
-  pointer-events: none;
-  position: absolute;
-  z-index: 2;
-}
-
-.benefitCard:hover,
-.benefitCard:focus-visible {
-  background: rgba(255, 255, 255, 0.72) !important;
-  border-color: rgba(245, 158, 11, 0.55) !important;
-  box-shadow:
-    0 16px 40px -4px rgba(217, 119, 6, 0.18),
-    0 4px 14px -2px rgba(217, 119, 6, 0.08),
-    inset 0 1.5px 2px 0 rgba(255, 255, 255, 1) !important;
-  transform: translateY(-2px) !important;
-}
-
-.benefitCard :global(.rb-spotlight-card__content) {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: clamp(1.4rem, 2.2vw, 1.85rem);
-  position: relative;
-  width: 100%;
-  z-index: 3;
-}
-
-.benefitIcon {
-  align-items: center;
-  background: rgba(254, 240, 138, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(245, 158, 11, 0.45);
-  border-radius: 0.85rem;
-  box-shadow:
-    0 4px 14px -2px rgba(217, 119, 6, 0.15),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
-  color: #92400e;
-  display: inline-flex;
-  height: 2.85rem;
-  justify-content: center;
-  margin-bottom: 1.15rem;
-  position: relative;
-  width: 2.85rem;
-  z-index: 1;
-}
-
-.benefitContent {
-  position: relative;
-  z-index: 1;
-}
-
-.benefitContent h3 {
-  color: #14120e;
-  font-size: 1.22rem;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-  margin: 0 0 0.65rem;
-}
-
-.benefitContent p {
-  color: #4a4033;
-  font-size: 0.92rem;
-  line-height: 1.62;
-  margin: 0;
-}
-
-/* ==========================================================================
    COMBINED PROCESS & CTA WRAPPER
    Unbroken continuous dotted grid background from 'What happens next' through CTA
    ========================================================================== */
@@ -1097,10 +957,83 @@
 .process {
   background: transparent;
   border-top: none;
-  overflow: visible;
-  padding-bottom: clamp(2rem, 3.5vw, 3rem);
+  overflow: hidden;
+  padding-bottom: clamp(3rem, 5vw, 4.5rem);
   padding-top: clamp(4.5rem, 6.5vw, 6.5rem);
   position: relative;
+  z-index: 1;
+}
+
+/* Seamless top soft-blend dissolve connecting from Open Roles */
+.processTopBlend {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(5rem, 8vw, 8rem);
+  background: linear-gradient(
+    to bottom,
+    #fcfbf8 0%,
+    rgba(252, 251, 248, 0.75) 45%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Atmospheric ambient golden aurora glow patches for Process section */
+.processGlowRight {
+  position: absolute;
+  top: 20%;
+  right: -6%;
+  width: clamp(24rem, 42vw, 38rem);
+  height: clamp(24rem, 42vw, 38rem);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(254, 240, 138, 0.38) 0%,
+    rgba(251, 191, 36, 0.12) 48%,
+    transparent 70%
+  );
+  filter: blur(75px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.8;
+}
+
+.processGlowLeft {
+  position: absolute;
+  bottom: 10%;
+  left: -8%;
+  width: clamp(22rem, 38vw, 34rem);
+  height: clamp(22rem, 38vw, 34rem);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(253, 224, 71, 0.3) 0%,
+    rgba(245, 158, 11, 0.08) 50%,
+    transparent 70%
+  );
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.75;
+}
+
+/* Seamless bottom soft-blend dissolve into Recruitment CTA */
+.processBottomBlend {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: clamp(5rem, 8vw, 8rem);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(252, 251, 248, 0.6) 50%,
+    #fcfbf8 100%
+  );
+  pointer-events: none;
   z-index: 1;
 }
 
@@ -1110,7 +1043,7 @@
   gap: clamp(2.5rem, 6vw, 5rem);
   grid-template-columns: minmax(0, 0.85fr) minmax(24rem, 1.15fr);
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .processIntro {
@@ -1171,164 +1104,232 @@
 }
 
 /* ==========================================================================
-   CONTAINED RECRUITMENT CTA WITH COLORBENDS BACKGROUND
+   CONTAINED RECRUITMENT CTA - SLEEK OBSIDIAN GLASS WITH ASCII GLOBE
+   (Coordinates with OPG identity with warm ambient soft-blending transitions)
    ========================================================================== */
 
 .closingSection {
   background: transparent;
-  padding-bottom: clamp(5.5rem, 8vw, 7.5rem);
-  padding-top: clamp(1.5rem, 2.5vw, 2.5rem);
+  overflow: hidden;
+  padding-bottom: clamp(6rem, 8.5vw, 8rem);
+  padding-top: clamp(2.5rem, 4vw, 4rem);
   position: relative;
   z-index: 2;
 }
 
+/* Seamless top soft-blend dissolve from Application Steps */
+.closingTopBlend {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(5rem, 8vw, 7.5rem);
+  background: linear-gradient(
+    to bottom,
+    #fcfbf8 0%,
+    rgba(252, 251, 248, 0.75) 45%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Atmospheric ambient golden aura surrounding the obsidian card */
+.closingBackdropAura {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(34rem, 65vw, 60rem);
+  height: clamp(22rem, 38vw, 32rem);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(245, 158, 11, 0.16) 0%,
+    rgba(254, 240, 138, 0.08) 42%,
+    transparent 72%
+  );
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Seamless bottom soft-blend dissolve toward Site Footer */
+.closingBottomBlend {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: clamp(5rem, 7vw, 7rem);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(250, 248, 242, 0.65) 50%,
+    #faf8f2 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
 .closingContainer {
   position: relative;
+  z-index: 2;
 }
 
 .closingCard {
   align-items: center;
-  background-color: #0c0a07;
-  background-image: linear-gradient(135deg, #0e0c08 0%, #15110a 50%, #0a0805 100%);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 1.85rem;
+  background: #000000;
+  border: 1.5px solid rgba(245, 158, 11, 0.28);
+  border-radius: 2rem;
   box-shadow:
-    0 24px 60px -12px rgba(0, 0, 0, 0.55),
-    0 8px 24px -6px rgba(0, 0, 0, 0.35),
-    inset 0 1px 2px 0 rgba(255, 240, 138, 0.2);
+    0 32px 80px -16px rgba(0, 0, 0, 0.9),
+    0 10px 28px -6px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1.5px 0 rgba(254, 240, 138, 0.22);
   display: flex;
-  min-height: 16rem;
+  min-height: 24rem;
   overflow: hidden;
   position: relative;
   width: 100%;
 }
 
-.closingBends {
-  height: 100% !important;
-  inset: 0 !important;
-  pointer-events: none !important;
-  position: absolute !important;
-  width: 100% !important;
-  z-index: 0 !important;
-}
-
-.closingBends canvas {
-  display: block !important;
-  height: 100% !important;
-  left: 0 !important;
-  position: absolute !important;
-  top: 0 !important;
-  width: 100% !important;
-}
-
-.closingOverlay {
-  background: linear-gradient(
-    90deg,
-    rgba(10, 8, 5, 0.45) 0%,
-    rgba(10, 8, 5, 0.15) 45%,
-    transparent 70%
-  );
-  inset: 0;
-  pointer-events: none;
+/* Left ASCII Globe Container: Anchored so only the right half enters from the left edge */
+.closingLeftVisual {
   position: absolute;
+  left: clamp(-18rem, -18vw, -13rem);
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(28rem, 38vw, 36rem);
+  height: clamp(28rem, 38vw, 36rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
   z-index: 1;
 }
 
-.closingInner {
-  align-items: center;
+.closingAsciiGlobe {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.closingAsciiGlobe:active {
+  cursor: grabbing;
+}
+
+/* Content Area: Positioned to start right beside the half-globe curve, allowing broad width */
+.closingRightContent {
   display: flex;
-  gap: clamp(2rem, 4vw, 4rem);
-  justify-content: space-between;
-  padding: clamp(2.5rem, 4.5vw, 4rem);
+  flex-direction: column;
+  justify-content: center;
+  margin-left: clamp(13rem, 19vw, 20rem);
+  max-width: 52rem;
+  padding: clamp(3rem, 5vw, 4.5rem) clamp(2rem, 3.5vw, 3.5rem);
   position: relative;
   width: 100%;
   z-index: 2;
 }
 
-.closingCopy {
-  max-width: 40rem;
-}
-
-.closingEyebrow {
-  color: #fef08a;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  margin: 0 0 0.6rem;
-  text-shadow: 0 1px 8px rgba(254, 240, 138, 0.35);
-  text-transform: uppercase;
-}
-
-.closingCopy h2 {
+.closingTitle {
   color: #ffffff;
-  font-size: clamp(1.85rem, 3.2vw, 2.65rem);
+  font-size: clamp(1.85rem, 2.75vw, 2.65rem);
   font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1.15;
-  margin: 0 0 0.75rem;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65);
+  letter-spacing: -0.03em;
+  line-height: 1.18;
+  margin: 0 0 1.15rem;
+  max-width: 46rem;
 }
 
-.closingCopy > p:last-child {
-  color: #fef3c7;
-  font-size: clamp(0.94rem, 1.2vw, 1.05rem);
-  line-height: 1.6;
-  margin: 0;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+.closingTitleAccent {
+  background: linear-gradient(135deg, #ffffff 15%, #fde047 65%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline;
 }
 
-/* 2-Lined Vertically Stacked Glassmorphic CTA Buttons */
+.closingDesc {
+  color: #94a3b8;
+  font-size: clamp(0.95rem, 1.15vw, 1.05rem);
+  line-height: 1.65;
+  margin: 0 0 2.25rem;
+  max-width: 44rem;
+}
+
+/* Action Buttons: Identical length & sleek pill alignment */
 .closingActions {
-  align-items: stretch;
   display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  gap: 0.85rem;
-  justify-content: center;
-  min-width: 16rem;
-  width: clamp(15rem, 24vw, 19rem);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.15rem;
+  margin: 0;
 }
 
-/* See-through glassmorphism buttons revealing the ColorBends ribbons */
-.closingGlassBtn {
-  align-items: center;
-  background: rgba(255, 255, 255, 0.12) !important;
-  backdrop-filter: blur(14px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.38) !important;
-  border-radius: 9999px !important;
-  box-shadow:
-    0 4px 16px -2px rgba(0, 0, 0, 0.3),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.5) !important;
-  color: #ffffff !important;
+.closingPrimaryBtn,
+.closingSecondaryBtn {
+  align-items: center !important;
+  box-sizing: border-box !important;
   display: inline-flex !important;
-  font-size: 0.9rem !important;
-  font-weight: 700 !important;
+  font-size: 0.92rem !important;
+  font-weight: 750 !important;
   gap: 0.55rem !important;
   justify-content: center !important;
-  min-height: 2.95rem !important;
-  padding: 0.65rem 1.65rem !important;
+  min-height: 3.1rem !important;
+  padding: 0.65rem 1.75rem !important;
+  text-align: center !important;
   text-decoration: none !important;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) !important;
-  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1) !important;
   white-space: nowrap !important;
-  width: 100% !important;
+  width: 15.75rem !important;
 }
 
-.closingGlassBtn:hover {
-  background: rgba(255, 255, 255, 0.22) !important;
-  border-color: rgba(254, 240, 138, 0.75) !important;
+.closingPrimaryBtn {
+  border-radius: 9999px !important;
+  background: linear-gradient(
+    135deg,
+    #fef08a 0%,
+    #fcd34d 45%,
+    #f59e0b 100%
+  ) !important;
+  color: #0d1117 !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
   box-shadow:
-    0 6px 22px -2px rgba(0, 0, 0, 0.4),
-    0 0 14px 0 rgba(254, 240, 138, 0.25),
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.75) !important;
+    0 6px 20px -2px rgba(245, 158, 11, 0.4),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.8) !important;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.closingPrimaryBtn:hover {
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #fef08a 40%,
+    #f59e0b 100%
+  ) !important;
+  transform: translateY(-2px) !important;
+  box-shadow:
+    0 8px 24px -2px rgba(245, 158, 11, 0.55),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 1) !important;
+}
+
+.closingSecondaryBtn {
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.closingSecondaryBtn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(254, 240, 138, 0.6) !important;
   color: #ffffff !important;
   transform: translateY(-2px) !important;
-}
-
-.closingGlassBtn svg {
-  color: #fef08a !important;
-  flex-shrink: 0;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(254, 240, 138, 0.2) !important;
 }
 
 .pillButton {
@@ -1639,16 +1640,6 @@
 }
 
 @media (max-width: 52rem) {
-  .benefitsHeading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.85rem;
-  }
-
-  .benefitsGrid {
-    grid-template-columns: 1fr;
-  }
-
   .processLayout {
     grid-template-columns: 1fr;
   }
@@ -1657,26 +1648,37 @@
     position: static;
   }
 
-  .closingInner {
-    align-items: flex-start;
+  .closingCard {
     flex-direction: column;
-    gap: 1.5rem;
-    padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.25rem, 3.5vw, 2rem);
+    min-height: auto;
   }
 
-  .closingOverlay {
-    background: linear-gradient(
-      180deg,
-      rgba(13, 11, 8, 0.45) 0%,
-      rgba(13, 11, 8, 0.2) 55%,
-      transparent 100%
-    );
+  .closingLeftVisual {
+    position: relative;
+    left: 0;
+    top: 0;
+    transform: none;
+    width: 100%;
+    height: 18rem;
+    min-height: 18rem;
+  }
+
+  .closingRightContent {
+    margin-left: 0;
+    max-width: 100%;
+    padding: clamp(1.75rem, 5vw, 2.5rem) clamp(1.25rem, 4vw, 2rem);
   }
 
   .closingActions {
-    justify-content: flex-start;
-    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
     width: 100%;
+  }
+
+  .closingPrimaryBtn,
+  .closingSecondaryBtn {
+    min-width: 0 !important;
+    width: 100% !important;
   }
 
   .pageHeader {
@@ -1739,20 +1741,13 @@
     grid-template-columns: 2.25rem 1fr;
   }
 
-  .closingInner {
+  .closingRightContent {
     padding: 1.75rem 1.25rem;
   }
 
-  .closingActions,
-  .closingActions > a,
-  .closingGlassBtn {
-    width: 100% !important;
-  }
-
-  .closingGlassBtn {
-    font-size: 0.88rem !important;
-    padding: 0.65rem 1.25rem !important;
-    white-space: normal !important;
+  .closingLeftVisual {
+    height: 14rem;
+    min-height: 14rem;
   }
 }
 
@@ -1777,7 +1772,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .benefitCard,
   .jobCard,
   .searchField,
   .filterControl select,

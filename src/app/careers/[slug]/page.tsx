@@ -252,7 +252,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           {/* Right: Application Form (Unboxed - Not in a double card) */}
           <aside className={styles.applyColumn} id="apply">
             <div className={styles.applyHeader}>
-              <span className={styles.applyBadge}>Direct Application</span>
               <h2 className={styles.applyTitle}>Submit Application</h2>
               <p className={styles.applySubtitle}>
                 Apply directly for {job.title}. Our talent acquisition team

@@ -4,7 +4,6 @@ import { CareerOpeningsExplorer } from '@/app/careers/career-openings-explorer'
 import {
   ApplicationSteps,
   RecruitmentCTA,
-  WhyJoin,
 } from '@/app/careers/careers-sections'
 import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { Notice } from '@/components/ui/notice'
@@ -91,6 +90,9 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
         <div className={styles.openingsGlowMidLeft} aria-hidden="true" />
         <div className={styles.openingsGlowMidRight} aria-hidden="true" />
 
+        {/* Seamless bottom soft-blend dissolve into Application Steps */}
+        <div className={styles.openingsBottomBlend} aria-hidden="true" />
+
         <div className="container">
           <header className={styles.pageHeader}>
             <div className={styles.pageHeaderContent}>
@@ -140,14 +142,6 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
         </div>
       </section>
 
-      <WhyJoin
-        benefits={[
-          { title: copy.benefit1Title, body: copy.benefit1Body },
-          { title: copy.benefit2Title, body: copy.benefit2Body },
-          { title: copy.benefit3Title, body: copy.benefit3Body },
-        ]}
-        title={copy.benefitsTitle}
-      />
       <div className={styles.processAndCtaWrapper}>
         <ApplicationSteps />
         <RecruitmentCTA />

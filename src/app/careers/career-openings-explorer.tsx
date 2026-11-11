@@ -11,7 +11,8 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 import { EmptyState } from '@/components/ui/empty-state'
 import {
@@ -147,58 +148,67 @@ function GlassmorphicFilterSelect({
         </svg>
       </button>
 
-      {open && (
-        <div
-          aria-label={ariaLabel}
-          className={styles.glassSelectMenu}
-          role="listbox"
-        >
-          <button
-            aria-selected={value === ''}
-            className={`${styles.glassSelectOption} ${
-              value === '' ? styles.glassSelectOptionSelected : ''
-            }`}
-            onClick={() => {
-              onChange('')
-              setOpen(false)
-            }}
-            role="option"
-            type="button"
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            aria-label={ariaLabel}
+            className={styles.glassSelectMenu}
+            exit={{ opacity: 0, scale: 0.98, y: -6 }}
+            initial={{ opacity: 0, scale: 0.98, y: -8 }}
+            role="listbox"
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span>{allLabel}</span>
-            {value === '' && (
-              <span aria-hidden="true" className={styles.glassSelectCheck}>
-                ✓
-              </span>
-            )}
-          </button>
-          {options.map((opt) => {
-            const isSelected = opt === value
-            return (
-              <button
-                aria-selected={isSelected}
-                className={`${styles.glassSelectOption} ${
-                  isSelected ? styles.glassSelectOptionSelected : ''
-                }`}
-                key={opt}
-                onClick={() => {
-                  onChange(opt)
-                  setOpen(false)
-                }}
-                role="option"
-                type="button"
-              >
-                <span>{opt}</span>
-                {isSelected && (
-                  <span aria-hidden="true" className={styles.glassSelectCheck}>
-                    ✓
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      )}
+            <button
+              aria-selected={value === ''}
+              className={`${styles.glassSelectOption} ${
+                value === '' ? styles.glassSelectOptionSelected : ''
+              }`}
+              onClick={() => {
+                onChange('')
+                setOpen(false)
+              }}
+              role="option"
+              type="button"
+            >
+              <span>{allLabel}</span>
+              {value === '' && (
+                <span aria-hidden="true" className={styles.glassSelectCheck}>
+                  ✓
+                </span>
+              )}
+            </button>
+            {options.map((opt) => {
+              const isSelected = opt === value
+              return (
+                <button
+                  aria-selected={isSelected}
+                  className={`${styles.glassSelectOption} ${
+                    isSelected ? styles.glassSelectOptionSelected : ''
+                  }`}
+                  key={opt}
+                  onClick={() => {
+                    onChange(opt)
+                    setOpen(false)
+                  }}
+                  role="option"
+                  type="button"
+                >
+                  <span>{opt}</span>
+                  {isSelected && (
+                    <span
+                      aria-hidden="true"
+                      className={styles.glassSelectCheck}
+                    >
+                      ✓
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -206,16 +216,25 @@ function GlassmorphicFilterSelect({
 export function JobFilters({
   filters,
   hasFilters,
+  isSearching = false,
+  matchCount,
   onChange,
   onClear,
   options,
+  searchInputValue,
 }: {
   filters: CareerFilters
   hasFilters: boolean
+  isSearching?: boolean
+  matchCount?: number
   onChange: (key: keyof CareerFilters, value: string) => void
   onClear: () => void
   options: FilterOptions
+  searchInputValue?: string
 }) {
+  const currentSearchText =
+    searchInputValue !== undefined ? searchInputValue : filters.query
+
   return (
     <form
       aria-label="Filter open roles"
@@ -229,7 +248,9 @@ export function JobFilters({
             <span className="sr-only">Search open roles</span>
             <HugeiconsIcon
               aria-hidden="true"
-              className={styles.searchIcon}
+              className={`${styles.searchIcon} ${
+                isSearching ? styles.searchIconActive : ''
+              }`}
               icon={Search01Icon}
               size={18}
             />
@@ -245,9 +266,15 @@ export function JobFilters({
               }}
               placeholder="Search roles, skills, or teams…"
               type="search"
-              value={filters.query}
+              value={currentSearchText}
             />
-            {filters.query ? (
+            {isSearching ? (
+              <span
+                aria-label="Searching roles"
+                className={styles.searchSpinner}
+                role="status"
+              />
+            ) : currentSearchText ? (
               <button
                 aria-label="Clear search text"
                 className={styles.clearSearchInput}
@@ -311,25 +338,49 @@ export function JobFilters({
         </div>
       </div>
 
-      {hasFilters ? (
-        <div className={styles.filterSummary}>
-          <div className={styles.activeFilterActions}>
-            <button
-              className={styles.clearFiltersButton}
-              onClick={onClear}
-              type="button"
-            >
-              <HugeiconsIcon aria-hidden="true" icon={Cancel01Icon} size={14} />
-              <span>Clear filters</span>
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {hasFilters ? (
+          <motion.div
+            animate={{ opacity: 1, height: 'auto', y: 0 }}
+            className={styles.filterSummary}
+            exit={{ opacity: 0, height: 0, y: -4 }}
+            initial={{ opacity: 0, height: 0, y: -4 }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {matchCount !== undefined ? (
+              <span className={styles.filterMatchCount}>
+                <span className={styles.filterMatchDot} aria-hidden="true" />
+                <span>
+                  {matchCount}{' '}
+                  {matchCount === 1 ? 'role matches' : 'roles match'} your
+                  search
+                </span>
+              </span>
+            ) : null}
+            <div className={styles.activeFilterActions}>
+              <button
+                className={styles.clearFiltersButton}
+                onClick={onClear}
+                type="button"
+              >
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Cancel01Icon}
+                  size={14}
+                />
+                <span>Clear filters</span>
+              </button>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </form>
   )
 }
 
 export function JobCard({
+  applyLabel,
+  detailsLabel,
   job,
 }: {
   applyLabel?: string
@@ -337,6 +388,7 @@ export function JobCard({
   job: CareerJob
 }) {
   const detailsPath = `/careers/${job.slug}`
+  const actionLabel = applyLabel ?? detailsLabel ?? 'View Details & Apply'
 
   const arrangementClass =
     job.workArrangement === 'remote'
@@ -346,7 +398,19 @@ export function JobCard({
         : styles.arrangementOnsite
 
   return (
-    <article className={styles.jobCard}>
+    <motion.article
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className={styles.jobCard}
+      exit={{ opacity: 0, scale: 0.97, y: -6 }}
+      initial={{ opacity: 0, scale: 0.97, y: 8 }}
+      layout="position"
+      transition={{
+        duration: 0.16,
+        ease: [0.16, 1, 0.3, 1],
+        layout: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
+      }}
+      whileHover={{ y: -3, transition: { duration: 0.16, ease: 'easeOut' } }}
+    >
       <div className={styles.jobMain}>
         <div className={styles.jobBadges}>
           {job.department ? (
@@ -399,11 +463,11 @@ export function JobCard({
           className={`button-link button-link--primary ${styles.applyAction}`}
           href={detailsPath}
         >
-          <span>View Details &amp; Apply</span>
+          <span>{actionLabel}</span>
           <HugeiconsIcon aria-hidden="true" icon={ArrowRight01Icon} size={16} />
         </Link>
       </div>
-    </article>
+    </motion.article>
   )
 }
 
@@ -418,14 +482,16 @@ export function JobList({
 }) {
   return (
     <div className={styles.jobsList}>
-      {jobs.map((job) => (
-        <JobCard
-          applyLabel={applyLabel}
-          detailsLabel={detailsLabel}
-          job={job}
-          key={job.id}
-        />
-      ))}
+      <AnimatePresence initial={false}>
+        {jobs.map((job) => (
+          <JobCard
+            applyLabel={applyLabel}
+            detailsLabel={detailsLabel}
+            job={job}
+            key={job.id}
+          />
+        ))}
+      </AnimatePresence>
     </div>
   )
 }
@@ -459,7 +525,8 @@ export function CareerOpeningsExplorer({
   const [filters, setFilters] = useState<CareerFilters>(() =>
     careerFiltersFromSearchParams(searchParams),
   )
-  const [debouncedQuery, setDebouncedQuery] = useState(filters.query)
+  const [searchInputValue, setSearchInputValue] = useState(filters.query)
+  const [isSearching, startSearchTransition] = useTransition()
 
   // Real-time automatic background syncing with JazzHR backend
   useEffect(() => {
@@ -500,12 +567,6 @@ export function CareerOpeningsExplorer({
 
   const options = useMemo(() => filterOptions(jobs), [jobs])
 
-  // Responsive debounced query update for instant local filtering
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedQuery(filters.query), 120)
-    return () => window.clearTimeout(timer)
-  }, [filters.query])
-
   // Synchronize browser address bar for shareable links without triggering Next.js server navigation
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -528,25 +589,34 @@ export function CareerOpeningsExplorer({
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search)
-      setFilters(careerFiltersFromSearchParams(params))
+      const nextFilters = careerFiltersFromSearchParams(params)
+      setFilters(nextFilters)
+      setSearchInputValue(nextFilters.query)
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   const filteredJobs = useMemo(
-    () => filterCareerJobs(jobs, { ...filters, query: debouncedQuery }),
-    [debouncedQuery, filters, jobs],
+    () => filterCareerJobs(jobs, filters),
+    [filters, jobs],
   )
   const hasFilters = Object.values(filters).some(Boolean)
 
   function updateFilter(key: keyof CareerFilters, value: string) {
-    setFilters((current) => ({ ...current, [key]: value }))
+    if (key === 'query') {
+      setSearchInputValue(value)
+      startSearchTransition(() => {
+        setFilters((current) => ({ ...current, query: value }))
+      })
+    } else {
+      setFilters((current) => ({ ...current, [key]: value }))
+    }
   }
 
   function clearFilters() {
+    setSearchInputValue('')
     setFilters(EMPTY_CAREER_FILTERS)
-    setDebouncedQuery('')
   }
 
   if (jobs.length === 0) {
@@ -564,26 +634,39 @@ export function CareerOpeningsExplorer({
       <JobFilters
         filters={filters}
         hasFilters={hasFilters}
+        isSearching={isSearching}
+        matchCount={filteredJobs.length}
         onChange={updateFilter}
         onClear={clearFilters}
         options={options}
+        searchInputValue={searchInputValue}
       />
 
       {filteredJobs.length === 0 ? (
-        <EmptyState
-          action={
-            <button
-              className={`button ${styles.clearAllButton}`}
-              onClick={clearFilters}
-              type="button"
-            >
-              Clear all filters
-            </button>
-          }
-          className={styles.emptyState}
-          description="Try removing keywords or broadening your department or location filters."
-          title="No matching roles found"
-        />
+        <AnimatePresence>
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            initial={{ opacity: 0, y: 6 }}
+            key="empty-state"
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <EmptyState
+              action={
+                <button
+                  className={`button ${styles.clearAllButton}`}
+                  onClick={clearFilters}
+                  type="button"
+                >
+                  Clear all filters
+                </button>
+              }
+              className={styles.emptyState}
+              description="Try removing keywords or broadening your department or location filters."
+              title="No matching roles found"
+            />
+          </motion.div>
+        </AnimatePresence>
       ) : (
         <JobList
           applyLabel={applyLabel}

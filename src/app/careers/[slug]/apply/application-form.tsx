@@ -1,5 +1,6 @@
 'use client'
 
+import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import Script from 'next/script'
 import { useEffect, useRef, useState, useTransition } from 'react'
@@ -38,6 +39,161 @@ function FieldError({ error, id }: { error: string | undefined; id: string }) {
   )
 }
 
+function CustomQuestionSelect({
+  disabled,
+  error,
+  question,
+}: {
+  disabled: boolean
+  error: string | undefined
+  question: CareerQuestion
+}) {
+  const [open, setOpen] = useState(false)
+  const [selected, setSelected] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClickOutside(e: MouseEvent | TouchEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false)
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  const id = `application-${question.fieldName}`
+  const errorId = `${id}-error`
+
+  return (
+    <div className="custom-form-select" ref={containerRef}>
+      {/* Hidden input submitted with the FormData */}
+      <input name={question.fieldName} type="hidden" value={selected} />
+
+      {/* Hidden input for HTML5 required constraint validation */}
+      {question.mandatory && (
+        <input
+          aria-hidden="true"
+          disabled={disabled}
+          onChange={() => {}}
+          required
+          style={{
+            bottom: 0,
+            height: 0,
+            left: '50%',
+            opacity: 0,
+            pointerEvents: 'none',
+            position: 'absolute',
+            width: 0,
+          }}
+          tabIndex={-1}
+          value={selected}
+        />
+      )}
+
+      <button
+        aria-describedby={error ? errorId : undefined}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className={`custom-form-select__trigger ${
+          open ? 'custom-form-select__trigger--open' : ''
+        } ${error ? 'custom-form-select__trigger--error' : ''}`}
+        disabled={disabled}
+        id={id}
+        onClick={() => setOpen((prev) => !prev)}
+        ref={triggerRef}
+        type="button"
+      >
+        <span
+          className={`custom-form-select__value ${
+            !selected ? 'custom-form-select__placeholder' : ''
+          }`}
+        >
+          {selected || 'Select an answer'}
+        </span>
+        <svg
+          aria-hidden="true"
+          className={`custom-form-select__chevron ${
+            open ? 'custom-form-select__chevron--open' : ''
+          }`}
+          fill="none"
+          height="16"
+          viewBox="0 0 24 24"
+          width="16"
+        >
+          <path
+            d="m6 9 6 6 6-6"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2.25"
+          />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="custom-form-select__menu"
+            exit={{ opacity: 0, scale: 0.98, y: -6 }}
+            initial={{ opacity: 0, scale: 0.98, y: -8 }}
+            role="listbox"
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {question.options.map((option) => {
+              const isSelected = selected === option
+              return (
+                <button
+                  aria-selected={isSelected}
+                  className={`custom-form-select__option ${
+                    isSelected ? 'custom-form-select__option--selected' : ''
+                  }`}
+                  key={option}
+                  onClick={() => {
+                    setSelected(option)
+                    setOpen(false)
+                    triggerRef.current?.focus()
+                  }}
+                  role="option"
+                  type="button"
+                >
+                  <span>{option}</span>
+                  {isSelected && (
+                    <span
+                      aria-hidden="true"
+                      className="custom-form-select__check"
+                    >
+                      ✓
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 function QuestionField({
   disabled,
   error,
@@ -73,18 +229,18 @@ function QuestionField({
       </label>
 
       {question.format === 'select' ? (
-        <select {...shared} defaultValue="">
-          <option disabled={question.mandatory} value="">
-            Select an answer
-          </option>
-          {question.options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+        <CustomQuestionSelect
+          disabled={disabled}
+          error={error}
+          question={question}
+        />
       ) : question.format === 'textarea' ? (
-        <textarea {...shared} maxLength={question.maxLength || 5000} rows={4} />
+        <textarea
+          {...shared}
+          maxLength={question.maxLength || 5000}
+          placeholder="Provide your response or details here…"
+          rows={4}
+        />
       ) : question.format === 'checkbox' ? (
         <fieldset
           aria-describedby={error ? errorId : undefined}
@@ -109,6 +265,9 @@ function QuestionField({
         <input
           {...shared}
           maxLength={question.maxLength || undefined}
+          placeholder={
+            question.format === 'number' ? 'e.g. 5' : 'Enter your answer…'
+          }
           step={question.format === 'number' ? 'any' : undefined}
           type={question.format}
         />
@@ -296,6 +455,7 @@ export function CareerApplicationForm({
               id="application-first-name"
               maxLength={80}
               name="firstName"
+              placeholder="e.g. John"
               required
               type="text"
             />
@@ -313,6 +473,7 @@ export function CareerApplicationForm({
               id="application-last-name"
               maxLength={80}
               name="lastName"
+              placeholder="e.g. Doe"
               required
               type="text"
             />
@@ -332,6 +493,7 @@ export function CareerApplicationForm({
               id="application-email"
               maxLength={254}
               name="email"
+              placeholder="e.g. john.doe@example.com"
               required
               type="email"
             />
@@ -351,6 +513,7 @@ export function CareerApplicationForm({
               id="application-phone"
               maxLength={40}
               name="phone"
+              placeholder="e.g. +63 912 345 6789"
               required
               type="tel"
             />
@@ -395,6 +558,7 @@ export function CareerApplicationForm({
             id="application-cover-letter"
             maxLength={5000}
             name="coverLetter"
+            placeholder="Write a brief introduction, highlights of your relevant experience, or why you'd be a great fit for this role…"
             rows={6}
           />
           <FieldError
