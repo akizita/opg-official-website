@@ -6,7 +6,7 @@ import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { OpgSocialLinks } from '@/components/site/opg-social-links'
 import { ContactForm } from '@/app/contact/contact-form'
 import { Aurora } from '@/components/ui/aurora'
-import { SpotlightCard } from '@/components/ui/spotlight-card'
+import { ContactAsciiMapCorners } from '@/components/ui/contact-ascii-map'
 import { CONTACT_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
 import type { PageDocument } from '@/lib/content/page-documents'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
@@ -112,6 +112,8 @@ export default async function ContactPage({
           speed={0.5}
         />
       </div>
+      {/* Dotted ASCII style map accents on the background corners */}
+      <ContactAsciiMapCorners />
       <PageVisualRuntime
         page="contact"
         config={getPageVisualConfig(doc?.content)}
@@ -163,17 +165,10 @@ export default async function ContactPage({
           </div>
 
           <div className="contact-form-column">
-            <SpotlightCard
-              className="contact-form-spotlight"
-              spotlightColor="rgba(245, 182, 24, 0.26)"
-              tabIndex={-1}
-              trackPointerWhileFocused
-            >
-              <ContactForm
-                copy={copy}
-                signedInEmail={visitor?.email || ''}
-              />
-            </SpotlightCard>
+            <ContactForm
+              copy={copy}
+              signedInEmail={visitor?.email || ''}
+            />
           </div>
         </div>
       </div>
