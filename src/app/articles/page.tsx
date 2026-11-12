@@ -66,28 +66,29 @@ function Engagement({
   article: Article
   inverse?: boolean
 }) {
+  const likes = article.like_count ?? 0
+  const views = article.view_count ?? 0
+
   return (
     <span
       className={`article-engagement ${inverse ? 'article-engagement--inverse' : ''}`}
-      aria-label={`${article.like_count ?? 0} LinkedIn reactions. LinkedIn views are visible only to the publisher.`}
+      aria-label={`${likes} likes, ${views.toLocaleString()} views`}
     >
       <span className="article-engagement__item">
         <svg aria-hidden="true" viewBox="0 0 24 24">
           <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />
         </svg>
-        {article.like_count ?? 0} reactions
+        {likes} likes
       </span>
       <span
         className="article-engagement__item"
-        title="View totals are visible only to the LinkedIn publisher"
+        title={`${views.toLocaleString()} views`}
       >
         <svg aria-hidden="true" viewBox="0 0 24 24">
-          <path d="M2.2 12s3.6-6 9.8-6 9.8 6 9.8 6-3.6 6-9.8 6-9.8-6-9.8-6Z" />
+          <path d="M2.2 12s3.6-6 9.8-6 9.8 6-3.6 6-9.8 6-9.8-6Z" />
           <circle cx="12" cy="12" r="2.5" />
         </svg>
-        {article.view_count === null
-          ? 'Publisher-only views'
-          : `${article.view_count.toLocaleString()} views`}
+        {views.toLocaleString()} views
       </span>
     </span>
   )
@@ -139,11 +140,22 @@ export default async function ArticlesPage({
   const categorySlug = params.category || undefined
 
   const supabase = await createClient()
-  const [doc, databaseData] = await Promise.all([
+  const [doc, databaseData, engagementRes] = await Promise.all([
     getVisiblePageDocument(supabase, 'articles', params.opgPreview === '1'),
     getPublishedArticles({ page: 1, pageSize: 50, categorySlug }),
+    supabase.from('article_engagement').select('article_slug, view_count, like_count'),
   ])
   const copy = getPageCopy(doc?.content, ARTICLES_COPY_SECTIONS)
+
+  const engagementMap = new Map<string, { view_count: number; like_count: number }>()
+  if (engagementRes.data) {
+    for (const row of engagementRes.data) {
+      engagementMap.set(row.article_slug, {
+        view_count: Number(row.view_count ?? 0),
+        like_count: Number(row.like_count ?? 0),
+      })
+    }
+  }
 
   const editorialArticles = featuredArticles.filter(
     (article) =>
@@ -156,11 +168,21 @@ export default async function ArticlesPage({
     if (!articleMap.has(article.slug)) articleMap.set(article.slug, article)
   }
 
-  const allArticles = [...articleMap.values()].sort(
-    (a, b) =>
-      new Date(b.published_at || b.created_at).getTime() -
-      new Date(a.published_at || a.created_at).getTime(),
-  )
+  const allArticles = [...articleMap.values()]
+    .map((article) => {
+      const live = engagementMap.get(article.slug)
+      if (!live) return article
+      return {
+        ...article,
+        view_count: live.view_count,
+        like_count: Math.max(article.like_count ?? 0, live.like_count),
+      }
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.published_at || b.created_at).getTime() -
+        new Date(a.published_at || a.created_at).getTime(),
+    )
   const total = allArticles.length
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const from = (currentPage - 1) * PAGE_SIZE

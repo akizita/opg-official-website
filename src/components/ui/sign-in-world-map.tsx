@@ -1,0 +1,159 @@
+'use client'
+
+import React, { memo } from 'react'
+import styles from '@/app/sign-in/sign-in.module.css'
+
+/**
+ * Authentic Dotted ASCII Map Corner & Side Accents for the Sign-In Portal.
+ *
+ * Stuck flush to the corners and flanks in the background:
+ * - Top-Left: North America, Transatlantic & Europe (London, New York, San Francisco)
+ * - Bottom-Right: East Asia, Southeast Asia, Philippines Manila HQ, Singapore, Australia (Sydney)
+ *
+ * Keeps the centered login card completely clean, prominent, and free of overlap.
+ * Marked decorative: aria-hidden="true".
+ */
+const TOP_LEFT_ASCII_MAP_D =
+  'M288 256h.01 M120 264h.01 M128 264h.01 M240 264h.01 M248 264h.01 M264 264h.01 M288 264h.01 M296 264h.01 M304 264h.01 M344 264h.01 M104 272h.01 M112 272h.01 M120 272h.01 M128 272h.01 M136 272h.01 M192 272h.01 M216 272h.01 M224 272h.01 M272 272h.01 M280 272h.01 M304 272h.01 M312 272h.01 M320 272h.01 M328 272h.01 M336 272h.01 M344 272h.01 M352 272h.01 M360 272h.01 M96 280h.01 M112 280h.01 M120 280h.01 M128 280h.01 M136 280h.01 M144 280h.01 M192 280h.01 M264 280h.01 M272 280h.01 M296 280h.01 M304 280h.01 M312 280h.01 M320 280h.01 M328 280h.01 M336 280h.01 M344 280h.01 M352 280h.01 M360 280h.01 M368 280h.01 M376 280h.01 M384 280h.01 M96 288h.01 M104 288h.01 M112 288h.01 M120 288h.01 M128 288h.01 M136 288h.01 M144 288h.01 M152 288h.01 M160 288h.01 M168 288h.01 M176 288h.01 M200 288h.01 M208 288h.01 M216 288h.01 M232 288h.01 M264 288h.01 M296 288h.01 M304 288h.01 M312 288h.01 M320 288h.01 M328 288h.01 M336 288h.01 M344 288h.01 M352 288h.01 M360 288h.01 M368 288h.01 M376 288h.01 M88 296h.01 M96 296h.01 M104 296h.01 M112 296h.01 M120 296h.01 M128 296h.01 M136 296h.01 M144 296h.01 M152 296h.01 M160 296h.01 M168 296h.01 M176 296h.01 M184 296h.01 M200 296h.01 M208 296h.01 M216 296h.01 M232 296h.01 M256 296h.01 M264 296h.01 M312 296h.01 M320 296h.01 M328 296h.01 M336 296h.01 M344 296h.01 M352 296h.01 M360 296h.01 M368 296h.01 M376 296h.01 M88 304h.01 M96 304h.01 M104 304h.01 M112 304h.01 M120 304h.01 M128 304h.01 M136 304h.01 M144 304h.01 M152 304h.01 M160 304h.01 M168 304h.01 M176 304h.01 M184 304h.01 M192 304h.01 M216 304h.01 M240 304h.01 M256 304h.01 M264 304h.01 M272 304h.01 M320 304h.01 M328 304h.01 M336 304h.01 M344 304h.01 M352 304h.01 M360 304h.01 M368 304h.01 M376 304h.01 M88 312h.01 M96 312h.01 M104 312h.01 M112 312h.01 M120 312h.01 M128 312h.01 M136 312h.01 M144 312h.01 M152 312h.01 M160 312h.01 M168 312h.01 M176 312h.01 M184 312h.01 M192 312h.01 M200 312h.01 M208 312h.01 M216 312h.01 M240 312h.01 M256 312h.01 M272 312h.01 M280 312h.01 M312 312h.01 M320 312h.01 M328 312h.01 M336 312h.01 M344 312h.01 M352 312h.01 M360 312h.01 M376 312h.01 M96 320h.01 M120 320h.01 M136 320h.01 M144 320h.01 M152 320h.01 M160 320h.01 M168 320h.01 M176 320h.01 M184 320h.01 M192 320h.01 M200 320h.01 M208 320h.01 M216 320h.01 M224 320h.01 M232 320h.01 M240 320h.01 M248 320h.01 M256 320h.01 M280 320h.01 M312 320h.01 M320 320h.01 M328 320h.01 M336 320h.01 M344 320h.01 M352 320h.01 M360 320h.01 M368 320h.01 M80 328h.01 M88 328h.01 M136 328h.01 M144 328h.01 M152 328h.01 M160 328h.01 M168 328h.01 M176 328h.01 M184 328h.01 M192 328h.01 M200 328h.01 M208 328h.01 M216 328h.01 M224 328h.01 M232 328h.01 M272 328h.01 M280 328h.01 M320 328h.01 M328 328h.01 M336 328h.01 M344 328h.01 M352 328h.01 M360 328h.01 M136 336h.01 M144 336h.01 M152 336h.01 M160 336h.01 M168 336h.01 M176 336h.01 M184 336h.01 M192 336h.01 M200 336h.01 M208 336h.01 M216 336h.01 M224 336h.01 M272 336h.01 M280 336h.01 M312 336h.01 M320 336h.01 M328 336h.01 M336 336h.01 M344 336h.01 M136 344h.01 M144 344h.01 M152 344h.01 M160 344h.01 M168 344h.01 M176 344h.01 M184 344h.01 M192 344h.01 M200 344h.01 M208 344h.01 M216 344h.01 M272 344h.01 M280 344h.01 M312 344h.01 M320 344h.01 M328 344h.01 M368 344h.01 M376 344h.01 M136 352h.01 M144 352h.01 M152 352h.01 M160 352h.01 M168 352h.01 M176 352h.01 M184 352h.01 M192 352h.01 M200 352h.01 M208 352h.01 M216 352h.01 M256 352h.01 M264 352h.01 M320 352h.01 M328 352h.01 M144 360h.01 M152 360h.01 M160 360h.01 M168 360h.01 M176 360h.01 M184 360h.01 M192 360h.01 M200 360h.01 M208 360h.01 M216 360h.01 M224 360h.01 M256 360h.01 M264 360h.01 M280 360h.01 M136 368h.01 M144 368h.01 M152 368h.01 M160 368h.01 M168 368h.01 M176 368h.01 M184 368h.01 M192 368h.01 M200 368h.01 M208 368h.01 M216 368h.01 M224 368h.01 M232 368h.01 M256 368h.01 M264 368h.01 M272 368h.01 M280 368h.01 M400 368h.01 M152 376h.01 M160 376h.01 M168 376h.01 M176 376h.01 M184 376h.01 M192 376h.01 M200 376h.01 M208 376h.01 M216 376h.01 M224 376h.01 M232 376h.01 M248 376h.01 M256 376h.01 M264 376h.01 M272 376h.01 M280 376h.01 M288 376h.01 M400 376h.01 M144 384h.01 M152 384h.01 M160 384h.01 M168 384h.01 M176 384h.01 M184 384h.01 M192 384h.01 M200 384h.01 M208 384h.01 M216 384h.01 M224 384h.01 M232 384h.01 M240 384h.01 M248 384h.01 M256 384h.01 M264 384h.01 M272 384h.01 M280 384h.01 M288 384h.01 M392 384h.01 M136 392h.01 M144 392h.01 M152 392h.01 M160 392h.01 M168 392h.01 M176 392h.01 M184 392h.01 M192 392h.01 M200 392h.01 M208 392h.01 M224 392h.01 M232 392h.01 M240 392h.01 M248 392h.01 M256 392h.01 M288 392h.01 M400 392h.01 M408 392h.01 M136 400h.01 M144 400h.01 M152 400h.01 M160 400h.01 M168 400h.01 M176 400h.01 M184 400h.01 M192 400h.01 M200 400h.01 M208 400h.01 M216 400h.01 M224 400h.01 M232 400h.01 M240 400h.01 M248 400h.01 M256 400h.01 M264 400h.01 M288 400h.01 M400 400h.01 M408 400h.01 M128 408h.01 M136 408h.01 M144 408h.01 M152 408h.01 M160 408h.01 M168 408h.01 M176 408h.01 M184 408h.01 M192 408h.01 M200 408h.01 M208 408h.01 M216 408h.01 M232 408h.01 M240 408h.01 M248 408h.01 M256 408h.01 M264 408h.01 M408 408h.01 M136 416h.01 M144 416h.01 M152 416h.01 M160 416h.01 M168 416h.01 M176 416h.01 M184 416h.01 M192 416h.01 M200 416h.01 M208 416h.01 M216 416h.01 M224 416h.01 M232 416h.01 M240 416h.01 M248 416h.01 M408 416h.01 M136 424h.01 M144 424h.01 M152 424h.01 M160 424h.01 M168 424h.01 M176 424h.01 M184 424h.01 M192 424h.01 M200 424h.01 M208 424h.01 M216 424h.01 M224 424h.01 M232 424h.01 M392 424h.01 M400 424h.01 M408 424h.01 M136 432h.01 M144 432h.01 M152 432h.01 M160 432h.01 M168 432h.01 M176 432h.01 M184 432h.01 M192 432h.01 M200 432h.01 M208 432h.01 M216 432h.01 M224 432h.01 M232 432h.01 M392 432h.01 M400 432h.01 M136 440h.01 M144 440h.01 M152 440h.01 M168 440h.01 M176 440h.01 M184 440h.01 M192 440h.01 M200 440h.01 M208 440h.01 M216 440h.01 M400 440h.01 M408 440h.01 M152 448h.01 M160 448h.01 M168 448h.01 M176 448h.01 M184 448h.01 M216 448h.01 M392 448h.01 M400 448h.01 M408 448h.01'
+
+const BOTTOM_RIGHT_ASCII_MAP_D =
+  'M632 384h.01 M640 384h.01 M648 384h.01 M656 384h.01 M672 384h.01 M680 384h.01 M688 384h.01 M696 384h.01 M704 384h.01 M728 384h.01 M632 392h.01 M640 392h.01 M648 392h.01 M656 392h.01 M664 392h.01 M672 392h.01 M680 392h.01 M688 392h.01 M696 392h.01 M704 392h.01 M720 392h.01 M728 392h.01 M632 400h.01 M640 400h.01 M648 400h.01 M656 400h.01 M664 400h.01 M672 400h.01 M680 400h.01 M688 400h.01 M696 400h.01 M632 408h.01 M640 408h.01 M648 408h.01 M656 408h.01 M664 408h.01 M672 408h.01 M728 408h.01 M632 416h.01 M640 416h.01 M648 416h.01 M656 416h.01 M664 416h.01 M672 416h.01 M680 416h.01 M696 416h.01 M720 416h.01 M728 416h.01 M632 424h.01 M640 424h.01 M648 424h.01 M656 424h.01 M664 424h.01 M672 424h.01 M680 424h.01 M712 424h.01 M720 424h.01 M632 432h.01 M640 432h.01 M648 432h.01 M656 432h.01 M664 432h.01 M672 432h.01 M680 432h.01 M688 432h.01 M712 432h.01 M632 440h.01 M640 440h.01 M648 440h.01 M656 440h.01 M664 440h.01 M672 440h.01 M680 440h.01 M688 440h.01 M632 448h.01 M640 448h.01 M648 448h.01 M656 448h.01 M664 448h.01 M672 448h.01 M680 448h.01 M688 448h.01 M632 456h.01 M640 456h.01 M648 456h.01 M656 456h.01 M664 456h.01 M672 456h.01 M680 456h.01 M632 464h.01 M648 464h.01 M664 464h.01 M672 464h.01 M680 464h.01 M632 472h.01 M640 472h.01 M648 472h.01 M656 472h.01 M640 480h.01 M648 480h.01 M648 488h.01 M656 488h.01 M664 488h.01 M704 488h.01 M648 496h.01 M664 496h.01 M704 496h.01 M712 496h.01 M664 504h.01 M712 504h.01 M712 512h.01 M656 520h.01 M688 520h.01 M656 528h.01 M680 528h.01 M688 528h.01 M696 528h.01 M704 528h.01 M712 528h.01 M720 528h.01 M656 536h.01 M680 536h.01 M688 536h.01 M704 536h.01 M664 544h.01 M744 544h.01 M672 552h.01 M680 552h.01 M752 552h.01 M760 552h.01 M752 560h.01 M800 568h.01 M728 576h.01 M736 576h.01 M752 576h.01 M704 584h.01 M712 584h.01 M720 584h.01 M728 584h.01 M736 584h.01 M752 584h.01 M696 592h.01 M704 592h.01 M712 592h.01 M720 592h.01 M728 592h.01 M736 592h.01 M744 592h.01 M752 592h.01 M680 600h.01 M688 600h.01 M696 600h.01 M704 600h.01 M712 600h.01 M720 600h.01 M728 600h.01 M736 600h.01 M744 600h.01 M752 600h.01 M760 600h.01 M680 608h.01 M688 608h.01 M696 608h.01 M704 608h.01 M712 608h.01 M720 608h.01 M728 608h.01 M736 608h.01 M744 608h.01 M752 608h.01 M760 608h.01 M680 616h.01 M688 616h.01 M696 616h.01 M704 616h.01 M712 616h.01 M720 616h.01 M728 616h.01 M736 616h.01 M744 616h.01 M752 616h.01 M760 616h.01 M680 624h.01 M688 624h.01 M696 624h.01 M704 624h.01 M712 624h.01 M720 624h.01 M728 624h.01 M736 624h.01 M744 624h.01 M752 624h.01 M760 624h.01 M672 632h.01 M680 632h.01 M688 632h.01 M696 632h.01 M712 632h.01 M720 632h.01 M728 632h.01 M736 632h.01 M744 632h.01 M752 632h.01 M760 632h.01 M720 640h.01 M728 640h.01 M736 640h.01 M744 640h.01 M752 640h.01 M728 648h.01 M736 648h.01 M744 648h.01 M752 648h.01 M728 656h.01 M736 656h.01 M744 656h.01 M808 664h.01 M728 672h.01 M736 672h.01 M808 672h.01 M800 680h.01 M784 688h.01 M776 696h.01'
+
+export const SignInAsciiBackground = memo(function SignInAsciiBackground() {
+  return (
+    <div aria-hidden="true" className={styles.asciiBg}>
+      {/* Top-Left Corner & Flank ASCII Map */}
+      <div className={`${styles.asciiCorner} ${styles.asciiCornerTopLeft}`}>
+        <div className={styles.asciiHalo} />
+        <svg
+          viewBox="76 250 336 205"
+          preserveAspectRatio="xMinYMin meet"
+          className={styles.asciiSvg}
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <filter id="signInPillShadow" x="-25%" y="-35%" width="150%" height="170%">
+              <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" floodColor="rgba(74, 55, 20, 0.12)" />
+            </filter>
+          </defs>
+
+          {/* Authentic Continental Dots */}
+          <path
+            d={TOP_LEFT_ASCII_MAP_D}
+            stroke="rgba(217, 119, 6, 0.68)"
+            strokeWidth="3.4"
+            strokeLinecap="round"
+          />
+
+          {/* Hub Beacons & White Pill Badges */}
+          <g className={styles.asciiPillGroup}>
+            {/* San Francisco / US West */}
+            <circle cx={135} cy={388} r={5} fill="rgba(245, 158, 11, 0.35)" />
+            <circle cx={135} cy={388} r={2.5} fill="#f59e0b" />
+
+            {/* New York / US East */}
+            <g>
+              <circle cx={232} cy={375} r={5.5} fill="rgba(245, 158, 11, 0.35)" />
+              <circle cx={232} cy={375} r={2.8} fill="#f59e0b" stroke="#ffffff" strokeWidth={1} />
+              <line x1={232} y1={375} x2={232} y2={364} stroke="rgba(217, 119, 6, 0.45)" strokeWidth={1} />
+              <rect x={192} y={342} width={80} height={22} rx={11} className={styles.hubPillBg} filter="url(#signInPillShadow)" />
+              <text x={232} y={353} textAnchor="middle" className={styles.hubPillText}>
+                New York
+              </text>
+            </g>
+
+            {/* London / Europe */}
+            <g>
+              <circle cx={398} cy={345} r={5.5} fill="rgba(245, 158, 11, 0.35)" />
+              <circle cx={398} cy={345} r={2.8} fill="#f59e0b" stroke="#ffffff" strokeWidth={1} />
+              <line x1={398} y1={345} x2={375} y2={334} stroke="rgba(217, 119, 6, 0.45)" strokeWidth={1} />
+              <rect x={340} y={312} width={70} height={22} rx={11} className={styles.hubPillBg} filter="url(#signInPillShadow)" />
+              <text x={375} y={323} textAnchor="middle" className={styles.hubPillText}>
+                London
+              </text>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      {/* Bottom-Right Corner & Flank ASCII Map */}
+      <div className={`${styles.asciiCorner} ${styles.asciiCornerBottomRight}`}>
+        <div className={styles.asciiHalo} />
+        <svg
+          viewBox="630 380 186 324"
+          preserveAspectRatio="xMaxYMax meet"
+          className={styles.asciiSvg}
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <filter id="signInPillShadowHq" x="-30%" y="-40%" width="160%" height="180%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(234, 88, 12, 0.2)" />
+            </filter>
+          </defs>
+
+          {/* Authentic Continental Dots */}
+          <path
+            d={BOTTOM_RIGHT_ASCII_MAP_D}
+            stroke="rgba(217, 119, 6, 0.68)"
+            strokeWidth="3.4"
+            strokeLinecap="round"
+          />
+
+          {/* Hub Beacons & White Pill Badges */}
+          <g className={styles.asciiPillGroup}>
+            {/* Philippines Global Operations HQ (Manila) - Dominant Beacon */}
+            <g>
+              {/* Pulsing Radar Ring */}
+              <circle
+                className={styles.asciiPulseRing}
+                cx={704}
+                cy={498}
+                r={16}
+                fill="none"
+                stroke="#f59e0b"
+                strokeWidth={1.5}
+              />
+              <circle cx={704} cy={498} r={8.5} fill="rgba(245, 158, 11, 0.3)" />
+              <circle cx={704} cy={498} r={5} fill="#ea580c" stroke="#ffffff" strokeWidth={1.5} />
+              <circle cx={704} cy={498} r={2} fill="#ffffff" />
+              <line x1={704} y1={498} x2={704} y2={480} stroke="#ea580c" strokeWidth={1.2} />
+              <rect x={655} y={456} width={98} height={24} rx={12} className={styles.hubPillBgHq} filter="url(#signInPillShadowHq)" />
+              <text x={704} y={468} textAnchor="middle" className={styles.hubPillTextHq}>
+                Manila (HQ)
+              </text>
+            </g>
+
+            {/* Singapore */}
+            <g>
+              <circle cx={658} cy={528} r={5} fill="rgba(245, 158, 11, 0.35)" />
+              <circle cx={658} cy={528} r={2.5} fill="#f59e0b" stroke="#ffffff" strokeWidth={1} />
+              <line x1={658} y1={528} x2={665} y2={548} stroke="rgba(217, 119, 6, 0.45)" strokeWidth={1} />
+              <rect x={634} y={548} width={78} height={22} rx={11} className={styles.hubPillBg} filter="url(#signInPillShadow)" />
+              <text x={673} y={559} textAnchor="middle" className={styles.hubPillText}>
+                Singapore
+              </text>
+            </g>
+
+            {/* Sydney / Australia */}
+            <g>
+              <circle cx={715} cy={660} r={5.5} fill="rgba(245, 158, 11, 0.35)" />
+              <circle cx={715} cy={660} r={2.8} fill="#f59e0b" stroke="#ffffff" strokeWidth={1} />
+              <line x1={715} y1={660} x2={726} y2={659} stroke="rgba(217, 119, 6, 0.45)" strokeWidth={1} />
+              <rect x={726} y={648} width={66} height={22} rx={11} className={styles.hubPillBg} filter="url(#signInPillShadow)" />
+              <text x={759} y={659} textAnchor="middle" className={styles.hubPillText}>
+                Sydney
+              </text>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  )
+})
+
+/**
+ * Backward compatibility alias for existing imports.
+ */
+export const SignInWorldMap = SignInAsciiBackground

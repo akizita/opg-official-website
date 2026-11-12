@@ -126,6 +126,18 @@ export default async function ArticleDetailPage({
       })
     : 'Publication date pending'
 
+  const supabase = createStaticClient()
+  const { data: engagementData } = await supabase
+    .from('article_engagement')
+    .select('view_count, like_count')
+    .eq('article_slug', slug)
+    .maybeSingle()
+
+  const initialCounts = {
+    view_count: Number(engagementData?.view_count ?? article.view_count ?? 0),
+    like_count: Number(engagementData?.like_count ?? article.like_count ?? 0),
+  }
+
   return (
     <article className="article-detail-page">
       <script
@@ -198,7 +210,7 @@ export default async function ArticleDetailPage({
                 <p>{publishedLabel}</p>
               )}
             </div>
-            <ArticleEngagement slug={article.slug} />
+            <ArticleEngagement slug={article.slug} initialCounts={initialCounts} />
           </aside>
         </div>
 

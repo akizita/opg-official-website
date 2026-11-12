@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react'
 
 interface AsciiGlobeProps {
   className?: string
+  theme?: 'dark' | 'light'
 }
 
 // Key OPG Talent Hub Coordinates (lat/lon in degrees)
@@ -140,9 +141,10 @@ function isLand(lat: number, lon: number): boolean {
   return false
 }
 
-export function AsciiGlobe({ className }: AsciiGlobeProps) {
+export function AsciiGlobe({ className, theme = 'dark' }: AsciiGlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const isLight = theme === 'light'
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -291,9 +293,9 @@ export function AsciiGlobe({ className }: AsciiGlobeProps) {
           }
 
           if (hubFound) {
-            ctx.fillStyle = '#ffffff'
-            ctx.shadowColor = '#fbbf24'
-            ctx.shadowBlur = 8
+            ctx.fillStyle = isLight ? '#b45309' : '#ffffff'
+            ctx.shadowColor = '#f59e0b'
+            ctx.shadowBlur = isLight ? 6 : 8
             ctx.fillText('●', pixelX, pixelY)
             ctx.shadowBlur = 0
             continue
@@ -301,7 +303,9 @@ export function AsciiGlobe({ className }: AsciiGlobeProps) {
 
           // Atmosphere Horizon Outer Rim (Soft dotted halo)
           if (distSq > 0.955) {
-            ctx.fillStyle = 'rgba(254, 240, 138, 0.35)'
+            ctx.fillStyle = isLight
+              ? 'rgba(217, 119, 6, 0.28)'
+              : 'rgba(254, 240, 138, 0.35)'
             ctx.fillText('·', pixelX, pixelY)
             continue
           }
@@ -312,20 +316,36 @@ export function AsciiGlobe({ className }: AsciiGlobeProps) {
             // Lighting / normal shading using purely dots of varying weight & luminosity
             const light = Math.max(0, xn * 0.35 - yn * 0.3 + zn * 0.88)
             let char = '•'
-            let fill = '#f59e0b'
+            let fill = isLight ? '#d97706' : '#f59e0b'
 
-            if (light > 0.75) {
-              char = '●'
-              fill = '#fef08a'
-            } else if (light > 0.52) {
-              char = '•'
-              fill = '#fbbf24'
-            } else if (light > 0.3) {
-              char = '•'
-              fill = '#f59e0b'
+            if (isLight) {
+              if (light > 0.75) {
+                char = '●'
+                fill = '#92400e'
+              } else if (light > 0.52) {
+                char = '•'
+                fill = '#b45309'
+              } else if (light > 0.3) {
+                char = '•'
+                fill = '#d97706'
+              } else {
+                char = '·'
+                fill = '#f59e0b'
+              }
             } else {
-              char = '·'
-              fill = '#d97706'
+              if (light > 0.75) {
+                char = '●'
+                fill = '#fef08a'
+              } else if (light > 0.52) {
+                char = '•'
+                fill = '#fbbf24'
+              } else if (light > 0.3) {
+                char = '•'
+                fill = '#f59e0b'
+              } else {
+                char = '·'
+                fill = '#d97706'
+              }
             }
 
             ctx.fillStyle = fill
@@ -336,14 +356,20 @@ export function AsciiGlobe({ className }: AsciiGlobeProps) {
             const isMeridian = Math.abs(((lonDeg % 30) + 30) % 30) < 3.2
 
             if (isParallel && isMeridian) {
-              ctx.fillStyle = 'rgba(245, 158, 11, 0.32)'
+              ctx.fillStyle = isLight
+                ? 'rgba(217, 119, 6, 0.35)'
+                : 'rgba(245, 158, 11, 0.32)'
               ctx.fillText('·', pixelX, pixelY)
             } else if (isParallel || isMeridian) {
-              ctx.fillStyle = 'rgba(245, 158, 11, 0.18)'
+              ctx.fillStyle = isLight
+                ? 'rgba(217, 119, 6, 0.22)'
+                : 'rgba(245, 158, 11, 0.18)'
               ctx.fillText('·', pixelX, pixelY)
             } else {
               // Dim subtle ocean surface dot
-              ctx.fillStyle = 'rgba(245, 158, 11, 0.08)'
+              ctx.fillStyle = isLight
+                ? 'rgba(217, 119, 6, 0.12)'
+                : 'rgba(245, 158, 11, 0.08)'
               ctx.fillText('·', pixelX, pixelY)
             }
           }
@@ -408,7 +434,7 @@ export function AsciiGlobe({ className }: AsciiGlobeProps) {
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
     }
-  }, [])
+  }, [isLight])
 
   return (
     <div
@@ -418,7 +444,7 @@ export function AsciiGlobe({ className }: AsciiGlobeProps) {
         position: 'relative',
         width: '100%',
         height: '100%',
-        minHeight: '18rem',
+        minHeight: '12rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -434,8 +460,9 @@ export function AsciiGlobe({ className }: AsciiGlobeProps) {
           position: 'absolute',
           inset: '10%',
           borderRadius: '50%',
-          background:
-            'radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.06) 45%, transparent 70%)',
+          background: isLight
+            ? 'radial-gradient(circle, rgba(255, 179, 0, 0.25) 0%, rgba(255, 216, 77, 0.08) 45%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.06) 45%, transparent 70%)',
           filter: 'blur(32px)',
           pointerEvents: 'none',
         }}

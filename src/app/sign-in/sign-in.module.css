@@ -78,15 +78,128 @@
   z-index: 0;
 }
 
-.container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-inline: auto;
-  max-width: min(100%, 74rem);
-  position: relative;
+/* --------------------------------------------------------------------------
+   ASCII Background Accents - Stuck to Corners & Sides
+   -------------------------------------------------------------------------- */
+.asciiBg {
+  height: 100%;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
   width: 100%;
-  z-index: 1;
+  z-index: 0;
+}
+
+.asciiCorner {
+  pointer-events: none;
+  position: absolute;
+}
+
+.asciiCornerTopLeft {
+  height: clamp(18rem, 28vw, 34rem);
+  left: 0;
+  mask-image: radial-gradient(ellipse at 0% 0%, #000000 65%, transparent 96%);
+  -webkit-mask-image: radial-gradient(ellipse at 0% 0%, #000000 65%, transparent 96%);
+  top: 0;
+  width: clamp(24rem, 38vw, 46rem);
+}
+
+.asciiCornerBottomRight {
+  bottom: 0;
+  height: clamp(20rem, 30vw, 36rem);
+  mask-image: radial-gradient(ellipse at 100% 100%, #000000 65%, transparent 96%);
+  -webkit-mask-image: radial-gradient(ellipse at 100% 100%, #000000 65%, transparent 96%);
+  right: 0;
+  width: clamp(24rem, 38vw, 46rem);
+}
+
+.asciiSvg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.asciiHalo {
+  border-radius: 50%;
+  inset: -25%;
+  pointer-events: none;
+  position: absolute;
+}
+
+.asciiCornerTopLeft .asciiHalo {
+  background: radial-gradient(
+    circle at 0% 0%,
+    rgba(255, 188, 31, 0.38) 0%,
+    rgba(217, 119, 6, 0.12) 45%,
+    transparent 75%
+  );
+}
+
+.asciiCornerBottomRight .asciiHalo {
+  background: radial-gradient(
+    circle at 100% 100%,
+    rgba(255, 188, 31, 0.38) 0%,
+    rgba(217, 119, 6, 0.12) 45%,
+    transparent 75%
+  );
+}
+
+.asciiPulseRing {
+  animation: hqPulseRadar 2.8s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+  transform-origin: center;
+}
+
+@keyframes hqPulseRadar {
+  0% {
+    opacity: 0.95;
+    r: 6px;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 0;
+    r: 22px;
+  }
+}
+
+.hubPillBg {
+  fill: #ffffff;
+  filter: drop-shadow(0 2px 4px rgba(74, 55, 20, 0.12));
+  stroke: rgba(217, 119, 6, 0.35);
+  stroke-width: 1px;
+}
+
+.hubPillBgHq {
+  fill: #ffffff;
+  filter: drop-shadow(0 2px 6px rgba(234, 88, 12, 0.22));
+  stroke: #ea580c;
+  stroke-width: 1.4px;
+}
+
+.hubPillText {
+  dominant-baseline: central;
+  fill: #1c1917;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  user-select: none;
+}
+
+.hubPillTextHq {
+  dominant-baseline: central;
+  fill: #c2410c;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  user-select: none;
+}
+
+.asciiPillGroup {
+  pointer-events: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -141,168 +254,39 @@
 }
 
 /* --------------------------------------------------------------------------
-   Split Layout (2 Columns - Left Content Aligned Left)
+   Centered Main Container & Login Card Wrapper
    -------------------------------------------------------------------------- */
-.splitLayout {
+.container {
   align-items: center;
-  display: grid;
-  gap: clamp(1.5rem, 3vw, 3.25rem);
-  grid-template-columns: 1.08fr 0.92fr;
-  justify-content: center;
-  width: 100%;
-}
-
-/* --------------------------------------------------------------------------
-   Left Column: Hero Copy & Security Cards (Aligned Left)
-   -------------------------------------------------------------------------- */
-.leftColumn {
-  align-items: flex-start;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin: 0;
-  max-width: 35rem;
-  text-align: left;
-}
-
-.eyebrowBadge {
-  align-items: center;
-  align-self: flex-start;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 9999px;
-  box-shadow:
-    0 2px 10px -2px rgba(74, 55, 20, 0.06),
-    inset 0 1px 1px rgba(255, 255, 255, 0.9);
-  color: #b45309;
-  display: inline-flex;
-  font-size: 0.78rem;
-  font-weight: 700;
-  gap: 0.45rem;
-  letter-spacing: 0.03em;
-  margin-bottom: 0.65rem;
-  padding: 0.3rem 0.85rem;
-}
-
-.heroHeadline {
-  color: #1c1917;
-  font-size: clamp(1.85rem, 2.7vw, 2.5rem);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1.14;
-  margin: 0 0 0.65rem;
-  text-align: left;
-  text-wrap: balance;
-}
-
-.highlightText {
-  background: linear-gradient(135deg, #f29f04 0%, #ea580c 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  display: inline;
-}
-
-.heroSubtext {
-  color: #57534e;
-  font-size: clamp(0.88rem, 1vw, 0.98rem);
-  line-height: 1.5;
-  margin: 0 0 1.15rem;
-  max-width: 31rem;
-  text-align: left;
-  text-wrap: pretty;
-}
-
-/* 3 Feature/Security Cards in a Row (See-Through Glassmorphism) */
-.securityCardsGrid {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(3, 1fr);
-  margin-bottom: 1rem;
-  width: 100%;
-}
-
-.securityCard {
-  align-items: flex-start;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(18px) saturate(180%);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.88);
-  border-radius: 1rem;
-  box-shadow:
-    0 8px 20px -4px rgba(74, 55, 20, 0.06),
-    0 2px 6px -1px rgba(0, 0, 0, 0.02),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.85rem 0.75rem;
-  text-align: left;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.securityCard:hover {
-  background: rgba(255, 255, 255, 0.72);
-  border-color: rgba(245, 158, 11, 0.45);
-  box-shadow:
-    0 12px 28px -4px rgba(74, 55, 20, 0.12),
-    0 4px 10px -2px rgba(0, 0, 0, 0.03),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
-}
-
-.securityCardIconWrap {
-  align-items: center;
-  background: rgba(254, 240, 138, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 0.55rem;
-  color: #b45309;
-  display: flex;
-  height: 1.95rem;
-  justify-content: center;
-  width: 1.95rem;
-}
-
-.securityCardTitle {
-  color: #1c1917;
-  font-size: 0.88rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  margin: 0;
-  text-align: left;
-}
-
-.securityCardSub {
-  color: #57534e;
-  font-size: 0.74rem;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  text-align: left;
-}
-
-.leftColumnFooter {
-  border-top: 1px solid rgba(217, 119, 6, 0.15);
-  color: #78716c;
-  display: flex;
-  font-size: 0.76rem;
-  justify-content: flex-start;
-  padding-top: 0.75rem;
-  text-align: left;
-  width: 100%;
-}
-
-/* --------------------------------------------------------------------------
-   Right Column: Elevated Form Card (See-Through Glassmorphism)
-   -------------------------------------------------------------------------- */
-.rightColumn {
-  display: flex;
-  flex-direction: column;
+  margin-inline: auto;
+  max-width: 100%;
   position: relative;
+  width: 100%;
+  z-index: 10;
+}
+
+.loginCardWrapper {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-inline: auto;
+  max-width: 29.5rem;
+  position: relative;
+  width: 100%;
+  z-index: 10;
+}
+
+.pageCopyright {
+  color: #78716c;
+  display: block;
+  font-size: 0.76rem;
+  margin-top: 1.15rem;
+  text-align: center;
+  user-select: none;
   width: 100%;
 }
 
@@ -312,12 +296,14 @@
   backdrop-filter: blur(26px) saturate(190%);
   -webkit-backdrop-filter: blur(26px) saturate(190%);
   border: 1px solid rgba(255, 255, 255, 0.92);
-  border-radius: 1.5rem;
+  border-radius: 1.85rem;
   box-shadow:
     0 20px 50px -15px rgba(74, 55, 20, 0.12),
     0 6px 18px -4px rgba(0, 0, 0, 0.04),
     inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1);
-  padding: clamp(1.15rem, 1.8vh, 1.65rem) clamp(1.25rem, 2.2vw, 2rem);
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1.25rem, 2vh, 1.75rem) clamp(1.25rem, 2.4vw, 2.15rem);
   position: relative;
   width: 100%;
   z-index: 1;
@@ -503,21 +489,24 @@
   transform: scale(1.05);
 }
 
-/* Tab Panel Transition Animation */
-.tabPanel {
-  animation: tabSlideFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Tab Panels Container & Smooth Motion */
+.tabPanelsWrapper {
+  display: flex;
+  flex-direction: column;
+  position: relative;
   width: 100%;
 }
 
-@keyframes tabSlideFadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.tabPanelMotion {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 /* OAuth Google Form (Pill-Shaped) */
@@ -586,12 +575,27 @@
 }
 
 /* --------------------------------------------------------------------------
-   Input Fields & Form Styles (Pill-Shaped Fields)
+   Input Fields & Form Styles (Pill-Shaped Fields & Consistent Spacing)
    -------------------------------------------------------------------------- */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  width: 100%;
+}
+
+.fieldsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.formBottomCluster {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+  padding-top: 0;
   width: 100%;
 }
 
@@ -733,7 +737,7 @@
   gap: 0.55rem;
   height: 2.75rem;
   justify-content: center;
-  margin-top: 0.2rem;
+  margin-top: 0;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   width: 100%;
 }
@@ -894,41 +898,30 @@
   max-width: 22rem;
 }
 
-/* Out-of-card bottom footer */
-.cardOuterFooter {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-top: 0.65rem;
-  text-align: center;
-  width: 100%;
-}
-
-.termsNotice {
+.cardTermsNotice {
   color: #78716c;
-  font-size: 0.74rem;
-  line-height: 1.45;
+  font-size: 0.72rem;
+  line-height: 1.35;
   margin: 0;
+  text-align: center;
 }
 
-.termsNotice a {
+.cardTermsNotice a {
   color: #57534e;
+  font-weight: 600;
   text-decoration: underline;
+  transition: color 0.15s ease;
 }
 
-.termsNotice a:hover {
+.cardTermsNotice a:hover {
   color: #1c1917;
-}
-
-.mobileCopyright {
-  display: none;
 }
 
 /* --------------------------------------------------------------------------
    Responsive Media Queries (Fully responsive up to mobile)
-   - On tablet & mobile (<=1024px), the left column is removed to focus solely on the login form
-   - Login card remains cleanly centered with zero awkward horizontal scrolling
+   - On tablet & mobile (<=1024px), the login card stays cleanly centered
+   - ASCII corners scale smoothly and never overlap the card
+   - Zero awkward horizontal scrolling at any width
    -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
   .signInPage {
@@ -945,30 +938,40 @@
     top: 1.25rem;
   }
 
-  .leftColumn {
-    display: none !important;
+  .asciiCornerTopLeft {
+    height: clamp(15rem, 25vw, 27rem);
+    opacity: 0.75;
+    width: clamp(20rem, 34vw, 36rem);
   }
 
-  .splitLayout {
-    align-items: center;
-    display: flex;
-    justify-content: center;
-    margin-inline: auto;
-    width: 100%;
+  .asciiCornerBottomRight {
+    height: clamp(16rem, 26vw, 28rem);
+    opacity: 0.75;
+    width: clamp(20rem, 34vw, 36rem);
   }
 
-  .rightColumn {
-    margin-inline: auto;
+  .loginCardWrapper {
     max-width: 28rem;
     width: 100%;
   }
 
-  .mobileCopyright {
-    color: #78716c;
-    display: block;
-    font-size: 0.74rem;
-    margin-top: 0.45rem;
-    text-align: center;
+  .loginCard {
+    min-height: 0;
+  }
+
+  .tabPanelsWrapper {
+    height: auto;
+    min-height: 0;
+  }
+
+  .tabPanelMotion {
+    height: auto;
+    min-height: 0;
+  }
+
+  .form {
+    gap: 0.85rem;
+    height: auto;
   }
 }
 
@@ -996,7 +999,15 @@
     width: 2.5rem;
   }
 
-  .rightColumn {
+  .asciiBg {
+    opacity: 0.35;
+  }
+
+  .asciiPillGroup {
+    display: none;
+  }
+
+  .loginCardWrapper {
     max-width: 100%;
     width: 100%;
   }
