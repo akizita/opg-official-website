@@ -14996,7 +14996,9 @@ h3 {
 /* Contact Us Page */
 #main-content:has(> .contact-page),
 #main-content:has(> .careers-page),
-#main-content:has(> .career-detail-page) {
+#main-content:has(> .career-detail-page),
+#main-content:has(> .terms-page),
+#main-content:has(> .security-page) {
   margin-top: calc(-1 * (clamp(0.75rem, 2vw, 1.25rem) + 4.15rem));
 }
 
@@ -16418,7 +16420,9 @@ h3 {
 @media (max-width: 42rem) {
   #main-content:has(> .contact-page),
   #main-content:has(> .careers-page),
-  #main-content:has(> .career-detail-page) {
+  #main-content:has(> .career-detail-page),
+  #main-content:has(> .terms-page),
+  #main-content:has(> .security-page) {
     margin-top: calc(-1 * (clamp(0.75rem, 2vw, 1.25rem) + 3.75rem));
   }
 

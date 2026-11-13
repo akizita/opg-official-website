@@ -178,7 +178,7 @@ export function VisitorSignInForm({
           <p className={styles.cardTermsNotice}>
             By signing in you agree to our{' '}
             <Link href="/terms">Terms</Link> &amp;{' '}
-            <Link href="/privacy">Security Policy</Link>.
+            <Link href="/security">Security Policy</Link>.
           </p>
         </div>
       </form>

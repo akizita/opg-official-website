@@ -20,13 +20,6 @@ export const placeholderSections: PlaceholderSection[] = [
     description:
       'The official notice and consent controls are still being prepared.',
   },
-  {
-    slug: 'terms',
-    title: 'Terms',
-    audience: 'Legal',
-    description:
-      'The official terms must be approved by OPG before publication.',
-  },
 ]
 
 export function getPlaceholderSection(slug: string) {

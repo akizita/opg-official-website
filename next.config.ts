@@ -35,6 +35,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/security-policy',
+        destination: '/security',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig
