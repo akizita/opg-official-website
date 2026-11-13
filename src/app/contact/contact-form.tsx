@@ -799,7 +799,7 @@ export function ContactForm({
               </Link>
               <Link
                 className="contact-modal-btn contact-modal-btn--secondary"
-                href="/sign-in?tab=signup&next=/contact"
+                href="/sign-up?next=/contact"
                 onClick={saveDraftToStorage}
               >
                 <span>Create an account</span>
