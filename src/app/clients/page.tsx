@@ -360,23 +360,58 @@ export default async function ClientsPage({
   )
   const featuredArticle = allArticles[0]
 
-  const combinedTestimonials: CarouselTestimonialItem[] = [
-    ...featuredTestimonials,
-    ...dbTestimonials.map((dbItem) => ({
+  const fallbackMap = new Map<string, (typeof featuredTestimonials)[number]>()
+  featuredTestimonials.forEach((item) => {
+    fallbackMap.set(item.companyName.toLowerCase(), item)
+    fallbackMap.set(item.authorName.toLowerCase(), item)
+  })
+
+  function getCompanyLogoType(name: string): ClientLogoType | undefined {
+    const lower = name.toLowerCase()
+    if (lower.includes('northstar')) return 'northstar'
+    if (lower.includes('meridian')) return 'meridian'
+    if (lower.includes('harborline')) return 'harborline'
+    if (lower.includes('atlas')) return 'atlas'
+    if (lower.includes('veridian')) return 'veridian'
+    return undefined
+  }
+
+  const mappedDbItems: CarouselTestimonialItem[] = dbTestimonials.map((dbItem) => {
+    const compName =
+      dbItem.client?.name || dbItem.author_company || 'Partner Enterprise'
+    const fallbackItem =
+      fallbackMap.get(compName.toLowerCase()) ||
+      fallbackMap.get(dbItem.author_name.toLowerCase())
+
+    const logoType =
+      (!dbItem.client?.logo_url ? fallbackItem?.logoType : undefined) ||
+      getCompanyLogoType(compName)
+
+    return {
       id: dbItem.id,
-      companyName: dbItem.author_company || 'Partner Enterprise',
-      headline: 'Exceptional Pod Performance & Velocity',
+      companyName: compName,
+      headline:
+        dbItem.headline ||
+        fallbackItem?.headline ||
+        'Exceptional Pod Performance & Velocity',
       quote: dbItem.quote,
       authorName: dbItem.author_name,
       authorRole: dbItem.author_role,
-      companyId: 'client-partner',
-      logoType: 'northstar' as ClientLogoType,
-      metricBadge: 'Verified Partner',
-      industry: 'Enterprise Client',
-      rating: 5,
-      photoUrl: '/images/testimonial-marcus-vance.jpg',
-    })),
-  ]
+      companyId: dbItem.client_id || fallbackItem?.companyId || 'client-partner',
+      logoType,
+      logoUrl: dbItem.client?.logo_url || null,
+      metricBadge: fallbackItem?.metricBadge || 'Verified Partner',
+      industry: fallbackItem?.industry || 'Enterprise Client',
+      rating: dbItem.rating ?? 5,
+      photoUrl:
+        dbItem.photo_url ||
+        fallbackItem?.photoUrl ||
+        '/images/testimonial-marcus-vance.jpg',
+    }
+  })
+
+  const combinedTestimonials: CarouselTestimonialItem[] =
+    mappedDbItems.length > 0 ? mappedDbItems : [...featuredTestimonials]
 
   return (
     <div className="clients-page">

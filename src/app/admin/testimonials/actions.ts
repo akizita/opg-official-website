@@ -4,12 +4,20 @@ import { revalidatePath } from 'next/cache'
 
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import { canArchive, canPublish } from '@/lib/auth/permissions'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createPrivilegedClient } from '@/lib/supabase/server'
 
 export type TestimonialReviewDecision = 'approved' | 'rejected'
 export type TestimonialReviewResult = {
   success: boolean
   error?: string
+}
+
+export type CreateCandidateTestimonialInput = {
+  author_name: string
+  quote: string
+  role_title?: string | null
+  profile_photo_data?: string | null
+  rating?: number
 }
 
 const UUID_PATTERN =
@@ -141,4 +149,107 @@ export async function deleteCandidateTestimonialsAction(
             ? `Deleted ${deletedIds.length} of ${ids.length} testimonials. Refresh and retry the rest.`
             : 'The selected testimonials could not be deleted. Refresh and try again.',
       }
+}
+
+export async function createCandidateTestimonialAction(
+  input: CreateCandidateTestimonialInput,
+): Promise<{ success: boolean; error?: string; id?: string }> {
+  const { profile } = await requireAdminSession({ requireAal2: true })
+
+  if (!canPublish(profile.roleKey)) {
+    return {
+      success: false,
+      error: 'You do not have permission to create candidate testimonials.',
+    }
+  }
+
+  const author_name = input.author_name?.trim() || ''
+  const quote = input.quote?.trim() || ''
+  const role_title = input.role_title?.trim() || null
+  const rating =
+    typeof input.rating === 'number' &&
+    Number.isInteger(input.rating) &&
+    input.rating >= 1 &&
+    input.rating <= 5
+      ? input.rating
+      : 5
+
+  if (author_name.length < 2 || author_name.length > 100) {
+    return {
+      success: false,
+      error: 'Candidate name must be between 2 and 100 characters.',
+    }
+  }
+
+  if (quote.length < 20 || quote.length > 1200) {
+    return {
+      success: false,
+      error: 'Story quote must be between 20 and 1,200 characters.',
+    }
+  }
+
+  if (role_title && role_title.length > 120) {
+    return {
+      success: false,
+      error: 'Role title must be 120 characters or fewer.',
+    }
+  }
+
+  let photoData: string | null = null
+  if (input.profile_photo_data && typeof input.profile_photo_data === 'string') {
+    const trimmedPhoto = input.profile_photo_data.trim()
+    if (trimmedPhoto.startsWith('data:image/')) {
+      const commaIndex = trimmedPhoto.indexOf(',')
+      photoData =
+        commaIndex >= 0 ? trimmedPhoto.slice(commaIndex + 1) : trimmedPhoto
+    } else {
+      photoData = trimmedPhoto
+    }
+  }
+
+  const now = new Date().toISOString()
+  const randomSuffix = crypto.randomUUID()
+  const fallbackEmail = `admin-manual-${randomSuffix.slice(0, 8)}@candidate.opg.internal`
+
+  const privileged = createPrivilegedClient()
+  const supabase = privileged || (await createClient())
+
+  const insertPayload: Record<string, unknown> = {
+    author_name,
+    quote,
+    role_title,
+    rating,
+    relationship: 'past',
+    email: fallbackEmail,
+    publication_consent: true,
+    submission_fingerprint: `admin-import-${randomSuffix}`,
+    status: 'approved',
+    published_at: now,
+    reviewed_at: now,
+    reviewed_by: profile.id || null,
+  }
+
+  if (photoData) {
+    insertPayload.profile_photo_data = photoData
+  }
+
+  const { data, error } = await supabase
+    .from('candidate_testimonials')
+    .insert(insertPayload)
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('Could not create candidate testimonial:', error.message)
+    return {
+      success: false,
+      error: 'Could not save the candidate testimonial. Try again.',
+    }
+  }
+
+  revalidatePath('/admin/testimonials')
+  revalidatePath('/admin')
+  revalidatePath('/testimonials')
+
+  return { success: true, id: (data as { id: string } | null)?.id }
 }

@@ -1,0 +1,15 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="client-logo-mh-border" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10b981" />
+      <stop offset="1" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="client-logo-mh-pulse" x1="10" y1="24" x2="38" y2="24" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#059669" />
+      <stop offset="1" stop-color="#f2b705" />
+    </linearGradient>
+  </defs>
+  <circle cx="24" cy="24" r="18" stroke="url(#client-logo-mh-border)" stroke-width="3" />
+  <path d="M13 24H18L21.5 15L26.5 33L30 24H35" stroke="url(#client-logo-mh-pulse)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="26.5" cy="24" r="2.5" fill="#f29f04" />
+</svg>

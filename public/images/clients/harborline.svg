@@ -1,0 +1,14 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="client-logo-hf-shield" x1="8" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4f46e5" />
+      <stop offset="1" stop-color="#312e81" />
+    </linearGradient>
+    <linearGradient id="client-logo-hf-pillars" x1="18" y1="16" x2="30" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f2b705" />
+      <stop offset="1" stop-color="#f29f04" />
+    </linearGradient>
+  </defs>
+  <path d="M24 5L41 14V28C41 36.5 33.8 42.5 24 45C14.2 42.5 7 36.5 7 28V14L24 5Z" stroke="url(#client-logo-hf-shield)" stroke-width="3" stroke-linejoin="round" />
+  <path d="M19 18V30M24 15V33M29 18V30" stroke="url(#client-logo-hf-pillars)" stroke-width="2.8" stroke-linecap="round" />
+</svg>

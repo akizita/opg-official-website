@@ -1,0 +1,12 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="client-logo-vo-grad" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0ea5e9" />
+      <stop offset="1" stop-color="#0369a1" />
+    </linearGradient>
+  </defs>
+  <path d="M24 7L39 19.5L24 32L9 19.5L24 7Z" stroke="url(#client-logo-vo-grad)" stroke-width="3" stroke-linejoin="round" />
+  <path d="M13 25L24 35L35 25" stroke="#f29f04" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M17.5 32L24 39L30.5 32" stroke="#f2b705" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="24" cy="19.5" r="3" fill="#0d0d0d" />
+</svg>

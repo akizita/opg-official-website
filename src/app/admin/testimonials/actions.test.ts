@@ -4,11 +4,15 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/auth/admin-session', () => ({
   requireAdminSession: vi.fn(),
 }))
-vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(),
+  createPrivilegedClient: vi.fn(),
+}))
 
 import { revalidatePath } from 'next/cache'
 
 import {
+  createCandidateTestimonialAction,
   deleteCandidateTestimonialAction,
   deleteCandidateTestimonialsAction,
   reviewCandidateTestimonialAction,
@@ -186,5 +190,70 @@ describe('candidate testimonial bulk delete action', () => {
     expect(rpc).toHaveBeenNthCalledWith(2, 'delete_candidate_testimonial', {
       p_id: secondTestimonialId,
     })
+  })
+})
+
+describe('create candidate testimonial action', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    setRole('publisher')
+  })
+
+  it('rejects users without publish permission', async () => {
+    setRole('viewer')
+    const result = await createCandidateTestimonialAction({
+      author_name: 'Jane Doe',
+      quote: 'This is a long enough quote that satisfies the length requirement of 20 characters.',
+    })
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('permission')
+  })
+
+  it('validates candidate name and quote length', async () => {
+    const shortName = await createCandidateTestimonialAction({
+      author_name: 'A',
+      quote: 'This is a long enough quote that satisfies the length requirement of 20 characters.',
+    })
+    expect(shortName.success).toBe(false)
+    expect(shortName.error).toContain('name')
+
+    const shortQuote = await createCandidateTestimonialAction({
+      author_name: 'Jane Doe',
+      quote: 'Too short',
+    })
+    expect(shortQuote.success).toBe(false)
+    expect(shortQuote.error).toContain('quote')
+  })
+
+  it('successfully creates an approved candidate testimonial and revalidates paths', async () => {
+    const single = vi.fn().mockResolvedValue({
+      data: { id: testimonialId },
+      error: null,
+    })
+    const select = vi.fn().mockReturnValue({ single })
+    const insert = vi.fn().mockReturnValue({ select })
+    const from = vi.fn().mockReturnValue({ insert })
+    vi.mocked(createClient).mockResolvedValue({ from } as never)
+
+    const result = await createCandidateTestimonialAction({
+      author_name: 'Jane Doe',
+      quote: 'This is an authentic candidate endorsement that spans more than 20 characters.',
+      role_title: 'Full Stack Engineer',
+      rating: 5,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.id).toBe(testimonialId)
+    expect(from).toHaveBeenCalledWith('candidate_testimonials')
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        author_name: 'Jane Doe',
+        quote: 'This is an authentic candidate endorsement that spans more than 20 characters.',
+        role_title: 'Full Stack Engineer',
+        status: 'approved',
+      }),
+    )
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/testimonials')
+    expect(revalidatePath).toHaveBeenCalledWith('/testimonials')
   })
 })

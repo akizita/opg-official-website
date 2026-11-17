@@ -5,6 +5,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import {
+  getAllTestimonials,
   getPublishedTestimonials,
   getVisibleClients,
   validateClientInput,
@@ -39,6 +40,24 @@ describe('clients & testimonials validation', () => {
     const result = validateTestimonialInput(valid)
     expect(result.success).toBe(true)
     expect(result.data?.quote).toBe('Exceptional talent and partnership.')
+  })
+
+  it('validates testimonial input with enhanced client fields', () => {
+    const valid = {
+      quote: 'Exceptional talent and partnership.',
+      author_name: 'Jane Doe',
+      author_role: 'CTO',
+      headline: 'Game-Changing Partnership',
+      client_id: '123e4567-e89b-12d3-a456-426614174000',
+      photo_url: 'https://example.com/photo.jpg',
+      rating: 5,
+    }
+    const result = validateTestimonialInput(valid)
+    expect(result.success).toBe(true)
+    expect(result.data?.headline).toBe('Game-Changing Partnership')
+    expect(result.data?.client_id).toBe('123e4567-e89b-12d3-a456-426614174000')
+    expect(result.data?.photo_url).toBe('https://example.com/photo.jpg')
+    expect(result.data?.rating).toBe(5)
   })
 
   it('rejects testimonial missing required fields', () => {
@@ -79,5 +98,19 @@ describe('clients & testimonials queries', () => {
     const testimonials = await getPublishedTestimonials()
     expect(testimonials).toHaveLength(1)
     expect(mockEq).toHaveBeenCalledWith('status', 'published')
+  })
+
+  it('queries all testimonials in display order', async () => {
+    const mockOrder = vi.fn().mockResolvedValue({
+      data: [{ id: '1', quote: 'Great work', status: 'draft' }],
+      error: null,
+    })
+    const mockSelect = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+    vi.mocked(createClient).mockResolvedValue({ from: mockFrom } as never)
+
+    const testimonials = await getAllTestimonials()
+    expect(testimonials).toHaveLength(1)
+    expect(mockOrder).toHaveBeenCalledWith('display_order', { ascending: true })
   })
 })

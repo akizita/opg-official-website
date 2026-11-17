@@ -9,13 +9,18 @@ import {
   type ReviewFilter,
   type ReviewStatus,
 } from '@/app/admin/testimonials/testimonials-inbox'
+import { ClientTestimonialsManager } from '@/app/admin/testimonials/client-testimonials-manager'
+import { CandidateTestimonialsHeader } from '@/app/admin/testimonials/candidate-testimonials-header'
+import { TestimonialsTabNavigation } from '@/app/admin/testimonials/testimonials-tab-navigation'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import { canArchive, canPublish, canViewContent } from '@/lib/auth/permissions'
+import { getAllTestimonials, getVisibleClients } from '@/lib/content/clients'
 import { createClient, createPrivilegedClient } from '@/lib/supabase/server'
 import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
+import adminStyles from '@/app/admin/testimonials/testimonials-admin.module.css'
 
 export const metadata: Metadata = {
-  title: 'Candidate Testimonials | OPG Admin',
+  title: 'Testimonials Management | OPG Admin',
 }
 
 export const dynamic = 'force-dynamic'
@@ -31,7 +36,7 @@ type SubmissionRecord = Omit<
   profile_photo_data?: string | null
 }
 type PageProps = {
-  searchParams: Promise<{ status?: string; page?: string }>
+  searchParams: Promise<{ status?: string; page?: string; tab?: string }>
 }
 
 const PAGE_SIZE = 20
@@ -53,10 +58,11 @@ const detailDateFormat = new Intl.DateTimeFormat('en-SG', {
 
 function reviewUrl(status: ReviewStatus, page = 1) {
   const params = new URLSearchParams()
+  params.set('tab', 'candidate')
   if (status !== 'pending') params.set('status', status)
   if (page > 1) params.set('page', String(page))
   const query = params.toString()
-  return `/admin/testimonials${query ? `?${query}` : ''}`
+  return `/admin/testimonials?${query}`
 }
 
 export default async function AdminTestimonialsPage({
@@ -68,9 +74,9 @@ export default async function AdminTestimonialsPage({
     return (
       <section className="admin-page candidate-review-page">
         <div className="container">
-          <h1>Candidate testimonials</h1>
+          <h1>Testimonials Management</h1>
           <p>
-            Your role does not have permission to view candidate submissions.
+            Your role does not have permission to view testimonial submissions.
           </p>
           <Link href="/admin">Return to dashboard</Link>
         </div>
@@ -79,6 +85,7 @@ export default async function AdminTestimonialsPage({
   }
 
   const requested = await searchParams
+  const activeTab = requested.tab === 'client' ? 'client' : 'candidate'
   const status: ReviewStatus = STATUSES.includes(
     requested.status as ReviewStatus,
   )
@@ -87,15 +94,23 @@ export default async function AdminTestimonialsPage({
   const requestedPage = Number(requested.page)
   const pageNumber =
     Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
+
   const supabase = await createClient()
-  const countsResult = await Promise.all(
-    (['pending', 'approved', 'rejected'] as const).map((item) =>
-      supabase
-        .from('candidate_testimonials')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', item),
+
+  // Concurrently fetch candidate counts, clients, and client testimonials
+  const [countsResult, clients, clientTestimonials] = await Promise.all([
+    Promise.all(
+      (['pending', 'approved', 'rejected'] as const).map((item) =>
+        supabase
+          .from('candidate_testimonials')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', item),
+      ),
     ),
-  )
+    getVisibleClients(),
+    getAllTestimonials(),
+  ])
+
   const countError = countsResult.find((result) => result.error)?.error
   const counts = {
     pending: countsResult[0].count ?? 0,
@@ -118,7 +133,7 @@ export default async function AdminTestimonialsPage({
 
   let submissions: CandidateSubmission[] = []
   let listError = countError
-  if (!countError) {
+  if (!countError && activeTab === 'candidate') {
     async function loadSubmissions(photoMode: 'inline' | 'storage' | 'legacy') {
       const columns =
         'id, author_name, email, relationship, role_title, rating, quote, publication_consent, status, submitted_at, reviewed_at'
@@ -184,63 +199,82 @@ export default async function AdminTestimonialsPage({
   return (
     <section className="admin-page candidate-review-page">
       <div className="container">
-        <CandidateTestimonialsLive audience="admin" showStatus={false} />
-        <div className="candidate-review-heading">
-          <div>
-            <h1>Testimonial management</h1>
-            <p>
-              Track candidate feedback, review incoming stories, and manage
-              which testimonials appear on the public website.
-            </p>
-          </div>
-        </div>
+        <div className={adminStyles.testimonialsPageWrap}>
+          <CandidateTestimonialsLive audience="admin" showStatus={false} />
 
-        <TestimonialAnalytics
-          activeStatus={status}
-          counts={countError ? null : counts}
-        />
+          {/* Rubber Segment Tab Navigation (React Bits micro-interaction, pill-shaped, black background) */}
+          <TestimonialsTabNavigation
+            candidateCount={total}
+            clientCount={clientTestimonials.length}
+            activeTab={activeTab}
+          />
 
-        <div className="candidate-review-table-card">
-          {listError ? (
-            <div className="candidate-review-empty" role="alert">
-              <span aria-hidden="true">!</span>
-              <h3>Could not load submissions</h3>
-              <p>
-                The list is temporarily unavailable. Try again to reload it.
-              </p>
-              <TestimonialRetryButton />
-            </div>
-          ) : (
+          {activeTab === 'candidate' ? (
             <>
-              <TestimonialsInbox
-                canDelete={canArchive(profile.roleKey)}
-                canReview={canPublish(profile.roleKey)}
-                filters={filters}
-                key={`${status}:${page}`}
-                status={status}
-                submissions={submissions}
+              {/* Candidate Testimonials Header with Inlined Action Button */}
+              <CandidateTestimonialsHeader
+                canAdd={canPublish(profile.roleKey)}
               />
-              {lastPage > 1 && (
-                <nav
-                  aria-label="Submission pages"
-                  className="candidate-review-pagination"
-                >
-                  {page > 1 ? (
-                    <Link href={reviewUrl(status, page - 1)}>← Previous</Link>
-                  ) : (
-                    <span />
-                  )}
-                  <span>
-                    Page {page} of {lastPage}
-                  </span>
-                  {page < lastPage ? (
-                    <Link href={reviewUrl(status, page + 1)}>Next →</Link>
-                  ) : (
-                    <span />
-                  )}
-                </nav>
-              )}
+
+              <TestimonialAnalytics
+                activeStatus={status}
+                counts={countError ? null : counts}
+              />
+
+              <div className="candidate-review-table-card">
+                {listError ? (
+                  <div className="candidate-review-empty" role="alert">
+                    <span aria-hidden="true">!</span>
+                    <h3>Could not load submissions</h3>
+                    <p>
+                      The list is temporarily unavailable. Try again to reload
+                      it.
+                    </p>
+                    <TestimonialRetryButton />
+                  </div>
+                ) : (
+                  <>
+                    <TestimonialsInbox
+                      canDelete={canArchive(profile.roleKey)}
+                      canReview={canPublish(profile.roleKey)}
+                      filters={filters}
+                      key={`${status}:${page}`}
+                      status={status}
+                      submissions={submissions}
+                    />
+                    {lastPage > 1 && (
+                      <nav
+                        aria-label="Submission pages"
+                        className="candidate-review-pagination"
+                      >
+                        {page > 1 ? (
+                          <Link href={reviewUrl(status, page - 1)}>
+                            ← Previous
+                          </Link>
+                        ) : (
+                          <span />
+                        )}
+                        <span>
+                          Page {page} of {lastPage}
+                        </span>
+                        {page < lastPage ? (
+                          <Link href={reviewUrl(status, page + 1)}>Next →</Link>
+                        ) : (
+                          <span />
+                        )}
+                      </nav>
+                    )}
+                  </>
+                )}
+              </div>
             </>
+          ) : (
+            <ClientTestimonialsManager
+              canDelete={canArchive(profile.roleKey)}
+              canManage={canPublish(profile.roleKey)}
+              clients={clients}
+              testimonials={clientTestimonials}
+            />
           )}
         </div>
       </div>

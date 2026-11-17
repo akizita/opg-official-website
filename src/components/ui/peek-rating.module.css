@@ -1,0 +1,96 @@
+.peekContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  position: relative;
+  user-select: none;
+  padding: 0.35rem 0.6rem;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  width: fit-content;
+}
+
+.starsRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+}
+
+.starButton {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  border-radius: 9999px;
+  transition: opacity 0.15s ease;
+}
+
+.starButton:focus-visible {
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4);
+}
+
+.starButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.starIcon {
+  width: 22px;
+  height: 22px;
+  transition: fill 0.2s ease, stroke 0.2s ease, filter 0.2s ease;
+}
+
+.starIconFilled {
+  fill: #f59e0b;
+  stroke: #d97706;
+  filter: drop-shadow(0 1px 2px rgba(245, 158, 11, 0.35));
+}
+
+.starIconEmpty {
+  fill: rgba(0, 0, 0, 0.06);
+  stroke: rgba(0, 0, 0, 0.22);
+}
+
+.ratingTip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+}
+
+.ratingTip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 4px;
+  border-style: solid;
+  border-color: #0f172a transparent transparent transparent;
+}
+
+.ratingLabelText {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  margin-left: 0.4rem;
+  min-width: 50px;
+}

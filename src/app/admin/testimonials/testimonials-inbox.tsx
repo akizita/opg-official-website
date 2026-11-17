@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
   type CSSProperties,
 } from 'react'
@@ -60,7 +61,19 @@ function profileLabel(item: CandidateSubmission) {
   return item.role_title ? `${relationship} · ${item.role_title}` : relationship
 }
 
+const emptySubscribe = () => () => {}
+
+function useIsClientMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  )
+}
+
 function CandidateAvatar({ item }: { item: CandidateSubmission }) {
+  const isMounted = useIsClientMounted()
+  const [hasError, setHasError] = useState(false)
   const nameParts = item.author_name.trim().split(/\s+/).filter(Boolean)
   const initials = (
     nameParts.length > 1
@@ -70,6 +83,7 @@ function CandidateAvatar({ item }: { item: CandidateSubmission }) {
     .join('')
     .slice(0, 2)
     .toUpperCase()
+
   const hue =
     (Array.from(item.author_name).reduce(
       (sum, letter) => sum + letter.charCodeAt(0),
@@ -77,19 +91,31 @@ function CandidateAvatar({ item }: { item: CandidateSubmission }) {
     ) %
       50) +
     18
+
+  // Priority: 1) Uploaded photo, 2) Email profile photo from unavatar.io/gravatar (on client), 3) Initials
+  const avatarUrl = useMemo(() => {
+    if (item.profile_photo_url) return item.profile_photo_url
+    if (isMounted && item.email && item.email.includes('@')) {
+      const cleanEmail = item.email.trim().toLowerCase()
+      return `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=false`
+    }
+    return null
+  }, [item.profile_photo_url, isMounted, item.email])
+
   return (
     <span
       className="candidate-review-avatar"
       aria-hidden="true"
       style={{ '--avatar-hue': hue } as CSSProperties}
     >
-      {item.profile_photo_url ? (
+      {avatarUrl && !hasError ? (
         <Image
           alt=""
           height={48}
-          src={item.profile_photo_url}
+          src={avatarUrl}
           unoptimized
           width={48}
+          onError={() => setHasError(true)}
         />
       ) : (
         <span>{initials}</span>
@@ -176,10 +202,9 @@ export function TestimonialStatusFilter({
       >
         <OpgIconFilter
           className="candidate-review-filter-picker__icon"
-          size={16}
+          size={14}
         />
         <span className="candidate-review-filter-picker__label">
-          <small>Status</small>
           <strong>{active.label}</strong>
         </span>
         <span className="candidate-review-filter-picker__count">
@@ -187,7 +212,7 @@ export function TestimonialStatusFilter({
         </span>
         <OpgIconChevron
           className="candidate-review-filter-picker__chevron"
-          size={16}
+          size={14}
         />
       </button>
       {filtering && (

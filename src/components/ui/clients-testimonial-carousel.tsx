@@ -13,6 +13,7 @@ export interface CarouselTestimonialItem {
   companyName: string
   companyId: string
   logoType?: ClientLogoType
+  logoUrl?: string | null
   metricBadge?: string
   rating?: number
   industry?: string
@@ -278,14 +279,25 @@ export function ClientsTestimonialCarousel({
                   <div className="clients-testimonial-card-col clients-testimonial-card-col--text">
                     {/* Brand row: Logo + Company name (Clean without yellow pill) */}
                     <div className="clients-testimonial-card__brand-row">
-                      {item.logoType && (
+                      {item.logoUrl ? (
+                        <div className="clients-testimonial-card__logo-wrap">
+                          <Image
+                            src={item.logoUrl}
+                            alt=""
+                            width={36}
+                            height={36}
+                            className="clients-testimonial-card__logo-img"
+                            unoptimized={item.logoUrl.startsWith('data:')}
+                          />
+                        </div>
+                      ) : item.logoType ? (
                         <div className="clients-testimonial-card__logo-wrap">
                           <ClientLogo
                             type={item.logoType}
                             className="clients-testimonial-card__logo-svg"
                           />
                         </div>
-                      )}
+                      ) : null}
                       <span className="clients-testimonial-card__company-name">
                         {item.companyName}
                       </span>
