@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 
-export type EngagementResult = {
+type EngagementResult = {
   success: boolean
   view_count: number
   like_count: number

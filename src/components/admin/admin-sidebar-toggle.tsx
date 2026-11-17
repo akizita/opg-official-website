@@ -2,6 +2,8 @@
 
 import { useSyncExternalStore } from 'react'
 
+import { OpgIconSidebarToggle } from '@/components/icons/opg-icons'
+
 const STORAGE_KEY = 'opg-admin-sidebar-collapsed'
 const CHANGE_EVENT = 'opg-admin-sidebar-change'
 const COMPACT_QUERY = '(max-width: 70rem)'
@@ -72,11 +74,7 @@ export function AdminSidebarToggle() {
       }
       type="button"
     >
-      <svg aria-hidden="true" viewBox="0 0 24 24">
-        <rect height="16" rx="2" width="18" x="3" y="4" />
-        <path d="M9 4v16" />
-        <path d={collapsed ? 'm14 9 3 3-3 3' : 'm16 9-3 3 3 3'} />
-      </svg>
+      <OpgIconSidebarToggle collapsed={collapsed} size={18} />
     </button>
   )
 }

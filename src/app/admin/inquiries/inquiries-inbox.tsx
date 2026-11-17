@@ -13,6 +13,14 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import { updateInquiryStatusAction } from '@/app/admin/inquiries/actions'
+import {
+  OpgIconChevron,
+  OpgIconExternalMail,
+  OpgIconReply,
+  OpgIconSearch,
+  OpgIconSend,
+  OpgIconTemplate,
+} from '@/components/icons/opg-icons'
 import { StatusBadge } from '@/components/ui/status-badge'
 import './inquiries.css'
 
@@ -277,7 +285,7 @@ export function InquiriesInbox({
   }, [inquiries])
 
   const filterOptions: { label: string; value: InquiryStatus; count: number }[] = [
-    { label: 'All Inquiries', value: 'all', count: counts.all },
+    { label: 'All Contacts', value: 'all', count: counts.all },
     { label: 'New', value: 'new', count: counts.new },
     { label: 'Read', value: 'read', count: counts.read },
     { label: 'Replied', value: 'replied', count: counts.replied },
@@ -398,9 +406,9 @@ export function InquiriesInbox({
       {/* Top Header & Controls Row */}
       <div className="inquiries-header-row">
         <div className="inquiries-header-content">
-          <h1 className="inquiries-header-title">Inquiries Inbox</h1>
+          <h1 className="inquiries-header-title">Contacts Inbox</h1>
           <p className="inquiries-header-subtitle">
-            Review and triage incoming submissions from institutional clients and talent
+            Review and triage incoming messages from institutional clients and talent
             candidates. Track response times, update triage statuses, and coordinate direct follow-ups.
           </p>
         </div>
@@ -408,11 +416,9 @@ export function InquiriesInbox({
         <div className="inquiries-header-controls inquiries-controls-bar">
           {/* Search Input */}
           <div className="inquiries-search-box">
-            <svg
-              aria-hidden="true"
+            <OpgIconSearch
               className="inquiries-search-icon"
-              fill="none"
-              height="18"
+              size={18}
               style={{
                 width: 18,
                 height: 18,
@@ -422,22 +428,12 @@ export function InquiriesInbox({
                 maxHeight: 18,
                 flexShrink: 0,
               }}
-              viewBox="0 0 20 20"
-              width="18"
-            >
-              <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.7" />
-              <path
-                d="m13.5 13.5 4 4"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="1.7"
-              />
-            </svg>
+            />
             <input
-              aria-label="Search inquiries by sender, email, subject, or message"
+              aria-label="Search contacts by sender, email, subject, or message"
               className="inquiries-search-input"
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search inquiries or sender…"
+              placeholder="Search contacts or sender…"
               type="search"
               value={searchQuery}
             />
@@ -484,13 +480,11 @@ export function InquiriesInbox({
               <span className="inquiries-pill-filter__badge">
                 {activeOption.count}
               </span>
-              <svg
-                aria-hidden="true"
+              <OpgIconChevron
                 className={`inquiries-pill-filter__chevron ${
                   dropdownOpen ? 'inquiries-pill-filter__chevron--open' : ''
                 }`}
-                fill="none"
-                height="16"
+                size={16}
                 style={{
                   width: 16,
                   height: 16,
@@ -500,22 +494,12 @@ export function InquiriesInbox({
                   maxHeight: 16,
                   flexShrink: 0,
                 }}
-                viewBox="0 0 20 20"
-                width="16"
-              >
-                <path
-                  d="m5 7.5 5 5 5-5"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                />
-              </svg>
+              />
             </button>
 
           {dropdownOpen && (
             <div
-              aria-label="Filter inquiries by status"
+              aria-label="Filter contacts by status"
               className="inquiries-pill-filter__menu"
               id={dropdownMenuId}
               onKeyDown={(e) => {
@@ -705,11 +689,11 @@ export function InquiriesInbox({
                       <div aria-hidden="true" className="inquiries-empty-icon">
                         ✦
                       </div>
-                      <h3>No inquiries found</h3>
+                      <h3>No contacts found</h3>
                       <p>
                         {searchQuery
-                          ? `No inquiries match "${searchQuery}". Try a different keyword.`
-                          : `There are no inquiries matching the "${activeOption.label}" filter.`}
+                          ? `No contacts match "${searchQuery}". Try a different keyword.`
+                          : `There are no contacts matching the "${activeOption.label}" filter.`}
                       </p>
                     </div>
                   </td>
@@ -723,11 +707,11 @@ export function InquiriesInbox({
         <div className="inquiries-card-table__footer">
           <span>
             Showing <strong>{filteredInquiries.length}</strong> of{' '}
-            <strong>{inquiries.length}</strong> inquiries
+            <strong>{inquiries.length}</strong> contacts
           </span>
           {counts.new > 0 && (
             <span className="inquiries-new-badge">
-              {counts.new} unread inquiry{counts.new > 1 ? 's' : ''}
+              {counts.new} unread contact{counts.new > 1 ? 's' : ''}
             </span>
           )}
         </div>
@@ -860,10 +844,8 @@ export function InquiriesInbox({
                         onClick={() => setIsReplying(true)}
                         type="button"
                       >
-                        <svg
-                          aria-hidden="true"
-                          fill="none"
-                          height="16"
+                        <OpgIconReply
+                          size={16}
                           style={{
                             width: 16,
                             height: 16,
@@ -871,24 +853,7 @@ export function InquiriesInbox({
                             minHeight: 16,
                             flexShrink: 0,
                           }}
-                          viewBox="0 0 20 20"
-                          width="16"
-                        >
-                          <path
-                            d="M8.5 4.5 3 10l5.5 5.5"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.8"
-                          />
-                          <path
-                            d="M3 10h9a5 5 0 0 1 5 5v1"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.8"
-                          />
-                        </svg>
+                        />
                         <span>Reply</span>
                       </button>
                     )}
@@ -898,10 +863,8 @@ export function InquiriesInbox({
                       onClick={() => handleOpenMailto(false)}
                       type="button"
                     >
-                      <svg
-                        aria-hidden="true"
-                        fill="none"
-                        height="15"
+                      <OpgIconExternalMail
+                        size={15}
                         style={{
                           width: 15,
                           height: 15,
@@ -909,23 +872,7 @@ export function InquiriesInbox({
                           minHeight: 15,
                           flexShrink: 0,
                         }}
-                        viewBox="0 0 20 20"
-                        width="15"
-                      >
-                        <path
-                          d="M15 10.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 15.5v-9A1.5 1.5 0 0 1 4.5 5H9.5"
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeWidth="1.6"
-                        />
-                        <path
-                          d="m12.5 3.5 4 4m0-4-7.5 7.5"
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="1.6"
-                        />
-                      </svg>
+                      />
                       <span>Open in Mail App</span>
                     </button>
                   </div>
@@ -935,10 +882,8 @@ export function InquiriesInbox({
                     {/* Quick Response Template Selector */}
                     <div className="inquiries-gmail-composer__template-bar">
                       <div className="inquiries-gmail-composer__template-left">
-                        <svg
-                          aria-hidden="true"
-                          fill="none"
-                          height="14"
+                        <OpgIconTemplate
+                          size={14}
                           style={{
                             width: 14,
                             height: 14,
@@ -946,17 +891,7 @@ export function InquiriesInbox({
                             minHeight: 14,
                             flexShrink: 0,
                           }}
-                          viewBox="0 0 20 20"
-                          width="14"
-                        >
-                          <path
-                            d="M3 5h14M3 10h14M3 15h9"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.8"
-                          />
-                        </svg>
+                        />
                         <span>Template:</span>
                       </div>
                       <div className="inquiries-gmail-composer__template-chips">
@@ -1026,10 +961,8 @@ export function InquiriesInbox({
                           onClick={() => handleOpenMailto(true)}
                           type="button"
                         >
-                          <svg
-                            aria-hidden="true"
-                            fill="none"
-                            height="14"
+                          <OpgIconSend
+                            size={14}
                             style={{
                               width: 14,
                               height: 14,
@@ -1037,17 +970,7 @@ export function InquiriesInbox({
                               minHeight: 14,
                               flexShrink: 0,
                             }}
-                            viewBox="0 0 20 20"
-                            width="14"
-                          >
-                            <path
-                              d="m3 10 14-7-5 14-3-5-6-2Z"
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="1.6"
-                            />
-                          </svg>
+                          />
                           <span>Send Email &amp; Mark Replied</span>
                         </button>
                       </div>

@@ -9,7 +9,7 @@ import {
 } from '@/lib/content/inquiries'
 import { createClient } from '@/lib/supabase/server'
 
-export type ContactActionState = {
+type ContactActionState = {
   success: boolean
   referenceId?: string
   errors?: Record<string, string>

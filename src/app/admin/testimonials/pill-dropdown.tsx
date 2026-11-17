@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from 'react'
 
+import { OpgIconChevron } from '@/components/icons/opg-icons'
+
 type Option = { label: string; value: string }
 
 export function PillDropdown({
@@ -78,12 +80,9 @@ export function PillDropdown({
         type="button"
       >
         <span className="candidate-review-pill-picker__copy">
-          <small>{label}</small>
           <strong>{selected?.label ?? 'Choose'}</strong>
         </span>
-        <svg aria-hidden="true" fill="none" viewBox="0 0 20 20">
-          <path d="m5 7.5 5 5 5-5" />
-        </svg>
+        <OpgIconChevron size={16} />
       </button>
       {open && (
         <div

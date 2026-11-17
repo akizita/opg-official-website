@@ -8,7 +8,7 @@ import { canManageInquiries, canViewInquiries } from '@/lib/auth/permissions'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
-  title: 'Inquiries Inbox | OPG Admin',
+  title: 'Contacts Inbox | OPG Admin',
 }
 
 type InquiriesPageProps = {
@@ -58,9 +58,9 @@ export default async function AdminInquiriesPage({
         {inquiriesError ? (
           <div>
             <div className="inquiries-header-content">
-              <h1 className="inquiries-header-title">Inquiries Inbox</h1>
+              <h1 className="inquiries-header-title">Contacts Inbox</h1>
               <p className="inquiries-header-subtitle">
-                Review and triage incoming inquiries from institutional clients and
+                Review and triage incoming messages from institutional clients and
                 talent candidates. Track response times, update triage statuses,
                 and coordinate direct follow-ups.
               </p>
@@ -70,9 +70,9 @@ export default async function AdminInquiriesPage({
               role="alert"
               style={{ marginTop: '1.5rem' }}
             >
-              <p>Inquiries could not be loaded. Please try again.</p>
+              <p>Contacts could not be loaded. Please try again.</p>
               <Link className="button-link" href="/admin/inquiries">
-                Retry loading inquiries
+                Retry loading contacts
               </Link>
             </div>
           </div>

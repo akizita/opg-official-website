@@ -352,7 +352,38 @@ export async function getArticleCategories(
     .eq('is_active', true)
     .order('name', { ascending: true })
 
-  return data || []
+  if (data && data.length > 0) return data
+
+  return [
+    {
+      id: 1,
+      slug: 'people-and-culture',
+      name: 'People & Culture',
+      description: 'Stories about talent, growth, leadership, and life at OPG.',
+      is_active: true,
+    },
+    {
+      id: 2,
+      slug: 'talent-strategy',
+      name: 'Talent Strategy',
+      description: 'Insights and playbooks for scaling remote and cross-border teams.',
+      is_active: true,
+    },
+    {
+      id: 3,
+      slug: 'engineering-delivery',
+      name: 'Engineering Delivery',
+      description: 'Best practices in software architecture, velocity, and technical team pods.',
+      is_active: true,
+    },
+    {
+      id: 4,
+      slug: 'global-operations',
+      name: 'Global Operations',
+      description: 'Regulatory compliance, operational excellence, and enterprise risk management.',
+      is_active: true,
+    },
+  ]
 }
 
 export async function getArticleTags(
@@ -366,4 +397,295 @@ export async function getArticleTags(
     .order('name', { ascending: true })
 
   return data || []
+}
+
+export async function getAuthors(
+  client?: SupabaseClient,
+): Promise<Author[]> {
+  const supabase = client ?? (await createClient())
+  const { data } = await supabase
+    .from('authors')
+    .select('*')
+    .eq('is_active', true)
+    .order('full_name', { ascending: true })
+
+  if (data && data.length > 0) return data
+
+  return [
+    {
+      id: '00000000-0000-0000-0000-000000000001',
+      slug: 'outsourced-pro-global',
+      full_name: 'Outsourced Pro Global',
+      role_title: 'Editorial Team',
+      bio: 'Empowering businesses and connecting exceptional global talent.',
+      avatar_url: null,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000002',
+      slug: 'elena-rostova',
+      full_name: 'Elena Rostova',
+      role_title: 'VP of Global People & Talent Solutions',
+      bio: 'Specializing in international workforce scaling and talent architecture.',
+      avatar_url: null,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000003',
+      slug: 'marcus-chen',
+      full_name: 'Marcus Chen',
+      role_title: 'Head of Technology Delivery',
+      bio: 'Advising enterprises on distributed software engineering pods.',
+      avatar_url: null,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    },
+  ]
+}
+
+export type AdminArticleItem = {
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  status: Article['status']
+  published_at: string | null
+  reading_time_minutes: number
+  cover_image_url: string | null
+  author_name: string
+  author_id: string | null
+  category_name: string
+  category_id: number | null
+  views: number
+  likes: number
+  created_at: string
+  updated_at: string
+}
+
+export type AdminArticleDetail = AdminArticleItem & {
+  content: RichTextBlock[]
+  markdownContent: string
+  seo_title: string | null
+  seo_description: string | null
+}
+
+import {
+  markdownToRichTextBlocks,
+  richTextBlocksToMarkdown,
+} from './article-markdown'
+
+export { markdownToRichTextBlocks, richTextBlocksToMarkdown }
+
+export async function getAdminArticles(
+  client?: SupabaseClient,
+): Promise<AdminArticleItem[]> {
+  const supabase = client ?? (await createClient())
+
+  const [articlesRes, engagementRes] = await Promise.all([
+    supabase
+      .from('articles')
+      .select(
+        `
+        id,
+        slug,
+        title,
+        excerpt,
+        cover_image_url,
+        reading_time_minutes,
+        status,
+        published_at,
+        created_at,
+        updated_at,
+        author_id,
+        author:authors(id, full_name, slug),
+        category_mappings:article_category_mappings(
+          category:article_categories(id, name, slug)
+        )
+      `,
+      )
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('article_engagement')
+      .select('article_slug, view_count, like_count'),
+  ])
+
+  const engagementMap = new Map<string, { views: number; likes: number }>()
+  if (engagementRes.data) {
+    for (const row of engagementRes.data) {
+      engagementMap.set(row.article_slug, {
+        views: Number(row.view_count ?? 0),
+        likes: Number(row.like_count ?? 0),
+      })
+    }
+  }
+
+  const dbArticles: AdminArticleItem[] = (articlesRes.data || []).map(
+    (row: Record<string, unknown>) => {
+      const categoryMappings =
+        (row.category_mappings as Array<{ category: ArticleCategory }>) || []
+      const primaryCategory = categoryMappings[0]?.category
+      const author = row.author as Author | null
+      const slug = row.slug as string
+      const engagement = engagementMap.get(slug) || { views: 0, likes: 0 }
+
+      return {
+        id: row.id as string,
+        slug,
+        title: row.title as string,
+        excerpt: (row.excerpt as string) || '',
+        status: (row.status as Article['status']) || 'draft',
+        published_at: row.published_at as string | null,
+        reading_time_minutes: Number(row.reading_time_minutes || 3),
+        cover_image_url: row.cover_image_url as string | null,
+        author_name: author?.full_name || 'Editorial Team',
+        author_id: (row.author_id as string) || author?.id || null,
+        category_name: primaryCategory?.name || 'General',
+        category_id: primaryCategory?.id ?? null,
+        views: engagement.views,
+        likes: engagement.likes,
+        created_at: (row.created_at as string) || new Date().toISOString(),
+        updated_at: (row.updated_at as string) || new Date().toISOString(),
+      }
+    },
+  )
+
+  const dbSlugs = new Set(dbArticles.map((a) => a.slug))
+
+  // Merge featured editorial articles so they are immediately available for monitoring and editing
+  const featuredMapped: AdminArticleItem[] = featuredArticles
+    .filter((f) => !dbSlugs.has(f.slug))
+    .map((f) => {
+      const engagement = engagementMap.get(f.slug) || {
+        views: f.view_count ?? 0,
+        likes: f.like_count ?? 0,
+      }
+      return {
+        id: f.id,
+        slug: f.slug,
+        title: f.title,
+        excerpt: f.excerpt,
+        status: f.status,
+        published_at: f.published_at,
+        reading_time_minutes: f.reading_time_minutes,
+        cover_image_url: f.cover_image_url,
+        author_name: f.author?.full_name || 'Outsourced Pro Global',
+        author_id: f.author_id,
+        category_name: f.categories?.[0]?.name || 'People & Culture',
+        category_id: f.categories?.[0]?.id ?? null,
+        views: engagement.views,
+        likes: engagement.likes,
+        created_at: f.created_at,
+        updated_at: f.updated_at,
+      }
+    })
+
+  return [...dbArticles, ...featuredMapped]
+}
+
+export async function getAdminArticleByIdOrSlug(
+  idOrSlug: string,
+  client?: SupabaseClient,
+): Promise<AdminArticleDetail | null> {
+  const supabase = client ?? (await createClient())
+
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      idOrSlug,
+    )
+
+  let query = supabase
+    .from('articles')
+    .select(
+      `
+      *,
+      author:authors(*),
+      category_mappings:article_category_mappings(
+        category:article_categories(*)
+      )
+    `,
+    )
+
+  if (isUuid) {
+    query = query.eq('id', idOrSlug)
+  } else {
+    query = query.eq('slug', idOrSlug)
+  }
+
+  const { data: row } = await query.maybeSingle()
+
+  if (row) {
+    const { data: eng } = await supabase
+      .from('article_engagement')
+      .select('view_count, like_count')
+      .eq('article_slug', row.slug)
+      .maybeSingle()
+
+    const categoryMappings =
+      (row.category_mappings as Array<{ category: ArticleCategory }>) || []
+    const primaryCategory = categoryMappings[0]?.category
+    const author = row.author as Author | null
+    const content = (row.content as RichTextBlock[]) || []
+
+    return {
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      excerpt: row.excerpt,
+      content,
+      markdownContent: richTextBlocksToMarkdown(content),
+      status: row.status as Article['status'],
+      published_at: row.published_at,
+      reading_time_minutes: Number(row.reading_time_minutes || 3),
+      cover_image_url: row.cover_image_url,
+      author_name: author?.full_name || 'Editorial Team',
+      author_id: row.author_id || null,
+      category_name: primaryCategory?.name || 'General',
+      category_id: primaryCategory?.id ?? null,
+      seo_title: row.seo_title || null,
+      seo_description: row.seo_description || null,
+      views: Number(eng?.view_count ?? 0),
+      likes: Number(eng?.like_count ?? 0),
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }
+  }
+
+  // Fallback to featuredArticles if not in DB yet
+  const featured = featuredArticles.find(
+    (f) => f.id === idOrSlug || f.slug === idOrSlug,
+  )
+  if (featured) {
+    const { data: eng } = await supabase
+      .from('article_engagement')
+      .select('view_count, like_count')
+      .eq('article_slug', featured.slug)
+      .maybeSingle()
+
+    return {
+      id: featured.id,
+      slug: featured.slug,
+      title: featured.title,
+      excerpt: featured.excerpt,
+      content: featured.content,
+      markdownContent: richTextBlocksToMarkdown(featured.content),
+      status: featured.status,
+      published_at: featured.published_at,
+      reading_time_minutes: featured.reading_time_minutes,
+      cover_image_url: featured.cover_image_url,
+      author_name: featured.author?.full_name || 'Outsourced Pro Global',
+      author_id: featured.author_id,
+      category_name: featured.categories?.[0]?.name || 'People & Culture',
+      category_id: featured.categories?.[0]?.id ?? null,
+      seo_title: featured.seo_title,
+      seo_description: featured.seo_description,
+      views: Number(eng?.view_count ?? featured.view_count ?? 0),
+      likes: Number(eng?.like_count ?? featured.like_count ?? 0),
+      created_at: featured.created_at,
+      updated_at: featured.updated_at,
+    }
+  }
+
+  return null
 }

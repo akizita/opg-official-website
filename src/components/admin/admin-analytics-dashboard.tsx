@@ -1,6 +1,12 @@
 import Link from 'next/link'
-import type { ReactNode } from 'react'
 
+import {
+  OpgIconContacts,
+  OpgIconLikes,
+  OpgIconTestimonials,
+  OpgIconViews,
+  OpgIconVisits,
+} from '@/components/icons/opg-icons'
 import type { AdminProfile } from '@/lib/auth/admin-session'
 import { canViewContent, canViewInquiries } from '@/lib/auth/permissions'
 import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
@@ -92,35 +98,16 @@ function formatReviewDate(value: string) {
 }
 
 function MetricIconGraphic({ name }: { name: MetricIcon }) {
-  const paths: Record<MetricIcon, ReactNode> = {
-    visits: (
-      <>
-        <path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z" />
-        <circle cx="12" cy="12" r="2.6" />
-      </>
-    ),
-    views: (
-      <>
-        <rect height="14" rx="2" width="18" x="3" y="5" />
-        <path d="M7 15V12M12 15V9M17 15v-4" />
-      </>
-    ),
-    likes: (
-      <path d="M20.8 8.2c0 5-8.8 10.5-8.8 10.5S3.2 13.2 3.2 8.2A4.2 4.2 0 0 1 12 6.3a4.2 4.2 0 0 1 8.8 1.9Z" />
-    ),
-    contacts: (
-      <>
-        <rect height="14" rx="2" width="18" x="3" y="5" />
-        <path d="m4 7 8 6 8-6" />
-      </>
-    ),
+  const glyphs: Record<MetricIcon, React.ReactElement> = {
+    visits: <OpgIconVisits />,
+    views: <OpgIconViews />,
+    likes: <OpgIconLikes />,
+    contacts: <OpgIconContacts />,
   }
 
   return (
     <span className="admin-analytics-metric__icon">
-      <svg aria-hidden="true" viewBox="0 0 24 24">
-        {paths[name]}
-      </svg>
+      {glyphs[name]}
     </span>
   )
 }
@@ -264,6 +251,210 @@ function VisitChart({
   )
 }
 
+type ArticleEngagementPoint = {
+  label: string
+  likes: number
+  views: number
+}
+
+function ArticleEngagementChart({
+  data,
+}: {
+  data: ArticleEngagementPoint[]
+}) {
+  const width = 720
+  const height = 265
+  const leftPadding = 46
+  const rightPadding = 20
+  const topPadding = 34
+  const bottomPadding = 42
+  const chartHeight = height - topPadding - bottomPadding
+  const chartWidth = width - leftPadding - rightPadding
+  const maximum = Math.max(
+    ...data.flatMap((point) => [point.views, point.likes]),
+    1,
+  )
+
+  const viewPoints = data.map((point, index) => {
+    const x =
+      leftPadding +
+      (data.length === 1
+        ? chartWidth / 2
+        : (index / (data.length - 1)) * chartWidth)
+    const y = topPadding + chartHeight - (point.views / maximum) * chartHeight
+    return { ...point, x, y }
+  })
+
+  const likePoints = data.map((point, index) => {
+    const x =
+      leftPadding +
+      (data.length === 1
+        ? chartWidth / 2
+        : (index / (data.length - 1)) * chartWidth)
+    const y = topPadding + chartHeight - (point.likes / maximum) * chartHeight
+    return { ...point, x, y }
+  })
+
+  const viewsLinePath = buildSmoothPath(viewPoints)
+  const viewsAreaPath = `${viewsLinePath} L ${viewPoints.at(-1)?.x ?? leftPadding} ${topPadding + chartHeight} L ${viewPoints[0]?.x ?? leftPadding} ${topPadding + chartHeight} Z`
+
+  const likesLinePath = buildSmoothPath(likePoints)
+  const likesAreaPath = `${likesLinePath} L ${likePoints.at(-1)?.x ?? leftPadding} ${topPadding + chartHeight} L ${likePoints[0]?.x ?? leftPadding} ${topPadding + chartHeight} Z`
+
+  const labelStep = Math.max(1, Math.ceil(data.length / 7))
+
+  const peakView = data.some((point) => point.views > 0)
+    ? viewPoints.reduce(
+        (highest, point) => (point.views > highest.views ? point : highest),
+        viewPoints[0]!,
+      )
+    : null
+
+  return (
+    <div className="admin-visit-chart">
+      <svg
+        aria-label="Article views and likes engagement over the selected period"
+        role="img"
+        viewBox={`0 0 ${width} ${height}`}
+      >
+        <defs>
+          <linearGradient id="articleViewsArea" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#f2b705" stopOpacity="0.32" />
+            <stop offset="100%" stopColor="#f2b705" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="articleViewsLine" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#f59e0b" />
+          </linearGradient>
+
+          <linearGradient id="articleLikesArea" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#171717" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#171717" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="articleLikesLine" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor="#000000" />
+            <stop offset="100%" stopColor="#404040" />
+          </linearGradient>
+        </defs>
+
+        {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+          const y = topPadding + chartHeight * ratio
+          return (
+            <g key={ratio}>
+              <line
+                className="admin-visit-chart__grid"
+                x1={leftPadding}
+                x2={width - rightPadding}
+                y1={y}
+                y2={y}
+              />
+              <text
+                className="admin-visit-chart__axis"
+                textAnchor="end"
+                x={leftPadding - 9}
+                y={y + 3}
+              >
+                {Math.round(maximum * (1 - ratio))}
+              </text>
+            </g>
+          )
+        })}
+
+        {peakView && (
+          <line
+            className="admin-visit-chart__peak-line"
+            x1={peakView.x}
+            x2={peakView.x}
+            y1={topPadding - 4}
+            y2={topPadding + chartHeight}
+          />
+        )}
+
+        <path d={viewsAreaPath} fill="url(#articleViewsArea)" />
+        <path
+          className="admin-visit-chart__line"
+          d={viewsLinePath}
+          stroke="url(#articleViewsLine)"
+        />
+
+        <path d={likesAreaPath} fill="url(#articleLikesArea)" />
+        <path
+          className="admin-visit-chart__line admin-article-chart__likes-line"
+          d={likesLinePath}
+          stroke="url(#articleLikesLine)"
+        />
+
+        {viewPoints.map((point, index) => {
+          const likePoint = likePoints[index]
+          return (
+            <g key={`${point.label}-${index}`}>
+              <circle
+                className="admin-visit-chart__dot-halo"
+                cx={point.x}
+                cy={point.y}
+                r="7"
+              />
+              <circle
+                className="admin-visit-chart__dot"
+                cx={point.x}
+                cy={point.y}
+                r="3.2"
+              />
+
+              {likePoint && (
+                <>
+                  <circle
+                    className="admin-visit-chart__dot-halo admin-article-chart__likes-halo"
+                    cx={likePoint.x}
+                    cy={likePoint.y}
+                    r="6"
+                  />
+                  <circle
+                    className="admin-visit-chart__dot admin-article-chart__likes-dot"
+                    cx={likePoint.x}
+                    cy={likePoint.y}
+                    r="2.8"
+                  />
+                </>
+              )}
+
+              {(index % labelStep === 0 || index === viewPoints.length - 1) && (
+                <text
+                  className="admin-visit-chart__label"
+                  textAnchor="middle"
+                  x={point.x}
+                  y={height - 12}
+                >
+                  {point.label}
+                </text>
+              )}
+
+              {point === peakView && peakView.views > 0 && (
+                <g className="admin-visit-chart__peak">
+                  <rect
+                    height="24"
+                    rx="8"
+                    width="54"
+                    x={Math.min(Math.max(point.x - 27, 4), width - 58)}
+                    y={Math.max(point.y - 34, 1)}
+                  />
+                  <text
+                    textAnchor="middle"
+                    x={Math.min(Math.max(point.x, 31), width - 31)}
+                    y={Math.max(point.y - 18, 17)}
+                  >
+                    {point.views} views
+                  </text>
+                </g>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
 export async function AdminAnalyticsDashboard({
   period,
   profile,
@@ -370,6 +561,31 @@ export async function AdminAnalyticsDashboard({
     }
   })
 
+  const articleViewsByDate = new Map(
+    dailyEngagement.map((row) => [row.engagement_date, row.view_count]),
+  )
+  const articleLikesByDate = new Map(
+    dailyEngagement.map((row) => [row.engagement_date, row.like_count]),
+  )
+  const articleSeries: ArticleEngagementPoint[] = Array.from(
+    { length: periodDays },
+    (_, index) => {
+      const date = new Date(chartStart.getTime() + index * DAY_IN_MS)
+      const key = toDateKey(date)
+      return {
+        label: new Intl.DateTimeFormat('en-SG', {
+          day: 'numeric',
+          month: 'short',
+          timeZone: 'UTC',
+        }).format(date),
+        likes: articleLikesByDate.get(key) ?? 0,
+        views: articleViewsByDate.get(key) ?? 0,
+      }
+    },
+  )
+  const seriesTotalViews = articleSeries.reduce((total, p) => total + p.views, 0)
+  const seriesTotalLikes = articleSeries.reduce((total, p) => total + p.likes, 0)
+
   const titleBySlug = new Map<string, string>()
   featuredArticles.forEach((article) =>
     titleBySlug.set(article.slug, article.title),
@@ -413,7 +629,6 @@ export async function AdminAnalyticsDashboard({
       <div className="admin-analytics__inner">
         <header className="admin-analytics__welcome">
           <div>
-            <p>Overview</p>
             <h1>Good day, {profile.displayName}</h1>
             <span>Here is what is happening across the OPG website.</span>
           </div>
@@ -450,11 +665,15 @@ export async function AdminAnalyticsDashboard({
           </article>
         </section>
 
-        <section className="admin-analytics__charts">
+        {/* Bento Grid - Section 1: Hero Performance Graphs */}
+        <section
+          aria-label="Performance trend charts"
+          className="admin-analytics__charts"
+        >
+          {/* 1. Website Visits Chart Panel */}
           <article className="admin-glass-panel admin-analytics__visits-panel">
             <header className="admin-analytics__panel-heading">
               <div>
-                <p>Traffic analytics</p>
                 <h2>Website visits</h2>
                 <span>
                   {period === 'week' ? 'Last 7 days' : 'Last 30 days'} ·{' '}
@@ -482,48 +701,150 @@ export async function AdminAnalyticsDashboard({
             <VisitChart data={visitSeries} />
           </article>
 
+          {/* 2. Articles Analytics Graph Panel */}
+          <article className="admin-glass-panel admin-analytics__article-chart-panel">
+            <header className="admin-analytics__panel-heading">
+              <div>
+                <h2>Articles analytics</h2>
+                <span>
+                  {period === 'week' ? 'Last 7 days' : 'Last 30 days'} ·{' '}
+                  {seriesTotalViews} views · {seriesTotalLikes} likes
+                </span>
+              </div>
+              <div className="admin-analytics__chart-legend">
+                <span className="admin-analytics__legend-pill">
+                  <span
+                    aria-hidden="true"
+                    className="admin-analytics__legend-dot admin-analytics__legend-dot--gold"
+                  />
+                  <span className="admin-analytics__legend-text">Views</span>
+                </span>
+                <span className="admin-analytics__legend-pill">
+                  <span
+                    aria-hidden="true"
+                    className="admin-analytics__legend-dot admin-analytics__legend-dot--black"
+                  />
+                  <span className="admin-analytics__legend-text">Likes</span>
+                </span>
+              </div>
+            </header>
+            <ArticleEngagementChart data={articleSeries} />
+          </article>
+        </section>
+
+        {/* Bento Grid - Section 2: Article Comparison, Inbox & Testimonials */}
+        <section
+          aria-label="Content performance and review queues"
+          className="admin-review-grid"
+        >
+          {/* 3. Refined Article Comparison Card */}
           <article className="admin-glass-panel admin-analytics__articles-panel">
             <header className="admin-analytics__panel-heading">
               <div>
-                <p>Content performance</p>
                 <h2>Article comparison</h2>
                 <span>Lifetime first-party engagement</span>
               </div>
-              <span className="admin-analytics__legend">
-                <i /> Views <i /> Likes
-              </span>
+              <div className="admin-analytics__chart-legend">
+                <span className="admin-analytics__legend-pill">
+                  <span
+                    aria-hidden="true"
+                    className="admin-analytics__legend-dot admin-analytics__legend-dot--gold"
+                  />
+                  <span className="admin-analytics__legend-text">Views</span>
+                </span>
+                <span className="admin-analytics__legend-pill">
+                  <span
+                    aria-hidden="true"
+                    className="admin-analytics__legend-dot admin-analytics__legend-dot--black"
+                  />
+                  <span className="admin-analytics__legend-text">Likes</span>
+                </span>
+              </div>
             </header>
 
             <div className="admin-article-analytics">
               {articleAnalytics.length > 0 ? (
-                articleAnalytics.map((article) => (
-                  <div
-                    className="admin-article-analytics__row"
-                    key={article.slug}
-                  >
-                    <Link href={`/articles/${article.slug}`}>
-                      {article.title}
-                    </Link>
-                    <div className="admin-article-analytics__bars">
-                      <span>
-                        <i
-                          style={{
-                            width: `${(article.views / maximumArticleValue) * 100}%`,
-                          }}
-                        />
-                        <b>{article.views.toLocaleString()}</b>
-                      </span>
-                      <span>
-                        <i
-                          style={{
-                            width: `${(article.likes / maximumArticleValue) * 100}%`,
-                          }}
-                        />
-                        <b>{article.likes.toLocaleString()}</b>
-                      </span>
+                articleAnalytics.map((article, index) => {
+                  const viewsPercent = Math.round(
+                    (article.views / maximumArticleValue) * 100,
+                  )
+                  const likesPercent = Math.round(
+                    (article.likes / maximumArticleValue) * 100,
+                  )
+
+                  return (
+                    <div
+                      className="admin-article-analytics__card"
+                      key={article.slug}
+                    >
+                      <div className="admin-article-analytics__card-top">
+                        <div className="admin-article-analytics__title-wrap">
+                          <span
+                            className={`admin-article-analytics__rank ${
+                              index === 0
+                                ? 'admin-article-analytics__rank--top'
+                                : ''
+                            }`}
+                          >
+                            #{index + 1}
+                          </span>
+                          <Link
+                            className="admin-article-analytics__link"
+                            href={`/articles/${article.slug}`}
+                            title={article.title}
+                          >
+                            {article.title}
+                          </Link>
+                        </div>
+                        <div className="admin-article-analytics__badges">
+                          <span
+                            className="admin-article-analytics__badge admin-article-analytics__badge--views"
+                            title={`${article.views.toLocaleString()} Total Views`}
+                          >
+                            <OpgIconViews size={12} />
+                            <span>{article.views.toLocaleString()}</span>
+                          </span>
+                          <span
+                            className="admin-article-analytics__badge admin-article-analytics__badge--likes"
+                            title={`${article.likes.toLocaleString()} Reader Likes`}
+                          >
+                            <OpgIconLikes size={12} />
+                            <span>{article.likes.toLocaleString()}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="admin-article-analytics__bars-track">
+                        <div className="admin-article-analytics__bar-line">
+                          <span className="admin-article-analytics__bar-label">
+                            Views
+                          </span>
+                          <div className="admin-article-analytics__track-bg">
+                            <div
+                              className="admin-article-analytics__track-fill admin-article-analytics__track-fill--views"
+                              style={{
+                                width: `${Math.max(viewsPercent, article.views > 0 ? 4 : 0)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="admin-article-analytics__bar-line">
+                          <span className="admin-article-analytics__bar-label">
+                            Likes
+                          </span>
+                          <div className="admin-article-analytics__track-bg">
+                            <div
+                              className="admin-article-analytics__track-fill admin-article-analytics__track-fill--likes"
+                              style={{
+                                width: `${Math.max(likesPercent, article.likes > 0 ? 4 : 0)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  )
+                })
               ) : (
                 <div className="admin-analytics__empty">
                   Article engagement will appear after publication.
@@ -531,20 +852,13 @@ export async function AdminAnalyticsDashboard({
               )}
             </div>
           </article>
-        </section>
-
-        <section className="admin-review-grid" aria-label="Review queues">
           <article className="admin-glass-panel admin-review-card">
             <header className="admin-review-card__heading">
               <div>
                 <span className="admin-review-card__icon admin-review-card__icon--inbox">
-                  <svg aria-hidden="true" viewBox="0 0 24 24">
-                    <rect height="14" rx="2" width="18" x="3" y="5" />
-                    <path d="m4 7 8 6 8-6" />
-                  </svg>
+                  <OpgIconContacts size={18} />
                 </span>
                 <div>
-                  <p>Communications</p>
                   <h2>Inbox</h2>
                 </div>
               </div>
@@ -589,13 +903,9 @@ export async function AdminAnalyticsDashboard({
             <header className="admin-review-card__heading">
               <div>
                 <span className="admin-review-card__icon admin-review-card__icon--testimonial">
-                  <svg aria-hidden="true" viewBox="0 0 24 24">
-                    <path d="M7 10h4v4H7zM13 10h4v4h-4z" />
-                    <path d="M5 5h14v14H5z" />
-                  </svg>
+                  <OpgIconTestimonials size={18} />
                 </span>
                 <div>
-                  <p>Social proof</p>
                   <h2>Testimonials</h2>
                 </div>
               </div>

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 
 import { updateInquiryStatusAction } from '@/app/admin/inquiries/actions'
+import { AdminConfirmDialog } from '@/components/admin/admin-confirm-dialog'
 
 type StatusOption = 'new' | 'read' | 'replied' | 'archived'
 
@@ -16,6 +17,7 @@ export function InquiryStatusControl({
   const [status, setStatus] = useState<StatusOption>(currentStatus)
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false)
 
   function handleStatusChange(newStatus: StatusOption) {
     if (newStatus === status) return
@@ -30,6 +32,19 @@ export function InquiryStatusControl({
         setMessage('Failed to update status')
       }
     })
+  }
+
+  function onStatusButtonClick(targetStatus: StatusOption) {
+    if (targetStatus === 'archived') {
+      setArchiveModalOpen(true)
+    } else {
+      handleStatusChange(targetStatus)
+    }
+  }
+
+  function confirmArchive() {
+    setArchiveModalOpen(false)
+    handleStatusChange('archived')
   }
 
   return (
@@ -53,7 +68,7 @@ export function InquiryStatusControl({
             className={`button ${status === s ? 'button--primary' : 'button--secondary'}`}
             disabled={isPending || status === s}
             key={s}
-            onClick={() => handleStatusChange(s)}
+            onClick={() => onStatusButtonClick(s)}
             type="button"
           >
             {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -71,6 +86,18 @@ export function InquiryStatusControl({
           {message}
         </p>
       )}
+
+      <AdminConfirmDialog
+        cancelText="Cancel"
+        confirmText="Archive Inquiry"
+        description="Are you sure you want to archive this inquiry? It will be marked as archived and removed from your active triage inbox."
+        disabled={isPending}
+        isOpen={archiveModalOpen}
+        onClose={() => setArchiveModalOpen(false)}
+        onConfirm={confirmArchive}
+        title="Archive Inquiry?"
+        tone="warning"
+      />
     </div>
   )
 }

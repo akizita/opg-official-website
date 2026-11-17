@@ -19,6 +19,13 @@ import {
 } from '@/app/admin/testimonials/actions'
 import { TestimonialReviewControls } from '@/app/admin/testimonials/review-controls'
 import { PillDropdown } from '@/app/admin/testimonials/pill-dropdown'
+import { AdminConfirmDialog } from '@/components/admin/admin-confirm-dialog'
+import {
+  OpgIconChevron,
+  OpgIconFilter,
+  OpgIconMore,
+  OpgIconSearch,
+} from '@/components/icons/opg-icons'
 
 export type ReviewStatus = 'all' | 'pending' | 'approved' | 'rejected'
 
@@ -167,14 +174,10 @@ export function TestimonialStatusFilter({
         ref={triggerRef}
         type="button"
       >
-        <svg
-          aria-hidden="true"
+        <OpgIconFilter
           className="candidate-review-filter-picker__icon"
-          fill="none"
-          viewBox="0 0 20 20"
-        >
-          <path d="M3 5h14l-5.5 6v4l-3 1v-5L3 5Z" />
-        </svg>
+          size={16}
+        />
         <span className="candidate-review-filter-picker__label">
           <small>Status</small>
           <strong>{active.label}</strong>
@@ -182,14 +185,10 @@ export function TestimonialStatusFilter({
         <span className="candidate-review-filter-picker__count">
           {active.count}
         </span>
-        <svg
-          aria-hidden="true"
+        <OpgIconChevron
           className="candidate-review-filter-picker__chevron"
-          fill="none"
-          viewBox="0 0 20 20"
-        >
-          <path d="m5 7.5 5 5 5-5" />
-        </svg>
+          size={16}
+        />
       </button>
       {filtering && (
         <span className="candidate-review-filter-picker__progress" />
@@ -263,6 +262,7 @@ export function TestimonialsInbox({
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [menuId, setMenuId] = useState<string | null>(null)
   const [deleteTargets, setDeleteTargets] = useState<CandidateSubmission[]>([])
+  const [rejectTargets, setRejectTargets] = useState<CandidateSubmission[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [hiddenIds, setHiddenIds] = useState<string[]>([])
   const [deleteError, setDeleteError] = useState('')
@@ -400,6 +400,18 @@ export function TestimonialsInbox({
     })
   }
 
+  function closeReject() {
+    if (reviewing) return
+    setRejectTargets([])
+  }
+
+  function confirmReject() {
+    if (rejectTargets.length === 0) return
+    const targets = [...rejectTargets]
+    setRejectTargets([])
+    reviewItems(targets, 'rejected')
+  }
+
   function openDetails(item: CandidateSubmission, trigger: HTMLElement) {
     lastTriggerRef.current = trigger
     setMenuId(null)
@@ -508,10 +520,7 @@ export function TestimonialsInbox({
       <div className="candidate-review-inbox__toolbar">
         <label className="candidate-review-inbox__search">
           <span className="sr-only">Search candidate or story</span>
-          <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
-            <circle cx="10.8" cy="10.8" r="6.3" />
-            <path d="m16 16 4.5 4.5" />
-          </svg>
+          <OpgIconSearch size={18} />
           <input
             onChange={(event) => {
               setSearch(event.target.value)
@@ -583,7 +592,7 @@ export function TestimonialsInbox({
             <button
               className="candidate-review-button candidate-review-button--neutral"
               disabled={selectedPending.length === 0 || reviewing || deleting}
-              onClick={() => reviewItems(selectedPending, 'rejected')}
+              onClick={() => setRejectTargets(selectedPending)}
               type="button"
             >
               Reject
@@ -793,15 +802,7 @@ export function TestimonialsInbox({
                           }}
                           type="button"
                         >
-                          <svg
-                            aria-hidden="true"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle cx="5" cy="12" r="1.7" />
-                            <circle cx="12" cy="12" r="1.7" />
-                            <circle cx="19" cy="12" r="1.7" />
-                          </svg>
+                          <OpgIconMore size={18} />
                         </button>
                         {menuId === item.id && (
                           <div
@@ -834,7 +835,7 @@ export function TestimonialsInbox({
                                 disabled={reviewing || deleting}
                                 onClick={() => {
                                   setMenuId(null)
-                                  reviewItems([item], 'rejected')
+                                  setRejectTargets([item])
                                 }}
                                 role="menuitem"
                                 type="button"
@@ -1046,7 +1047,7 @@ export function TestimonialsInbox({
                   <button
                     className="candidate-review-button candidate-review-button--neutral"
                     disabled={reviewing}
-                    onClick={() => reviewItems([selected], 'rejected')}
+                    onClick={() => setRejectTargets([selected])}
                     type="button"
                   >
                     Reject testimonial
@@ -1124,6 +1125,32 @@ export function TestimonialsInbox({
           </div>
         </dialog>
       )}
+
+      <AdminConfirmDialog
+        cancelText="Cancel"
+        confirmText={
+          reviewing
+            ? 'Rejecting…'
+            : rejectTargets.length === 1
+              ? 'Reject Testimonial'
+              : `Reject ${rejectTargets.length} Testimonials`
+        }
+        description={
+          rejectTargets.length === 1
+            ? `Are you sure you want to reject the testimonial from ${rejectTargets[0]?.author_name}? It will be marked as rejected and will not be published on the website.`
+            : `Are you sure you want to reject these ${rejectTargets.length} selected testimonials? They will be marked as rejected and will not be published on the website.`
+        }
+        disabled={reviewing}
+        isOpen={rejectTargets.length > 0}
+        onClose={closeReject}
+        onConfirm={confirmReject}
+        title={
+          rejectTargets.length === 1
+            ? 'Reject Testimonial?'
+            : `Reject ${rejectTargets.length} Testimonials?`
+        }
+        tone="danger"
+      />
       {toast && (
         <div
           className={`candidate-review-toast candidate-review-toast--${toast.tone}`}

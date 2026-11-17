@@ -69,7 +69,7 @@ describe('InquiriesInbox component', () => {
     // Pill dropdown filter
     expect(html).toContain('inquiries-pill-filter')
     expect(html).toContain('inquiries-pill-filter__trigger')
-    expect(html).toContain('All Inquiries')
+    expect(html).toContain('All Contacts')
 
     // Card table (email inbox style)
     expect(html).toContain('inquiries-card-table')
@@ -93,7 +93,7 @@ describe('InquiriesInbox component', () => {
       }),
     )
 
-    expect(html).toContain('No inquiries found')
+    expect(html).toContain('No contacts found')
     expect(html).toContain('inquiries-empty-state')
     expect(html).not.toContain('Reset filters')
   })

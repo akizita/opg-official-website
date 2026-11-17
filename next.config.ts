@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   experimental: {
+    cpus: 1,
     staticGenerationMaxConcurrency: 1,
     serverActions: {
       // Allow up to 6 MB to safely accommodate 5 MB image uploads
@@ -40,6 +41,11 @@ const nextConfig: NextConfig = {
       {
         source: '/security-policy',
         destination: '/security',
+        permanent: true,
+      },
+      {
+        source: '/admin/contacts',
+        destination: '/admin/inquiries',
         permanent: true,
       },
     ]

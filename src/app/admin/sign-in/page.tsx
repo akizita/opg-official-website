@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
 
-import { AuthPanel } from '@/components/admin/auth-panel'
 import {
   DESIGNATED_SUPER_ADMIN_EMAIL,
   isAdminMfaRequired,
@@ -12,11 +12,15 @@ import {
 } from '@/lib/auth/admin-session'
 
 import { SignInForm } from './sign-in-form'
+import styles from './sign-in.module.css'
 
 export const metadata: Metadata = {
-  title: 'Administrator sign in',
+  title: 'Administrator sign in | OutPro Global',
   robots: { index: false, follow: false },
 }
+
+const ADMIN_LOGO_URL =
+  'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/general/logo-1789740351319.png'
 
 type SignInPageProps = {
   searchParams: Promise<{ notice?: string }>
@@ -31,47 +35,73 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const mfaRequired = isAdminMfaRequired()
 
   return (
-    <AuthPanel
-      description={`Use an approved OPG administrator account. The main OPG account (${DESIGNATED_SUPER_ADMIN_EMAIL}) is assigned the Super Admin role.`}
-      eyebrow="OPG administration"
-      title="Sign in"
-    >
-      {notice === 'invalid-link' ? (
-        <p className="form-message form-message--error" role="alert">
-          This link is invalid or has expired. Ask a Super Admin for a new
-          invitation.
+    <div className={`admin-sign-in-page ${styles.page}`}>
+      {/* Diffused Pure-CSS Mesh Gradient Background with Concentric Contours */}
+      <div aria-hidden="true" className={styles.bg}>
+        <div className={styles.glowLeft} />
+        <div className={styles.glowRight} />
+        <div className={styles.contoursLeft} />
+        <div className={styles.contoursRight} />
+      </div>
+
+      {/* Centered Translucent Glassmorphic Form Card */}
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <div className={styles.brand}>
+            <Image
+              alt="Outsource Pro Global"
+              className={styles.logo}
+              height={64}
+              priority
+              src={ADMIN_LOGO_URL}
+              width={64}
+            />
+          </div>
+
+          <h1 className={styles.title}>Sign in</h1>
+          <p className={styles.subtitle}>
+            Use your approved OPG administrator credentials to access the workspace.
+          </p>
+        </div>
+
+        {notice === 'invalid-link' ? (
+          <p className={styles.alert} role="alert">
+            This link is invalid or has expired. Ask a Super Admin for a new
+            invitation.
+          </p>
+        ) : null}
+        {notice === 'signup-disabled' ? (
+          <p className={styles.alert} role="alert">
+            Signups are disabled in Supabase. Please ask a Super Admin to invite your
+            account.
+          </p>
+        ) : null}
+        {notice === 'oauth-failed' || notice === 'oauth-error' ? (
+          <p className={styles.alert} role="alert">
+            Google authentication could not be completed. Please ensure your
+            account has access and try again.
+          </p>
+        ) : null}
+        {notice === 'unauthorized' ? (
+          <p className={styles.alert} role="alert">
+            This Google account does not have active OPG administrator access.
+          </p>
+        ) : null}
+        {notice === 'super-admin-provisioning' ? (
+          <p className={styles.alert} role="alert">
+            The OPG Google account was authenticated, but its Super Admin profile
+            has not been provisioned in the database yet.
+          </p>
+        ) : null}
+
+        <SignInForm defaultEmail={DESIGNATED_SUPER_ADMIN_EMAIL} />
+
+        <p className={styles.note}>
+          {mfaRequired
+            ? 'Access is restricted to approved administrators and protected by an authenticator app.'
+            : 'Development mode: authenticator verification is temporarily bypassed.'}
         </p>
-      ) : null}
-      {notice === 'signup-disabled' ? (
-        <p className="form-message form-message--error" role="alert">
-          Signups are disabled in Supabase. In Supabase Dashboard, go to
-          Authentication &rarr; Sign In / Up and enable &ldquo;Allow new users
-          to sign up&rdquo;.
-        </p>
-      ) : null}
-      {notice === 'oauth-failed' || notice === 'oauth-error' ? (
-        <p className="form-message form-message--error" role="alert">
-          Google authentication could not be completed. Please ensure your
-          account has access and try again.
-        </p>
-      ) : null}
-      {notice === 'unauthorized' ? (
-        <p className="form-message form-message--error" role="alert">
-          This Google account does not have active OPG administrator access.
-        </p>
-      ) : null}
-      {notice === 'super-admin-provisioning' ? (
-        <p className="form-message form-message--error" role="alert">
-          The OPG Google account was authenticated, but its Super Admin profile
-          has not been provisioned in the connected Supabase project yet.
-        </p>
-      ) : null}
-      <SignInForm defaultEmail={DESIGNATED_SUPER_ADMIN_EMAIL} />
-      <p className="auth-panel__note">
-        {mfaRequired
-          ? 'Access is restricted to approved OPG administrators and protected by an authenticator app.'
-          : 'Development mode: authenticator verification is temporarily bypassed. Password or Google authentication is still required.'}
-      </p>
-    </AuthPanel>
+      </div>
+    </div>
   )
 }

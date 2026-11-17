@@ -2,7 +2,7 @@
 
 import { subscribeToNewsletter } from '@/lib/content/newsletter'
 
-export type NewsletterActionState = {
+type NewsletterActionState = {
   success: boolean
   message: string
   error?: string

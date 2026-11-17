@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { signOutAction } from '@/app/admin/actions'
+import { AdminSignOutButton } from '@/components/admin/admin-sign-out-button'
 import {
   AdminAnalyticsDashboard,
   type AnalyticsPeriod,
 } from '@/components/admin/admin-analytics-dashboard'
 import { Card } from '@/components/ui/card'
-import { StatusBadge } from '@/components/ui/status-badge'
 import { isAdminMfaRequired } from '@/lib/auth/config'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import {
@@ -15,8 +14,6 @@ import {
   canViewInquiries,
   canViewSubscribers,
 } from '@/lib/auth/permissions'
-import type { PageDocument } from '@/lib/content/page-documents'
-import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: 'Administration',
@@ -31,20 +28,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const mfaRequired = isAdminMfaRequired()
   const { period: requestedPeriod } = await searchParams
   const period: AnalyticsPeriod = requestedPeriod === 'week' ? 'week' : 'month'
-
-  const supabase = await createClient()
-  const [{ data: mvDoc }, { data: aboutDoc }] = await Promise.all([
-    supabase
-      .from('page_documents')
-      .select('status, version, updated_at')
-      .eq('slug', 'mission-and-vision')
-      .maybeSingle<PageDocument>(),
-    supabase
-      .from('page_documents')
-      .select('status, version, updated_at')
-      .eq('slug', 'about')
-      .maybeSingle<PageDocument>(),
-  ])
 
   const hasContentAccess = canViewContent(profile.roleKey)
   const hasInquiryAccess = canViewInquiries(profile.roleKey)
@@ -65,107 +48,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               Signed in as {profile.email} · {profile.roleDisplayName}
             </p>
           </div>
-          <form action={signOutAction}>
-            <button className="button button--secondary" type="submit">
-              Sign out
-            </button>
-          </form>
+          <AdminSignOutButton variant="button" />
         </div>
         <div className="admin-grid">
-          <Card eyebrow="Institutional Content" title="Pages & Documents">
+          <Card eyebrow="Management" title="Articles, Testimonials & Clients">
             <p>
-              Managed institutional pages and content declarations for the
-              official website.
-            </p>
-            {hasContentAccess ? (
-              <>
-                <div className="admin-card__row">
-                  <div>
-                    <strong>Mission & Vision</strong>
-                    <div className="admin-card__meta">
-                      <StatusBadge status={mvDoc?.status ?? 'draft'} />
-                      <span>v{mvDoc?.version ?? 1}</span>
-                    </div>
-                  </div>
-                  <Link
-                    className="button-link button-link--secondary"
-                    href="/admin/pages?tab=home"
-                  >
-                    Edit Page →
-                  </Link>
-                </div>
-
-                <div className="admin-card__row">
-                  <div>
-                    <strong>About Us</strong>
-                    <div className="admin-card__meta">
-                      <StatusBadge status={aboutDoc?.status ?? 'draft'} />
-                      <span>v{aboutDoc?.version ?? 1}</span>
-                    </div>
-                  </div>
-                  <Link
-                    className="button-link button-link--secondary"
-                    href="/admin/pages?tab=about"
-                  >
-                    Edit Page →
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <p className="form-help">
-                Your role does not have content editing permissions.
-              </p>
-            )}
-          </Card>
-
-          <Card eyebrow="Catalog & Relationships" title="Services & Clients">
-            <p>
-              Manage public service offerings, client partner badges, and
-              published testimonials.
-            </p>
-            {hasContentAccess ? (
-              <>
-                <div className="admin-card__row">
-                  <div>
-                    <strong>Services Catalog</strong>
-                    <p className="field-hint">
-                      Service descriptions and delivery models
-                    </p>
-                  </div>
-                  <Link
-                    className="button-link button-link--secondary"
-                    href="/admin/services"
-                  >
-                    Manage →
-                  </Link>
-                </div>
-
-                <div className="admin-card__row">
-                  <div>
-                    <strong>Clients & Testimonials</strong>
-                    <p className="field-hint">
-                      Client organizations and endorsements
-                    </p>
-                  </div>
-                  <Link
-                    className="button-link button-link--secondary"
-                    href="/admin/clients"
-                  >
-                    Manage →
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <p className="form-help">
-                Your role does not have content editing permissions.
-              </p>
-            )}
-          </Card>
-
-          <Card eyebrow="Publishing & Knowledge" title="Articles & FAQs">
-            <p>
-              Manage editorial publications, categories, tags, and verified
-              frequently asked questions.
+              Manage public editorial articles, client partnerships, and candidate testimonials.
             </p>
             {hasContentAccess ? (
               <>
@@ -186,14 +74,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
                 <div className="admin-card__row">
                   <div>
-                    <strong>FAQs Knowledge Base</strong>
+                    <strong>Testimonials</strong>
                     <p className="field-hint">
-                      Answers categorized for clients and talent
+                      Candidate and talent endorsements
                     </p>
                   </div>
                   <Link
                     className="button-link button-link--secondary"
-                    href="/admin/faqs"
+                    href="/admin/testimonials"
                   >
                     Manage →
                   </Link>
@@ -201,14 +89,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
                 <div className="admin-card__row">
                   <div>
-                    <strong>Media & Image Storage</strong>
+                    <strong>Clients & Partners</strong>
                     <p className="field-hint">
-                      Upload and manage photos, logos, and banners
+                      Client organizations and collaboration badges
                     </p>
                   </div>
                   <Link
                     className="button-link button-link--secondary"
-                    href="/admin/media"
+                    href="/admin/clients"
                   >
                     Manage →
                   </Link>
@@ -216,41 +104,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               </>
             ) : (
               <p className="form-help">
-                Your role does not have publishing permissions.
-              </p>
-            )}
-          </Card>
-
-          <Card eyebrow="Talent & Opportunities" title="Careers & Recruitment">
-            <p>
-              Manage open positions, department alignments, and external ATS
-              application routing.
-            </p>
-            {hasContentAccess ? (
-              <div className="admin-card__row">
-                <div>
-                  <strong>Job Openings</strong>
-                  <p className="field-hint">
-                    Active roles and ATS job postings
-                  </p>
-                </div>
-                <Link
-                  className="button-link button-link--secondary"
-                  href="/admin/careers"
-                >
-                  Manage →
-                </Link>
-              </div>
-            ) : (
-              <p className="form-help">
-                Your role does not have talent editing permissions.
+                Your role does not have content editing permissions.
               </p>
             )}
           </Card>
 
           <Card
             eyebrow="Communications & Audience"
-            title="Inquiries & Subscribers"
+            title="Contacts & Subscribers"
           >
             <p>
               Inbound contact requests, triage queues, response statuses, and
@@ -261,7 +122,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 {hasInquiryAccess && (
                   <div className="admin-card__row">
                     <div>
-                      <strong>Inquiries Inbox</strong>
+                      <strong>Contacts Inbox</strong>
                       <p className="field-hint">
                         Client and candidate submissions
                       </p>

@@ -11,7 +11,7 @@ import type { ContactInquiry } from '@/lib/content/inquiries'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
-  title: 'Inquiry Detail | OPG Admin',
+  title: 'Contact Detail | OPG Admin',
 }
 
 type InquiryDetailPageProps = {
@@ -77,7 +77,7 @@ export default async function AdminInquiryDetailPage({
             </li>
             <li aria-hidden="true">/</li>
             <li>
-              <Link href="/admin/inquiries">Inquiries</Link>
+              <Link href="/admin/inquiries">Contacts</Link>
             </li>
             <li aria-hidden="true">/</li>
             <li aria-current="page">{refId}</li>
@@ -100,7 +100,7 @@ export default async function AdminInquiryDetailPage({
         </div>
 
         <div style={{ maxWidth: '800px', marginTop: '2rem' }}>
-          <Card eyebrow="Inquiry Details" title="Submission Content">
+          <Card eyebrow="Contact Details" title="Submission Content">
             <div
               style={{
                 display: 'grid',

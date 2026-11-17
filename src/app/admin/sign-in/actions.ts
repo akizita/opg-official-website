@@ -51,32 +51,54 @@ export async function signInAction(
     return { status: 'error', message: 'Enter your email and password.' }
   }
 
-  const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password: passwordValue,
-  })
+  try {
+    const supabase = await createClient()
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: passwordValue,
+    })
 
-  if (error) {
-    return {
-      status: 'error',
-      message: 'The email or password is incorrect.',
+    if (error) {
+      return {
+        status: 'error',
+        message:
+          error.message === 'Invalid login credentials'
+            ? 'The email or password is incorrect.'
+            : error.message || 'The email or password is incorrect.',
+      }
     }
-  }
 
-  const session = await getAdminSession()
+    const session = await getAdminSession()
 
-  if (!session) {
-    await supabase.auth.signOut()
+    if (!session) {
+      await supabase.auth.signOut()
+      return {
+        status: 'error',
+        message:
+          email === DESIGNATED_SUPER_ADMIN_EMAIL
+            ? 'The OPG account was authenticated, but its Super Admin profile has not been provisioned in Supabase yet.'
+            : 'This account does not have active OPG administrator access.',
+      }
+    }
+
+    revalidatePath('/admin', 'layout')
+    redirect(getAdminAuthDestination(session))
+  } catch (err: unknown) {
+    if (
+      err instanceof Error &&
+      (err.message.startsWith('REDIRECT:') ||
+        ('digest' in err &&
+          typeof (err as { digest?: unknown }).digest === 'string' &&
+          (err as { digest: string }).digest.startsWith('NEXT_REDIRECT')))
+    ) {
+      throw err
+    }
     return {
       status: 'error',
       message:
-        email === DESIGNATED_SUPER_ADMIN_EMAIL
-          ? 'The OPG account was authenticated, but its Super Admin profile has not been provisioned in Supabase yet.'
-          : 'This account does not have active OPG administrator access.',
+        err instanceof Error
+          ? err.message
+          : 'An unexpected error occurred during sign in.',
     }
   }
-
-  revalidatePath('/admin', 'layout')
-  redirect(getAdminAuthDestination(session))
 }

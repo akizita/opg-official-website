@@ -104,7 +104,8 @@ export function SiteHeader() {
     pathname === '/sign-in' ||
     pathname === '/sign-up' ||
     pathname.startsWith('/sign-in/') ||
-    pathname.startsWith('/sign-up/')
+    pathname.startsWith('/sign-up/') ||
+    pathname.startsWith('/admin')
   ) {
     return null
   }

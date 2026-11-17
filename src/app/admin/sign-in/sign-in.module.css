@@ -1,0 +1,362 @@
+/* Admin Login Page: Pure CSS diffused mesh gradient with subtle contour lines */
+
+.page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  margin: 0;
+  padding: clamp(1rem, 2.5vh, 2rem) 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Fallback scrolling only on extremely constrained landscape heights */
+@media (max-height: 520px) {
+  .page {
+    overflow-y: auto;
+    align-items: flex-start;
+  }
+}
+
+/* Fixed background covering full viewport, strictly behind the card */
+.bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background-color: #ffffff;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Layer 1: Left glowing orb of light yellow (#FFE98A) at bottom left */
+.glowLeft {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform: translate(-15%, 20%);
+  width: clamp(28rem, 50vw, 55rem);
+  height: clamp(28rem, 50vw, 55rem);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 233, 138, 0.72) 0%,
+    rgba(255, 233, 138, 0.42) 30%,
+    rgba(255, 233, 138, 0.14) 55%,
+    rgba(255, 255, 255, 0) 75%
+  );
+  filter: blur(52px);
+  opacity: 0.9;
+  will-change: transform;
+}
+
+/* Layer 2: Right glowing orb placed at top right (darker golden amber) */
+.glowRight {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(15%, -20%);
+  width: clamp(28rem, 50vw, 55rem);
+  height: clamp(28rem, 50vw, 55rem);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(224, 150, 0, 0.76) 0%,
+    rgba(210, 135, 0, 0.48) 32%,
+    rgba(210, 135, 0, 0.18) 58%,
+    rgba(255, 255, 255, 0) 78%
+  );
+  filter: blur(56px);
+  opacity: 0.95;
+  will-change: transform;
+}
+
+/* Layer 3: Concentric contour lines inside left glow, positioned at bottom left */
+.contoursLeft {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50vw;
+  height: 55vh;
+  background-image: repeating-radial-gradient(
+    circle at 0% 100%,
+    transparent 0,
+    transparent 19px,
+    rgba(217, 160, 10, 0.08) 19px,
+    rgba(217, 160, 10, 0.08) 20.2px,
+    transparent 20.2px,
+    transparent 38px
+  );
+  mask-image: radial-gradient(
+    ellipse at 0% 100%,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.35) 45%,
+    transparent 75%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse at 0% 100%,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.35) 45%,
+    transparent 75%
+  );
+  pointer-events: none;
+}
+
+/* Layer 4: Concentric contour lines inside right glow, positioned at top right */
+.contoursRight {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50vw;
+  height: 55vh;
+  background-image: repeating-radial-gradient(
+    circle at 100% 0%,
+    transparent 0,
+    transparent 19px,
+    rgba(195, 120, 0, 0.12) 19px,
+    rgba(195, 120, 0, 0.12) 20.2px,
+    transparent 20.2px,
+    transparent 38px
+  );
+  mask-image: radial-gradient(
+    ellipse at 100% 0%,
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.38) 45%,
+    transparent 75%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse at 100% 0%,
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.38) 45%,
+    transparent 75%
+  );
+  pointer-events: none;
+}
+
+/* Card Form: Translucent glassmorphism with large rounded corners */
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: clamp(30rem, 92vw, 34.5rem);
+  border-radius: 2.75rem;
+  background: rgba(255, 255, 255, 0.42) !important;
+  backdrop-filter: blur(32px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.75) !important;
+  box-shadow:
+    0 24px 60px rgba(220, 150, 0, 0.08),
+    0 6px 20px rgba(0, 0, 0, 0.03),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95) !important;
+  padding: clamp(2.4rem, 4vh, 3.25rem) clamp(2rem, 3.8vw, 2.85rem);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 0.65rem;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+}
+
+.logo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.85rem;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 12px rgba(242, 183, 5, 0.28));
+}
+
+.title {
+  font-size: clamp(2.15rem, 3.4vh, 2.5rem);
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.025em;
+  margin: 0.25rem 0 0.45rem;
+  text-align: center;
+  width: 100%;
+}
+
+.subtitle {
+  font-size: 0.96rem;
+  color: #525252;
+  line-height: 1.5;
+  margin: 0 auto 0.85rem;
+  text-align: center;
+  max-width: 27rem;
+}
+
+/* OAuth & Form Elements */
+.formContainer {
+  margin-top: 0.35rem;
+}
+
+.oauthForm {
+  margin-bottom: 0.35rem;
+}
+
+.oauthBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  width: 100%;
+  height: 3.35rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #171717;
+  cursor: pointer;
+  transition: all 180ms ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.oauthBtn:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: #f29f04 !important;
+  box-shadow: 0 4px 16px rgba(242, 159, 4, 0.2) !important;
+  transform: translateY(-1px);
+}
+
+.oauthIcon {
+  flex-shrink: 0;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 1.15rem 0;
+  font-size: 0.76rem;
+  color: #737373;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.fieldLabel {
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: #262626;
+  margin-bottom: 0.35rem;
+  margin-left: 0.85rem;
+}
+
+.input {
+  width: 100%;
+  height: 3.35rem;
+  border-radius: 9999px;
+  padding: 0.65rem 1.45rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  font-size: 0.98rem;
+  color: #000000;
+  box-sizing: border-box;
+  transition: all 180ms ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.input::placeholder {
+  color: #8c8c8c;
+}
+
+.input:focus {
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  outline: none;
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.submitBtn {
+  width: 100%;
+  height: 3.35rem;
+  border-radius: 9999px;
+  background: #000000 !important;
+  color: #ffffff !important;
+  font-size: 1rem;
+  font-weight: 700;
+  border: 0;
+  cursor: pointer;
+  transition: all 180ms ease;
+  margin-top: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #f29f04 !important;
+  color: #000000 !important;
+  box-shadow: 0 6px 20px rgba(242, 159, 4, 0.35);
+  transform: translateY(-1px);
+}
+
+.submitBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.alert {
+  border-radius: 9999px;
+  font-size: 0.84rem;
+  padding: 0.55rem 1.15rem;
+  margin-bottom: 0.75rem;
+  background: rgba(254, 242, 242, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #dc2626;
+  text-align: center;
+}
+
+.note {
+  font-size: 0.8rem;
+  color: #737373;
+  margin-top: 1rem;
+  line-height: 1.45;
+}

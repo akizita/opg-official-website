@@ -6,20 +6,21 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { initialAuthFormState } from '@/lib/auth/form-state'
 
 import { signInAction, signInWithGoogleAction } from './actions'
+import styles from './sign-in.module.css'
 
 export function SignInForm({ defaultEmail = '' }: { defaultEmail?: string }) {
   const [state, action] = useActionState(signInAction, initialAuthFormState)
 
   return (
-    <div className="auth-signin-container">
-      <form action={signInWithGoogleAction} className="auth-oauth-form">
-        <button className="button button--oauth" type="submit">
+    <div className={styles.formContainer}>
+      <form action={signInWithGoogleAction} className={styles.oauthForm}>
+        <button className={styles.oauthBtn} type="submit">
           <svg
             aria-hidden="true"
-            className="button__icon"
-            height="20"
+            className={styles.oauthIcon}
+            height="18"
             viewBox="0 0 24 24"
-            width="20"
+            width="18"
           >
             <path
               d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
@@ -42,39 +43,45 @@ export function SignInForm({ defaultEmail = '' }: { defaultEmail?: string }) {
         </button>
       </form>
 
-      <div className="auth-divider" role="separator">
+      <div className={styles.divider} role="separator">
         <span>or continue with email</span>
       </div>
 
-      <form action={action} className="auth-form">
-        <label className="field" htmlFor="admin-email">
-          <span>Email address</span>
+      <form action={action} className={styles.form}>
+        <label className={styles.field} htmlFor="admin-email">
+          <span className={styles.fieldLabel}>Email address</span>
           <input
             autoComplete="username"
+            className={styles.input}
             defaultValue={defaultEmail}
             id="admin-email"
             inputMode="email"
             name="email"
+            placeholder="admin@outsourceproglobal.com"
             required
             type="email"
           />
         </label>
-        <label className="field" htmlFor="admin-password">
-          <span>Password</span>
+        <label className={styles.field} htmlFor="admin-password">
+          <span className={styles.fieldLabel}>Password</span>
           <input
             autoComplete="current-password"
+            className={styles.input}
             id="admin-password"
             name="password"
+            placeholder="Enter your password"
             required
             type="password"
           />
         </label>
         {state.status === 'error' ? (
-          <p className="form-message form-message--error" role="alert">
+          <p className={styles.alert} role="alert">
             {state.message}
           </p>
         ) : null}
-        <SubmitButton pendingLabel="Signing in…">Sign in securely</SubmitButton>
+        <SubmitButton className={styles.submitBtn} pendingLabel="Signing in…">
+          Sign in securely
+        </SubmitButton>
       </form>
     </div>
   )
