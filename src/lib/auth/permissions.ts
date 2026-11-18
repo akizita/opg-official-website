@@ -12,6 +12,7 @@ export type AdminPermissionKey =
   | 'inquiries.view'
   | 'inquiries.manage'
   | 'subscribers.view'
+  | 'subscribers.manage'
   | 'users.invite'
   | 'users.roles.manage'
   | 'settings.manage'
@@ -36,7 +37,12 @@ export const ROLE_PERMISSIONS: Record<
     'content.archive',
     'media.draft.write',
   ],
-  inquiry_manager: ['inquiries.view', 'inquiries.manage', 'subscribers.view'],
+  inquiry_manager: [
+    'inquiries.view',
+    'inquiries.manage',
+    'subscribers.view',
+    'subscribers.manage',
+  ],
   super_admin: [
     'content.view',
     'content.draft.write',
@@ -48,6 +54,7 @@ export const ROLE_PERMISSIONS: Record<
     'inquiries.view',
     'inquiries.manage',
     'subscribers.view',
+    'subscribers.manage',
     'users.invite',
     'users.roles.manage',
     'settings.manage',
@@ -98,6 +105,10 @@ export function canManageInquiries(roleKey: string): boolean {
 
 export function canViewSubscribers(roleKey: string): boolean {
   return hasRolePermission(roleKey, 'subscribers.view')
+}
+
+export function canManageSubscribers(roleKey: string): boolean {
+  return hasRolePermission(roleKey, 'subscribers.manage')
 }
 
 export function canManageSettings(roleKey: string): boolean {

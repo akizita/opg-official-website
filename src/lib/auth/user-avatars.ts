@@ -1,4 +1,7 @@
-import { extractUserAvatarUrl } from '@/lib/auth/avatar-utils'
+import {
+  extractUserAvatarUrl,
+  extractUserDisplayName,
+} from '@/lib/auth/avatar-utils'
 import { createPrivilegedClient } from '@/lib/supabase/server'
 
 export {
@@ -7,14 +10,19 @@ export {
   sanitizeAvatarUrl,
 } from '@/lib/auth/avatar-utils'
 
+export type ResolvedAuthProfile = {
+  avatarUrl: string | null
+  displayName: string | null
+}
+
 /**
- * Resolves registered Supabase Auth user profile photos (`avatar_url` / `picture`
- * from OAuth or saved user metadata) for a batch of email addresses.
+ * Resolves registered Supabase Auth user profile photos (`avatar_url` / `picture`)
+ * and display names for a batch of email addresses.
  */
-export async function resolveAuthAvatarsByEmail(
+export async function resolveAuthProfilesByEmail(
   emails: string[],
-): Promise<Map<string, string>> {
-  const result = new Map<string, string>()
+): Promise<Map<string, ResolvedAuthProfile>> {
+  const result = new Map<string, ResolvedAuthProfile>()
   const targets = new Set(
     emails
       .map((email) => email.trim().toLowerCase())
@@ -39,8 +47,9 @@ export async function resolveAuthAvatarsByEmail(
         if (!userEmail || !targets.has(userEmail)) continue
 
         const avatarUrl = extractUserAvatarUrl(undefined, authUser)
-        if (avatarUrl) {
-          result.set(userEmail, avatarUrl)
+        const displayName = extractUserDisplayName(undefined, authUser)
+        if (avatarUrl || displayName) {
+          result.set(userEmail, { avatarUrl, displayName })
         }
       }
 
@@ -48,6 +57,25 @@ export async function resolveAuthAvatarsByEmail(
     }
   } catch {
     // Non-fatal fallback: caller continues with Gravatar / initials fallback.
+  }
+
+  return result
+}
+
+/**
+ * Resolves registered Supabase Auth user profile photos (`avatar_url` / `picture`
+ * from OAuth or saved user metadata) for a batch of email addresses.
+ */
+export async function resolveAuthAvatarsByEmail(
+  emails: string[],
+): Promise<Map<string, string>> {
+  const profiles = await resolveAuthProfilesByEmail(emails)
+  const result = new Map<string, string>()
+
+  for (const [email, profile] of profiles) {
+    if (profile.avatarUrl) {
+      result.set(email, profile.avatarUrl)
+    }
   }
 
   return result

@@ -1,20 +1,32 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { AnimatedContent } from '@/components/ui/animated-content'
-import { Card } from '@/components/ui/card'
-import { EmptyState } from '@/components/ui/empty-state'
-import { StatusBadge } from '@/components/ui/status-badge'
+import { type SubscriberItem } from '@/app/admin/subscribers/subscriber-utils'
+import { SubscribersManager } from '@/app/admin/subscribers/subscribers-manager'
+import styles from '@/app/admin/subscribers/subscribers.module.css'
 import { requireAdminSession } from '@/lib/auth/admin-session'
-import { canViewSubscribers } from '@/lib/auth/permissions'
-import type { NewsletterSubscription } from '@/lib/content/newsletter'
+import {
+  canManageSubscribers,
+  canViewSubscribers,
+} from '@/lib/auth/permissions'
+import { resolveAuthProfilesByEmail } from '@/lib/auth/user-avatars'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: 'Newsletter Subscribers | OPG Admin',
 }
 
-export default async function AdminSubscribersPage() {
+export const dynamic = 'force-dynamic'
+
+type AdminSubscribersPageProps = {
+  searchParams: Promise<{
+    status?: string
+  }>
+}
+
+export default async function AdminSubscribersPage({
+  searchParams,
+}: AdminSubscribersPageProps) {
   const { profile } = await requireAdminSession({ requireAal2: true })
 
   if (!canViewSubscribers(profile.roleKey)) {
@@ -33,129 +45,56 @@ export default async function AdminSubscribersPage() {
     )
   }
 
+  const { status } = await searchParams
   const supabase = await createClient()
-  const { data: subscribers } = await supabase
+  const { data: subscribers, error: subscribersError } = await supabase
     .from('newsletter_subscriptions')
-    .select('*')
+    .select(
+      'id, email_normalized, status, confirmation_sent_at, confirmed_at, unsubscribed_at, consent_version, consent_source, created_at',
+    )
     .order('created_at', { ascending: false })
 
-  const subscriberList = (subscribers as NewsletterSubscription[]) || []
+  const rawSubscribers = (subscribers as SubscriberItem[]) || []
+  const authProfiles = await resolveAuthProfilesByEmail(
+    rawSubscribers.map((sub) => sub.email_normalized),
+  )
+
+  const subscriberList: SubscriberItem[] = rawSubscribers.map((sub) => {
+    const matched = authProfiles.get(sub.email_normalized.trim().toLowerCase())
+    return {
+      ...sub,
+      avatar_url: matched?.avatarUrl ?? null,
+      display_name: matched?.displayName ?? null,
+    }
+  })
 
   return (
     <section className="admin-page">
       <div className="container">
-        <nav aria-label="Admin Breadcrumb" className="admin-breadcrumb">
-          <ol>
-            <li>
-              <Link href="/admin">Dashboard</Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li aria-current="page">Subscribers</li>
-          </ol>
-        </nav>
-
-        <div className="admin-heading">
-          <div>
-            <p className="eyebrow">Audience & Distribution</p>
-            <h1>Newsletter Subscribers</h1>
-            <p>
-              Audience registry for OPG Insights with verified consent
-              provenance and double opt-in statuses.
-            </p>
-          </div>
-          <div>
-            <Link className="button button--secondary" href="/admin">
-              ← Return to Dashboard
-            </Link>
-          </div>
-        </div>
-
-        <AnimatedContent
-          animateOpacity
-          delay={0.08}
-          direction="vertical"
-          distance={24}
-          duration={0.55}
-          ease="power3.out"
-          initialOpacity={0}
-          playOnMount
-        >
-          <div className="admin-services-list" style={{ marginTop: '2rem' }}>
-          {subscriberList.length > 0 ? (
-            <div className="card-grid">
-              {subscriberList.map((sub) => {
-                const createdDate = new Date(sub.created_at).toLocaleDateString(
-                  'en-US',
-                  {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  },
-                )
-
-                return (
-                  <Card
-                    eyebrow={`Source: ${sub.consent_source} · v${sub.consent_version}`}
-                    key={sub.id}
-                    title={sub.email_normalized}
-                  >
-                    <p
-                      style={{
-                        fontSize: '0.85rem',
-                        color: 'var(--color-text-subtle)',
-                      }}
-                    >
-                      Subscribed on {createdDate}
-                      {sub.confirmed_at && (
-                        <span>
-                          {' '}
-                          · Confirmed{' '}
-                          {new Date(sub.confirmed_at).toLocaleDateString()}
-                        </span>
-                      )}
-                    </p>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginTop: '1rem',
-                        paddingTop: '0.75rem',
-                        borderTop: '1px solid var(--color-border)',
-                        fontSize: '0.85rem',
-                      }}
-                    >
-                      <StatusBadge
-                        status={
-                          sub.status === 'confirmed'
-                            ? 'published'
-                            : sub.status === 'pending_confirmation'
-                              ? 'draft'
-                              : 'archived'
-                        }
-                      />
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        {sub.status.replace('_', ' ')}
-                      </span>
-                    </div>
-                  </Card>
-                )
-              })}
+        {subscribersError ? (
+          <div className={styles.pageWrap}>
+            <header className={styles.headerSection}>
+              <h1 className={styles.headerTitle}>Newsletter Subscribers</h1>
+              <p className={styles.headerSubtitle}>
+                Manage OPG Insights audience subscriptions, double opt-in
+                verification statuses, consent provenance, and mailing list
+                exports.
+              </p>
+            </header>
+            <div className="alert-banner alert-banner--error" role="alert">
+              <p>Subscribers could not be loaded. Please try again.</p>
+              <Link className="button-link" href="/admin/subscribers">
+                Retry loading subscribers
+              </Link>
             </div>
-          ) : (
-            <EmptyState
-              description="No subscribers have registered yet."
-              title="No Subscribers Found"
-            />
-          )}
           </div>
-        </AnimatedContent>
+        ) : (
+          <SubscribersManager
+            canManage={canManageSubscribers(profile.roleKey)}
+            initialStatus={status || 'all'}
+            initialSubscribers={subscriberList}
+          />
+        )}
       </div>
     </section>
   )
