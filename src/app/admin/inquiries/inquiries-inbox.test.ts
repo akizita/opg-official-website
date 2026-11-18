@@ -66,6 +66,10 @@ describe('InquiriesInbox component', () => {
       }),
     )
 
+    // Full-width Header Section & Toolbar Row
+    expect(html).toContain('inquiries-header-section')
+    expect(html).toContain('inquiries-toolbar-row')
+
     // Pill dropdown filter
     expect(html).toContain('inquiries-pill-filter')
     expect(html).toContain('inquiries-pill-filter__trigger')
@@ -82,6 +86,11 @@ describe('InquiriesInbox component', () => {
     // Badges & types
     expect(html).toContain('inquiry-type-pill--client')
     expect(html).toContain('inquiry-type-pill--talent')
+
+    // Contact Status Pills (Verified not DRAFT)
+    expect(html).toContain('inquiry-status-pill--new')
+    expect(html).toContain('inquiry-status-pill--replied')
+    expect(html).not.toContain('• DRAFT')
   })
 
   it('renders clean empty state without reset filters button when no inquiries match', () => {

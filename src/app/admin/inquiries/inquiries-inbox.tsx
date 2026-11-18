@@ -7,13 +7,16 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
   type CSSProperties,
 } from 'react'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import { updateInquiryStatusAction } from '@/app/admin/inquiries/actions'
 import {
+  OpgIconCalendar,
   OpgIconChevron,
   OpgIconExternalMail,
   OpgIconReply,
@@ -21,7 +24,6 @@ import {
   OpgIconSend,
   OpgIconTemplate,
 } from '@/components/icons/opg-icons'
-import { StatusBadge } from '@/components/ui/status-badge'
 import './inquiries.css'
 
 export type InquiryStatus = 'all' | 'new' | 'read' | 'replied' | 'archived'
@@ -30,6 +32,7 @@ export type InquiryItem = {
   id: string
   full_name: string
   email: string
+  avatar_url?: string | null
   subject: string
   message: string
   status: 'new' | 'read' | 'replied' | 'archived' | 'spam_suspected'
@@ -51,6 +54,51 @@ export function parseInquiryDetails(subject: string) {
   }
 
   return { type, cleanSubject }
+}
+
+export function InquiryStatusBadge({
+  status,
+}: {
+  status: InquiryItem['status']
+}) {
+  switch (status) {
+    case 'new':
+      return (
+        <span className="inquiry-status-pill inquiry-status-pill--new">
+          <span aria-hidden="true" className="inquiry-status-pill__dot" />
+          <span>New</span>
+        </span>
+      )
+    case 'replied':
+      return (
+        <span className="inquiry-status-pill inquiry-status-pill--replied">
+          <span aria-hidden="true" className="inquiry-status-pill__dot" />
+          <span>Replied</span>
+        </span>
+      )
+    case 'read':
+      return (
+        <span className="inquiry-status-pill inquiry-status-pill--read">
+          <span aria-hidden="true" className="inquiry-status-pill__dot" />
+          <span>Read</span>
+        </span>
+      )
+    case 'spam_suspected':
+      return (
+        <span className="inquiry-status-pill inquiry-status-pill--spam">
+          <span aria-hidden="true" className="inquiry-status-pill__dot" />
+          <span>Spam</span>
+        </span>
+      )
+    case 'archived':
+    default:
+      return (
+        <span className="inquiry-status-pill inquiry-status-pill--archived">
+          <span aria-hidden="true" className="inquiry-status-pill__dot" />
+          <span>Archived</span>
+        </span>
+      )
+  }
 }
 
 function formatInboxDate(dateStr: string) {
@@ -150,6 +198,99 @@ function getAvatarHue(name: string) {
   )
 }
 
+const emptySubscribe = () => () => {}
+
+function useIsClientMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  )
+}
+
+export function InquirySenderAvatar({
+  avatarUrl,
+  name,
+  email,
+  size = 34,
+  className = '',
+}: {
+  avatarUrl?: string | null
+  name: string
+  email: string
+  size?: number
+  className?: string
+}) {
+  const isMounted = useIsClientMounted()
+  const initials = getAvatarInitials(name)
+  const hue = getAvatarHue(name)
+
+  const candidates = useMemo(() => {
+    const list: string[] = []
+    if (avatarUrl?.trim()) {
+      list.push(avatarUrl.trim())
+    }
+    if (isMounted && email && email.includes('@')) {
+      const cleanEmail = email.trim().toLowerCase()
+      const gravatarUrl = `https://unavatar.io/gravatar/${encodeURIComponent(cleanEmail)}?fallback=false`
+      if (!list.includes(gravatarUrl)) {
+        list.push(gravatarUrl)
+      }
+    }
+    return list
+  }, [avatarUrl, isMounted, email])
+
+  const candidateKey = candidates.join('|')
+  const [prevKey, setPrevKey] = useState(candidateKey)
+  const [attemptIndex, setAttemptIndex] = useState(0)
+  if (prevKey !== candidateKey) {
+    setPrevKey(candidateKey)
+    setAttemptIndex(0)
+  }
+
+  const activeSrc = candidates[attemptIndex] ?? null
+
+  return (
+    <span
+      className={`inquiry-sender-avatar ${className}`}
+      aria-hidden="true"
+      style={
+        {
+          '--avatar-hue': hue,
+          width: `${size}px`,
+          height: `${size}px`,
+          minWidth: `${size}px`,
+          minHeight: `${size}px`,
+        } as CSSProperties
+      }
+    >
+      {activeSrc ? (
+        <Image
+          alt=""
+          className="inquiry-sender-avatar-img"
+          height={size}
+          onError={() => setAttemptIndex((prev) => prev + 1)}
+          referrerPolicy="no-referrer"
+          src={activeSrc}
+          unoptimized
+          width={size}
+        />
+      ) : (
+        <span className="inquiry-sender-avatar-initials">{initials}</span>
+      )}
+    </span>
+  )
+}
+
+type DateFilterType = 'all' | 'today' | '7days' | '30days' | 'custom'
+
+const DATE_FILTER_OPTIONS: { label: string; value: DateFilterType }[] = [
+  { label: 'All Dates', value: 'all' },
+  { label: 'Today', value: 'today' },
+  { label: 'Last 7 Days', value: '7days' },
+  { label: 'Last 30 Days', value: '30days' },
+]
+
 export function InquiriesInbox({
   initialInquiries,
   canManage,
@@ -181,6 +322,13 @@ export function InquiriesInbox({
 
   const [searchQuery, setSearchQuery] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [dateFilter, setDateFilter] = useState<DateFilterType>('all')
+  const [customDate, setCustomDate] = useState<string>('')
+  const [dateRangeCutoff, setDateRangeCutoff] = useState<{
+    startMs: number
+    endMs: number
+  } | null>(null)
+  const [dateFilterOpen, setDateFilterOpen] = useState(false)
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryItem | null>(
     null,
   )
@@ -198,6 +346,9 @@ export function InquiriesInbox({
   const dropdownRootRef = useRef<HTMLDivElement>(null)
   const dropdownTriggerRef = useRef<HTMLButtonElement>(null)
   const dropdownMenuRef = useRef<HTMLDivElement>(null)
+  const dateFilterRootRef = useRef<HTMLDivElement>(null)
+  const dateFilterTriggerRef = useRef<HTMLButtonElement>(null)
+  const dateFilterMenuRef = useRef<HTMLDivElement>(null)
   const modalDialogRef = useRef<HTMLDialogElement>(null)
   const dropdownMenuId = useId()
 
@@ -235,7 +386,7 @@ export function InquiriesInbox({
     return () => clearTimeout(timer)
   }, [toast])
 
-  // Click outside to close dropdown
+  // Click outside to close status dropdown
   useEffect(() => {
     if (!dropdownOpen) return
     function handleClickOutside(event: PointerEvent | FocusEvent) {
@@ -258,6 +409,30 @@ export function InquiriesInbox({
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [dropdownOpen])
+
+  // Click outside to close date filter dropdown
+  useEffect(() => {
+    if (!dateFilterOpen) return
+    function handleClickOutside(event: PointerEvent | FocusEvent) {
+      if (!dateFilterRootRef.current?.contains(event.target as Node)) {
+        setDateFilterOpen(false)
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setDateFilterOpen(false)
+        dateFilterTriggerRef.current?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', handleClickOutside)
+    document.addEventListener('focusin', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handleClickOutside)
+      document.removeEventListener('focusin', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [dateFilterOpen])
 
   // Modal open / close sync with native dialog
   useEffect(() => {
@@ -294,6 +469,61 @@ export function InquiriesInbox({
 
   const activeOption = filterOptions.find((o) => o.value === selectedStatus) || filterOptions[0]
 
+  const dateFilterLabel = useMemo(() => {
+    if (dateFilter === 'today') return 'Today'
+    if (dateFilter === '7days') return 'Last 7 Days'
+    if (dateFilter === '30days') return 'Last 30 Days'
+    if (dateFilter === 'custom' && customDate) {
+      const [year, month, day] = customDate.split('-').map(Number)
+      if (year && month && day) {
+        const d = new Date(year, month - 1, day)
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }
+      return customDate
+    }
+    return 'All Dates'
+  }, [dateFilter, customDate])
+
+  const handleApplyDateFilter = useCallback(
+    (type: DateFilterType, specificDate?: string) => {
+      setDateFilter(type)
+      if (type === 'all') {
+        setCustomDate('')
+        setDateRangeCutoff(null)
+      } else if (type === 'today') {
+        setCustomDate('')
+        const now = new Date()
+        const start = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+        ).getTime()
+        const end = start + 86400000
+        setDateRangeCutoff({ startMs: start, endMs: end })
+      } else if (type === '7days') {
+        setCustomDate('')
+        const now = Date.now()
+        setDateRangeCutoff({ startMs: now - 7 * 86400000, endMs: now })
+      } else if (type === '30days') {
+        setCustomDate('')
+        const now = Date.now()
+        setDateRangeCutoff({ startMs: now - 30 * 86400000, endMs: now })
+      } else if (type === 'custom' && specificDate) {
+        setCustomDate(specificDate)
+        const [y, m, d] = specificDate.split('-').map(Number)
+        if (y && m && d) {
+          const start = new Date(y, m - 1, d).getTime()
+          const end = start + 86400000
+          setDateRangeCutoff({ startMs: start, endMs: end })
+        } else {
+          setDateRangeCutoff(null)
+        }
+      }
+      setDateFilterOpen(false)
+    },
+    [],
+  )
+
   const filteredInquiries = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     return inquiries.filter((item) => {
@@ -305,6 +535,18 @@ export function InquiriesInbox({
           return false
         }
       }
+
+      // Date range filter
+      if (dateRangeCutoff) {
+        const itemTime = new Date(item.submitted_at).getTime()
+        if (
+          itemTime < dateRangeCutoff.startMs ||
+          itemTime > dateRangeCutoff.endMs
+        ) {
+          return false
+        }
+      }
+
       // Search filter
       if (!q) return true
       const { cleanSubject, type } = parseInquiryDetails(item.subject)
@@ -316,7 +558,7 @@ export function InquiriesInbox({
         item.message.toLowerCase().includes(q)
       )
     })
-  }, [inquiries, selectedStatus, searchQuery])
+  }, [inquiries, selectedStatus, searchQuery, dateRangeCutoff])
 
   const handleSelectStatus = (status: InquiryStatus) => {
     setDropdownOpen(false)
@@ -403,49 +645,165 @@ export function InquiriesInbox({
         </div>
       )}
 
-      {/* Top Header & Controls Row */}
-      <div className="inquiries-header-row">
-        <div className="inquiries-header-content">
-          <h1 className="inquiries-header-title">Contacts Inbox</h1>
-          <p className="inquiries-header-subtitle">
-            Review and triage incoming messages from institutional clients and talent
-            candidates. Track response times, update triage statuses, and coordinate direct follow-ups.
-          </p>
+      {/* Top Header Section (Full Width Row) */}
+      <header className="inquiries-header-section">
+        <h1 className="inquiries-header-title">Contacts Inbox</h1>
+        <p className="inquiries-header-subtitle">
+          Review and triage incoming messages from institutional clients and talent
+          candidates. Track response times, update triage statuses, and coordinate direct follow-ups.
+        </p>
+      </header>
+
+      {/* Dedicated Toolbar Row directly under the header section */}
+      <div className="inquiries-toolbar-row">
+        {/* Search Input */}
+        <div className="inquiries-search-box">
+          <OpgIconSearch
+            className="inquiries-search-icon"
+            size={18}
+            style={{
+              width: 18,
+              height: 18,
+              minWidth: 18,
+              minHeight: 18,
+              maxWidth: 18,
+              maxHeight: 18,
+              flexShrink: 0,
+            }}
+          />
+          <input
+            aria-label="Search contacts by sender, email, subject, or message"
+            className="inquiries-search-input"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search contacts or sender…"
+            type="search"
+            value={searchQuery}
+          />
+          {searchQuery && (
+            <button
+              aria-label="Clear search"
+              className="inquiries-search-clear"
+              onClick={() => setSearchQuery('')}
+              type="button"
+            >
+              ×
+            </button>
+          )}
         </div>
 
-        <div className="inquiries-header-controls inquiries-controls-bar">
-          {/* Search Input */}
-          <div className="inquiries-search-box">
-            <OpgIconSearch
-              className="inquiries-search-icon"
-              size={18}
-              style={{
-                width: 18,
-                height: 18,
-                minWidth: 18,
-                minHeight: 18,
-                maxWidth: 18,
-                maxHeight: 18,
-                flexShrink: 0,
-              }}
-            />
-            <input
-              aria-label="Search contacts by sender, email, subject, or message"
-              className="inquiries-search-input"
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search contacts or sender…"
-              type="search"
-              value={searchQuery}
-            />
-            {searchQuery && (
-              <button
-                aria-label="Clear search"
-                className="inquiries-search-clear"
-                onClick={() => setSearchQuery('')}
-                type="button"
+        {/* Controls: Styled Calendar Date Filter + Status Pill Filter */}
+        <div className="inquiries-controls-group inquiries-toolbar-controls">
+          {/* Styled Calendar Date Filter */}
+          <div className="inquiries-date-filter" ref={dateFilterRootRef}>
+            <button
+              aria-expanded={dateFilterOpen}
+              aria-haspopup="dialog"
+              aria-label={`Filter by date: ${dateFilterLabel}`}
+              className={`inquiries-date-filter__trigger ${
+                dateFilter !== 'all' ? 'inquiries-date-filter__trigger--active' : ''
+              }`}
+              onClick={() => setDateFilterOpen((prev) => !prev)}
+              ref={dateFilterTriggerRef}
+              type="button"
+            >
+              <OpgIconCalendar
+                className="inquiries-date-filter__icon"
+                size={16}
+                style={{
+                  width: 16,
+                  height: 16,
+                  minWidth: 16,
+                  minHeight: 16,
+                  flexShrink: 0,
+                }}
+              />
+              <span className="inquiries-date-filter__title">{dateFilterLabel}</span>
+              <OpgIconChevron
+                className={`inquiries-pill-filter__chevron ${
+                  dateFilterOpen ? 'inquiries-pill-filter__chevron--open' : ''
+                }`}
+                size={14}
+                style={{
+                  width: 14,
+                  height: 14,
+                  minWidth: 14,
+                  minHeight: 14,
+                  flexShrink: 0,
+                }}
+              />
+            </button>
+
+            {dateFilterOpen && (
+              <div
+                aria-label="Filter contacts by date"
+                className="inquiries-date-filter__menu"
+                ref={dateFilterMenuRef}
               >
-                ×
-              </button>
+                <div className="inquiries-date-filter__presets">
+                  {DATE_FILTER_OPTIONS.map((opt) => {
+                    const isSelected = dateFilter === opt.value
+                    return (
+                      <button
+                        className={`inquiries-date-filter__option ${
+                          isSelected ? 'inquiries-date-filter__option--active' : ''
+                        }`}
+                        key={opt.value}
+                        onClick={() => handleApplyDateFilter(opt.value)}
+                        type="button"
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="inquiries-date-filter__divider" />
+
+                <div className="inquiries-date-filter__custom-box">
+                  <span className="inquiries-date-filter__custom-title">
+                    Specific date
+                  </span>
+                  <div className="inquiries-date-picker-wrap">
+                    <OpgIconCalendar
+                      className="inquiries-date-picker-icon"
+                      size={15}
+                      style={{
+                        width: 15,
+                        height: 15,
+                        minWidth: 15,
+                        minHeight: 15,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <input
+                      aria-label="Filter contacts by exact calendar date"
+                      className="inquiries-custom-date-picker"
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val) {
+                          handleApplyDateFilter('custom', val)
+                        } else {
+                          handleApplyDateFilter('all')
+                        }
+                      }}
+                      type="date"
+                      value={customDate}
+                    />
+                  </div>
+                </div>
+
+                {dateFilter !== 'all' && (
+                  <div className="inquiries-date-filter__footer">
+                    <button
+                      className="inquiries-date-filter__reset-btn"
+                      onClick={() => handleApplyDateFilter('all')}
+                      type="button"
+                    >
+                      Reset Date
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
@@ -497,70 +855,70 @@ export function InquiriesInbox({
               />
             </button>
 
-          {dropdownOpen && (
-            <div
-              aria-label="Filter contacts by status"
-              className="inquiries-pill-filter__menu"
-              id={dropdownMenuId}
-              onKeyDown={(e) => {
-                const buttons = Array.from(
-                  e.currentTarget.querySelectorAll<HTMLButtonElement>('button'),
-                )
-                const index = buttons.indexOf(
-                  document.activeElement as HTMLButtonElement,
-                )
-                if (e.key === 'ArrowDown') {
-                  e.preventDefault()
-                  buttons[(index + 1) % buttons.length]?.focus()
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault()
-                  buttons[
-                    (index - 1 + buttons.length) % buttons.length
-                  ]?.focus()
-                } else if (e.key === 'Home') {
-                  e.preventDefault()
-                  buttons[0]?.focus()
-                } else if (e.key === 'End') {
-                  e.preventDefault()
-                  buttons[buttons.length - 1]?.focus()
-                }
-              }}
-              ref={dropdownMenuRef}
-              role="menu"
-            >
-              {filterOptions.map((option) => {
-                const isSelected = selectedStatus === option.value
-                return (
-                  <button
-                    aria-checked={isSelected}
-                    className={`inquiries-pill-filter__option ${
-                      isSelected ? 'inquiries-pill-filter__option--active' : ''
-                    }`}
-                    key={option.value}
-                    onClick={() => handleSelectStatus(option.value)}
-                    role="menuitemradio"
-                    type="button"
-                  >
-                    <span className="inquiries-pill-filter__option-lead">
-                      <span
-                        aria-hidden="true"
-                        className={`inquiries-pill-filter__dot inquiries-pill-filter__dot--${option.value}`}
-                      />
-                      <span className="inquiries-pill-filter__option-name">
-                        {option.label}
+            {dropdownOpen && (
+              <div
+                aria-label="Filter contacts by status"
+                className="inquiries-pill-filter__menu"
+                id={dropdownMenuId}
+                onKeyDown={(e) => {
+                  const buttons = Array.from(
+                    e.currentTarget.querySelectorAll<HTMLButtonElement>('button'),
+                  )
+                  const index = buttons.indexOf(
+                    document.activeElement as HTMLButtonElement,
+                  )
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    buttons[(index + 1) % buttons.length]?.focus()
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    buttons[
+                      (index - 1 + buttons.length) % buttons.length
+                    ]?.focus()
+                  } else if (e.key === 'Home') {
+                    e.preventDefault()
+                    buttons[0]?.focus()
+                  } else if (e.key === 'End') {
+                    e.preventDefault()
+                    buttons[buttons.length - 1]?.focus()
+                  }
+                }}
+                ref={dropdownMenuRef}
+                role="menu"
+              >
+                {filterOptions.map((option) => {
+                  const isSelected = selectedStatus === option.value
+                  return (
+                    <button
+                      aria-checked={isSelected}
+                      className={`inquiries-pill-filter__option ${
+                        isSelected ? 'inquiries-pill-filter__option--active' : ''
+                      }`}
+                      key={option.value}
+                      onClick={() => handleSelectStatus(option.value)}
+                      role="menuitemradio"
+                      type="button"
+                    >
+                      <span className="inquiries-pill-filter__option-lead">
+                        <span
+                          aria-hidden="true"
+                          className={`inquiries-pill-filter__dot inquiries-pill-filter__dot--${option.value}`}
+                        />
+                        <span className="inquiries-pill-filter__option-name">
+                          {option.label}
+                        </span>
                       </span>
-                    </span>
-                    <span className="inquiries-pill-filter__option-count">
-                      {option.count}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
+                      <span className="inquiries-pill-filter__option-count">
+                        {option.count}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
 
       {/* Glassmorphic Card Table (Email Inbox Style) */}
       <div className="inquiries-card-table">
@@ -619,16 +977,15 @@ export function InquiriesInbox({
                         </span>
                       </td>
 
-                      {/* Sender */}
+                      {/* Sender with Actual Email Profile Avatar (No blue dot) */}
                       <td className="inquiries-col-sender">
                         <div className="inquiries-sender-cell">
-                          {isNew && (
-                            <span
-                              aria-label="New unread inquiry"
-                              className="inquiries-unread-indicator"
-                              title="New"
-                            />
-                          )}
+                          <InquirySenderAvatar
+                            avatarUrl={inq.avatar_url}
+                            email={inq.email}
+                            name={inq.full_name}
+                            size={34}
+                          />
                           <div className="inquiries-sender-info">
                             <span className="inquiries-sender-name">
                               {inq.full_name}
@@ -667,17 +1024,7 @@ export function InquiriesInbox({
 
                       {/* Status */}
                       <td className="inquiries-col-status">
-                        <StatusBadge
-                          status={
-                            inq.status === 'new'
-                              ? 'draft'
-                              : inq.status === 'read'
-                                ? 'in_review'
-                                : inq.status === 'replied'
-                                  ? 'published'
-                                  : 'archived'
-                          }
-                        />
+                        <InquiryStatusBadge status={inq.status} />
                       </td>
                     </tr>
                   )
@@ -709,11 +1056,6 @@ export function InquiriesInbox({
             Showing <strong>{filteredInquiries.length}</strong> of{' '}
             <strong>{inquiries.length}</strong> contacts
           </span>
-          {counts.new > 0 && (
-            <span className="inquiries-new-badge">
-              {counts.new} unread contact{counts.new > 1 ? 's' : ''}
-            </span>
-          )}
         </div>
       </div>
 
@@ -738,17 +1080,12 @@ export function InquiriesInbox({
             <header className="inquiries-modal__header">
               <div className="inquiries-modal__header-top">
                 <div className="inquiries-modal__sender-wrapper">
-                  <div
-                    aria-hidden="true"
-                    className="inquiries-modal__avatar"
-                    style={
-                      {
-                        '--avatar-hue': getAvatarHue(selectedInquiry.full_name),
-                      } as CSSProperties
-                    }
-                  >
-                    {getAvatarInitials(selectedInquiry.full_name)}
-                  </div>
+                  <InquirySenderAvatar
+                    avatarUrl={selectedInquiry.avatar_url}
+                    email={selectedInquiry.email}
+                    name={selectedInquiry.full_name}
+                    size={42}
+                  />
                   <div className="inquiries-modal__sender-info">
                     <div className="inquiries-modal__sender-line">
                       <strong className="inquiries-modal__sender-name">
@@ -759,17 +1096,6 @@ export function InquiriesInbox({
                       >
                         {parseInquiryDetails(selectedInquiry.subject).type}
                       </span>
-                      <StatusBadge
-                        status={
-                          selectedInquiry.status === 'new'
-                            ? 'draft'
-                            : selectedInquiry.status === 'read'
-                              ? 'in_review'
-                              : selectedInquiry.status === 'replied'
-                                ? 'published'
-                                : 'archived'
-                        }
-                      />
                     </div>
                     <div className="inquiries-modal__sender-meta">
                       <span className="inquiries-modal__sender-email">
@@ -814,15 +1140,15 @@ export function InquiriesInbox({
 
             {/* Scrollable Content Container — Internal scrollbar preserves card's rounded corners */}
             <div className="inquiries-modal__scroll-content">
-              {/* Subject Section with Clear Label */}
+              {/* Subject Section with Styled Box Matching Message Font Size */}
               <div className="inquiries-modal__subject-block">
                 <span className="inquiries-modal__field-label">Subject</span>
-                <h2
-                  className="inquiries-modal__subject-text"
+                <div
+                  className="inquiries-modal__subject-box"
                   id="inquiry-modal-title"
                 >
                   {parseInquiryDetails(selectedInquiry.subject).cleanSubject}
-                </h2>
+                </div>
               </div>
 
               {/* Message Section with Clear Label */}
@@ -836,7 +1162,7 @@ export function InquiriesInbox({
               {/* Gmail-style Reply Area */}
               <div className="inquiries-modal__reply-container">
                 {!isReplying ? (
-                  /* Gmail Reply Trigger Row */
+                  /* Gmail Reply Trigger Row - Aligned Right */
                   <div className="inquiries-modal__reply-trigger-row">
                     {canManage && (
                       <button
@@ -879,7 +1205,7 @@ export function InquiriesInbox({
                 ) : (
                   /* Gmail-Style Inline Reply Composer */
                   <div className="inquiries-gmail-composer">
-                    {/* Quick Response Template Selector */}
+                    {/* Quick Response Template Selector as Styled Dropdown */}
                     <div className="inquiries-gmail-composer__template-bar">
                       <div className="inquiries-gmail-composer__template-left">
                         <OpgIconTemplate
@@ -894,22 +1220,29 @@ export function InquiriesInbox({
                         />
                         <span>Template:</span>
                       </div>
-                      <div className="inquiries-gmail-composer__template-chips">
-                        {REPLY_TEMPLATES.map((tmpl) => (
-                          <button
-                            className={`inquiries-template-chip ${
-                              selectedTemplateId === tmpl.id
-                                ? 'inquiries-template-chip--active'
-                                : ''
-                            }`}
-                            key={tmpl.id}
-                            onClick={() => handleApplyTemplate(tmpl.id)}
-                            title={tmpl.title}
-                            type="button"
-                          >
-                            {tmpl.label}
-                          </button>
-                        ))}
+                      <div className="inquiries-template-select-wrap">
+                        <select
+                          aria-label="Select response template"
+                          className="inquiries-template-select"
+                          onChange={(e) => handleApplyTemplate(e.target.value)}
+                          value={selectedTemplateId}
+                        >
+                          {REPLY_TEMPLATES.map((tmpl) => (
+                            <option
+                              className="inquiries-template-select-option"
+                              key={tmpl.id}
+                              value={tmpl.id}
+                            >
+                              {tmpl.title}
+                            </option>
+                          ))}
+                        </select>
+                        <span
+                          aria-hidden="true"
+                          className="inquiries-template-select-chevron"
+                        >
+                          <OpgIconChevron size={13} />
+                        </span>
                       </div>
                     </div>
 

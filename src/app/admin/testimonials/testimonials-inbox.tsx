@@ -92,12 +92,13 @@ function CandidateAvatar({ item }: { item: CandidateSubmission }) {
       50) +
     18
 
-  // Priority: 1) Uploaded photo, 2) Email profile photo from unavatar.io/gravatar (on client), 3) Initials
+  // Priority: 1) Uploaded photo, 2) Personal account profile photo from Gravatar (on client), 3) Initials
   const avatarUrl = useMemo(() => {
     if (item.profile_photo_url) return item.profile_photo_url
     if (isMounted && item.email && item.email.includes('@')) {
       const cleanEmail = item.email.trim().toLowerCase()
-      return `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=false`
+      // Strictly query personal account profile (Gravatar) and avoid domain/company logo fallbacks (Clearbit)
+      return `https://unavatar.io/gravatar/${encodeURIComponent(cleanEmail)}?fallback=false`
     }
     return null
   }, [item.profile_photo_url, isMounted, item.email])

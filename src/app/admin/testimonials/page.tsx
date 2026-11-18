@@ -14,6 +14,7 @@ import { CandidateTestimonialsHeader } from '@/app/admin/testimonials/candidate-
 import { TestimonialsTabNavigation } from '@/app/admin/testimonials/testimonials-tab-navigation'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import { canArchive, canPublish, canViewContent } from '@/lib/auth/permissions'
+import { resolveAuthAvatarsByEmail } from '@/lib/auth/user-avatars'
 import { getAllTestimonials, getVisibleClients } from '@/lib/content/clients'
 import { createClient, createPrivilegedClient } from '@/lib/supabase/server'
 import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
@@ -163,15 +164,23 @@ export default async function AdminTestimonialsPage({
       item.profile_photo_path ? [item.profile_photo_path] : [],
     )
     const privileged = paths.length ? createPrivilegedClient() : null
-    const signedUrls = new Map<string, string>()
-    if (privileged) {
-      const { data: signed } = await privileged.storage
-        .from('candidate-profile-photos')
-        .createSignedUrls(paths, 3600)
-      signed?.forEach((item, index) => {
-        if (item.signedUrl) signedUrls.set(paths[index], item.signedUrl)
-      })
-    }
+    const [signedUrlsResult, authAvatars] = await Promise.all([
+      (async () => {
+        const map = new Map<string, string>()
+        if (privileged && paths.length > 0) {
+          const { data: signed } = await privileged.storage
+            .from('candidate-profile-photos')
+            .createSignedUrls(paths, 3600)
+          signed?.forEach((item, index) => {
+            if (item.signedUrl) map.set(paths[index], item.signedUrl)
+          })
+        }
+        return map
+      })(),
+      resolveAuthAvatarsByEmail(records.map((item) => item.email)),
+    ])
+    const signedUrls = signedUrlsResult
+
     submissions = records.map((record) => {
       const {
         profile_photo_path: path,
@@ -191,7 +200,9 @@ export default async function AdminTestimonialsPage({
           : 'Not reviewed',
         profile_photo_url:
           (path ? signedUrls.get(path) : null) ??
-          (data ? `data:image/webp;base64,${data}` : null),
+          (data ? `data:image/webp;base64,${data}` : null) ??
+          authAvatars.get(item.email.trim().toLowerCase()) ??
+          null,
       }
     })
   }

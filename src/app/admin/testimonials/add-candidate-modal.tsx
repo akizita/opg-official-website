@@ -269,6 +269,7 @@ export function AddCandidateTestimonialModal({
                           onChange={(val) => setPhotoInputMode(val as 'upload' | 'url')}
                           ariaLabel="Candidate photo upload method"
                           layoutId="candidate-photo-tab-thumb"
+                          tone="light"
                         />
 
                         {photoInputMode === 'upload' ? (

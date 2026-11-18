@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 
 import { ClientLogo, type ClientLogoType } from '@/components/ui/client-logo'
 
@@ -11,7 +12,7 @@ export type PartnerProfileItem = {
   industry: string
   region: string
   podCapability: string
-  talentCount: string
+  talentCount?: string
   tagline: string
   description: string
   website: string
@@ -19,7 +20,24 @@ export type PartnerProfileItem = {
   facebook?: string
   instagram?: string
   x?: string
-  logoType: ClientLogoType
+  logoType?: ClientLogoType
+  logoUrl?: string
+}
+
+function renderPartnerLogo(partner: PartnerProfileItem) {
+  if (partner.logoUrl && (partner.logoUrl.startsWith('/') || partner.logoUrl.startsWith('http') || partner.logoUrl.startsWith('data:'))) {
+    return (
+      <Image
+        src={partner.logoUrl}
+        alt={partner.name}
+        width={36}
+        height={36}
+        style={{ objectFit: 'contain', width: '100%', height: '100%', borderRadius: '6px' }}
+        unoptimized={partner.logoUrl.startsWith('data:')}
+      />
+    )
+  }
+  return <ClientLogo type={partner.logoType || 'northstar'} />
 }
 
 type ClientsPartnerProfilesProps = {
@@ -425,7 +443,7 @@ export function ClientsPartnerProfiles({
                           {String(index + 1).padStart(2, '0')}
                         </span>
                         <span className="client-profile-index__logo">
-                          <ClientLogo type={partner.logoType} />
+                          {renderPartnerLogo(partner)}
                         </span>
                         <span className="client-profile-index__item-copy">
                           <span className="client-profile-index__name">
@@ -479,7 +497,7 @@ export function ClientsPartnerProfiles({
 
                       <div className="client-profile-panel__brand">
                         <div className="client-profile-panel__logo">
-                          <ClientLogo type={partner.logoType} />
+                          {renderPartnerLogo(partner)}
                         </div>
                         <div>
                           <p className="client-profile-panel__badge">
@@ -496,7 +514,7 @@ export function ClientsPartnerProfiles({
                         {partner.description}
                       </p>
 
-                      <dl className="client-profile-panel__facts">
+                      <dl className="client-profile-panel__facts" style={{ gridTemplateColumns: '1fr 1.35fr' }}>
                         <div>
                           <dt>Operational base</dt>
                           <dd>{partner.region}</dd>
@@ -504,10 +522,6 @@ export function ClientsPartnerProfiles({
                         <div>
                           <dt>Dedicated capability</dt>
                           <dd>{partner.podCapability}</dd>
-                        </div>
-                        <div>
-                          <dt>Team footprint</dt>
-                          <dd>{partner.talentCount}</dd>
                         </div>
                       </dl>
 

@@ -778,6 +778,7 @@ export function ClientTestimonialsManager({
                             onChange={(val) => setPhotoInputMode(val as 'upload' | 'url')}
                             ariaLabel="Author photo upload method"
                             layoutId="client-photo-tab-thumb"
+                            tone="light"
                           />
 
                           {photoInputMode === 'upload' ? (

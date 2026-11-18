@@ -1,11 +1,13 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import createGlobe from 'cobe'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ButtonLink } from '@/components/ui/button-link'
 import { ClientLogo, type ClientLogoType } from '@/components/ui/client-logo'
 import { CLIENT_PAGE_DEFAULTS } from '@/lib/content/client-page'
+import type { Client } from '@/lib/content/clients'
 
 // Strategic offshore hubs and client locations
 const GLOBE_MARKERS: Array<{
@@ -91,14 +93,26 @@ const CLIENT_CARDS_DATA: Array<{
   },
 ]
 
+function getPresetLogoType(name: string, logoUrl?: string | null): ClientLogoType | undefined {
+  const check = `${logoUrl || ''} ${name}`.toLowerCase()
+  if (check.includes('northstar')) return 'northstar'
+  if (check.includes('meridian')) return 'meridian'
+  if (check.includes('harborline')) return 'harborline'
+  if (check.includes('atlas')) return 'atlas'
+  if (check.includes('veridian')) return 'veridian'
+  return undefined
+}
+
 export function ClientsGlobeHero({
   title = CLIENT_PAGE_DEFAULTS.title,
   summary = CLIENT_PAGE_DEFAULTS.summary,
   copy,
+  clients,
 }: {
   title?: string
   summary?: string
   copy: Record<string, string>
+  clients?: Client[]
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const pointerInteracting = useRef<number | null>(null)
@@ -106,11 +120,20 @@ export function ClientsGlobeHero({
   const phiRef = useRef(0)
   const shouldReduceMotion = useReducedMotion()
   const [hasWebGLFailed, setHasWebGLFailed] = useState(false)
-  const featuredCards = CLIENT_CARDS_DATA.map((card, index) => ({
-    ...card,
-    name: copy[`partner${index + 1}Name`] || card.name,
-    domain: copy[`partner${index + 1}HeroDomain`] || card.domain,
-  }))
+  const featuredCards = (clients && clients.length > 0)
+    ? clients.map((client, index) => ({
+        id: client.id,
+        name: client.name,
+        domain: client.hero_domain || client.type_of_company || copy[`partner${index + 1}HeroDomain`] || 'Partner',
+        logoUrl: client.logo_url,
+        logoType: getPresetLogoType(client.name, client.logo_url),
+      }))
+    : CLIENT_CARDS_DATA.map((card, index) => ({
+        ...card,
+        name: copy[`partner${index + 1}Name`] || card.name,
+        domain: copy[`partner${index + 1}HeroDomain`] || card.domain,
+        logoUrl: null as string | null,
+      }))
 
   // Drag interaction handlers
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -386,18 +409,22 @@ export function ClientsGlobeHero({
             >
               <div className="clients-hero-card-box__header">
                 <div className="clients-hero-card-box__icon-wrap">
-                  <ClientLogo
-                    type={client.logoType}
-                    className="clients-hero-card-box__svg"
-                  />
+                  {client.logoUrl && (client.logoUrl.startsWith('/') || client.logoUrl.startsWith('http') || client.logoUrl.startsWith('data:')) ? (
+                    <Image
+                      src={client.logoUrl}
+                      alt={client.name}
+                      width={28}
+                      height={28}
+                      style={{ objectFit: 'contain', width: '70%', height: '70%', borderRadius: '4px' }}
+                      unoptimized={client.logoUrl.startsWith('data:')}
+                    />
+                  ) : (
+                    <ClientLogo
+                      type={client.logoType || 'northstar'}
+                      className="clients-hero-card-box__svg"
+                    />
+                  )}
                 </div>
-                <span className="clients-hero-card-box__pill">
-                  <span
-                    className="clients-hero-card-box__dot"
-                    aria-hidden="true"
-                  />
-                  Pod
-                </span>
               </div>
               <div className="clients-hero-card-box__info">
                 <span className="clients-hero-card-box__name">

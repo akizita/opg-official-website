@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { Suspense, type ReactNode } from 'react'
 
 import { AdminNavigation } from '@/components/admin/admin-navigation'
+import { AdminPageTransition } from '@/components/admin/admin-page-transition'
 import { AdminProfileMenu } from '@/components/admin/admin-profile-menu'
-import { AdminSidebarToggle } from '@/components/admin/admin-sidebar-toggle'
 import type { AdminProfile } from '@/lib/auth/admin-session'
 import './admin-shell.css'
 
@@ -24,10 +24,11 @@ export function AdminShell({ children, profile }: AdminShellProps) {
           <Link
             aria-label="OutPro Global admin overview"
             className="admin-shell__brand"
+            data-label="OutPro Global"
             href="/admin"
           >
             <Image
-              alt=""
+              alt="OutPro Global"
               aria-hidden="true"
               className="admin-shell__brand-logo"
               height={150}
@@ -35,12 +36,7 @@ export function AdminShell({ children, profile }: AdminShellProps) {
               src={ADMIN_LOGO_URL}
               width={150}
             />
-            <span className="admin-shell__brand-copy">
-              <strong>OutPro Global</strong>
-              <small>Administration</small>
-            </span>
           </Link>
-          <AdminSidebarToggle />
         </div>
 
         <Suspense fallback={null}>
@@ -51,7 +47,11 @@ export function AdminShell({ children, profile }: AdminShellProps) {
       </aside>
 
       <div className="admin-shell__main">
-        <div className="admin-shell__workspace">{children}</div>
+        <Suspense fallback={<div className="admin-shell__workspace">{children}</div>}>
+          <AdminPageTransition className="admin-shell__workspace">
+            {children}
+          </AdminPageTransition>
+        </Suspense>
       </div>
     </div>
   )

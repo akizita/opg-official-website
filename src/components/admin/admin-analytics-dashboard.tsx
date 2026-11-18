@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+import { AccountAvatar } from '@/components/ui/account-avatar'
+import { AnimatedContent } from '@/components/ui/animated-content'
 import {
   OpgIconContacts,
   OpgIconLikes,
@@ -9,9 +11,10 @@ import {
 } from '@/components/icons/opg-icons'
 import type { AdminProfile } from '@/lib/auth/admin-session'
 import { canViewContent, canViewInquiries } from '@/lib/auth/permissions'
+import { resolveAuthAvatarsByEmail } from '@/lib/auth/user-avatars'
 import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
 import { featuredArticles } from '@/lib/content/featured-articles'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createPrivilegedClient } from '@/lib/supabase/server'
 
 export type AnalyticsPeriod = 'month' | 'week'
 
@@ -53,7 +56,10 @@ type InquiryRecord = {
 
 type TestimonialRecord = {
   author_name: string
+  email?: string | null
   id: string
+  profile_photo_data?: string | null
+  profile_photo_path?: string | null
   relationship: 'prospective' | 'past'
   submitted_at: string
 }
@@ -512,12 +518,25 @@ export async function AdminAnalyticsDashboard({
           .limit(5)
       : Promise.resolve({ data: [] }),
     canReadContent
-      ? supabase
-          .from('candidate_testimonials')
-          .select('id, author_name, relationship, submitted_at')
-          .eq('status', 'pending')
-          .order('submitted_at', { ascending: false })
-          .limit(5)
+      ? (async () => {
+          const primary = await supabase
+            .from('candidate_testimonials')
+            .select(
+              'id, author_name, email, relationship, submitted_at, profile_photo_path, profile_photo_data',
+            )
+            .eq('status', 'pending')
+            .order('submitted_at', { ascending: false })
+            .limit(5)
+          if (primary.error?.code === '42703') {
+            return supabase
+              .from('candidate_testimonials')
+              .select('id, author_name, email, relationship, submitted_at')
+              .eq('status', 'pending')
+              .order('submitted_at', { ascending: false })
+              .limit(5)
+          }
+          return primary
+        })()
       : Promise.resolve({ data: [] }),
   ])
 
@@ -532,6 +551,31 @@ export async function AdminAnalyticsDashboard({
   }>
   const recentInquiries = (recentInquiriesResult.data ?? []) as InquiryRecord[]
   const testimonials = (testimonialsResult.data ?? []) as TestimonialRecord[]
+
+  const testimonialPaths = testimonials.flatMap((t) =>
+    t.profile_photo_path ? [t.profile_photo_path] : [],
+  )
+  const [authAvatars, signedTestimonialPhotos] = await Promise.all([
+    resolveAuthAvatarsByEmail([
+      ...recentInquiries.map((inq) => inq.email),
+      ...testimonials.flatMap((t) => (t.email ? [t.email] : [])),
+    ]),
+    (async () => {
+      const map = new Map<string, string>()
+      if (testimonialPaths.length > 0) {
+        const privileged = createPrivilegedClient()
+        if (privileged) {
+          const { data: signed } = await privileged.storage
+            .from('candidate-profile-photos')
+            .createSignedUrls(testimonialPaths, 3600)
+          signed?.forEach((item, index) => {
+            if (item.signedUrl) map.set(testimonialPaths[index], item.signedUrl)
+          })
+        }
+      }
+      return map
+    })(),
+  ])
 
   const totalVisits = visits.reduce((total, row) => total + row.visit_count, 0)
   const currentMonthKey = toDateKey(currentMonthStart)
@@ -635,41 +679,62 @@ export async function AdminAnalyticsDashboard({
           <time dateTime={now.toISOString()}>{monthlyLabel}</time>
         </header>
 
-        <section
-          className="admin-analytics__metrics"
-          aria-label="Monthly overview"
+        <AnimatedContent
+          animateOpacity
+          delay={0.06}
+          direction="vertical"
+          distance={20}
+          duration={0.5}
+          ease="power3.out"
+          initialOpacity={0}
+          playOnMount
         >
-          <article className="admin-analytics-metric">
-            <MetricIconGraphic name="visits" />
-            <span>Website visits</span>
-            <strong>{formatCompact(totalVisits)}</strong>
-            <small>All-time first-party sessions</small>
-          </article>
-          <article className="admin-analytics-metric">
-            <MetricIconGraphic name="views" />
-            <span>Article views</span>
-            <strong>{formatCompact(monthlyViews)}</strong>
-            <small>Views during {monthlyLabel}</small>
-          </article>
-          <article className="admin-analytics-metric">
-            <MetricIconGraphic name="likes" />
-            <span>Article likes</span>
-            <strong>{formatCompact(monthlyLikes)}</strong>
-            <small>New likes during {monthlyLabel}</small>
-          </article>
-          <article className="admin-analytics-metric admin-analytics-metric--gold">
-            <MetricIconGraphic name="contacts" />
-            <span>Contacts & inquiries</span>
-            <strong>{formatCompact(monthlyInquiries)}</strong>
-            <small>Received during {monthlyLabel}</small>
-          </article>
-        </section>
+          <section
+            className="admin-analytics__metrics"
+            aria-label="Monthly overview"
+          >
+            <article className="admin-analytics-metric">
+              <MetricIconGraphic name="visits" />
+              <span>Website visits</span>
+              <strong>{formatCompact(totalVisits)}</strong>
+              <small>All-time first-party sessions</small>
+            </article>
+            <article className="admin-analytics-metric">
+              <MetricIconGraphic name="views" />
+              <span>Article views</span>
+              <strong>{formatCompact(monthlyViews)}</strong>
+              <small>Views during {monthlyLabel}</small>
+            </article>
+            <article className="admin-analytics-metric">
+              <MetricIconGraphic name="likes" />
+              <span>Article likes</span>
+              <strong>{formatCompact(monthlyLikes)}</strong>
+              <small>New likes during {monthlyLabel}</small>
+            </article>
+            <article className="admin-analytics-metric admin-analytics-metric--gold">
+              <MetricIconGraphic name="contacts" />
+              <span>Contacts & inquiries</span>
+              <strong>{formatCompact(monthlyInquiries)}</strong>
+              <small>Received during {monthlyLabel}</small>
+            </article>
+          </section>
+        </AnimatedContent>
 
         {/* Bento Grid - Section 1: Hero Performance Graphs */}
-        <section
-          aria-label="Performance trend charts"
-          className="admin-analytics__charts"
+        <AnimatedContent
+          animateOpacity
+          delay={0.14}
+          direction="vertical"
+          distance={24}
+          duration={0.55}
+          ease="power3.out"
+          initialOpacity={0}
+          playOnMount
         >
+          <section
+            aria-label="Performance trend charts"
+            className="admin-analytics__charts"
+          >
           {/* 1. Website Visits Chart Panel */}
           <article className="admin-glass-panel admin-analytics__visits-panel">
             <header className="admin-analytics__panel-heading">
@@ -730,13 +795,24 @@ export async function AdminAnalyticsDashboard({
             </header>
             <ArticleEngagementChart data={articleSeries} />
           </article>
-        </section>
+          </section>
+        </AnimatedContent>
 
         {/* Bento Grid - Section 2: Article Comparison, Inbox & Testimonials */}
-        <section
-          aria-label="Content performance and review queues"
-          className="admin-review-grid"
+        <AnimatedContent
+          animateOpacity
+          delay={0.05}
+          direction="vertical"
+          distance={32}
+          duration={0.62}
+          ease="power3.out"
+          initialOpacity={0}
+          threshold={0.08}
         >
+          <section
+            aria-label="Content performance and review queues"
+            className="admin-review-grid"
+          >
           {/* 3. Refined Article Comparison Card */}
           <article className="admin-glass-panel admin-analytics__articles-panel">
             <header className="admin-analytics__panel-heading">
@@ -875,9 +951,18 @@ export async function AdminAnalyticsDashboard({
                     href={`/admin/inquiries/${inquiry.id}`}
                     key={inquiry.id}
                   >
-                    <span className="admin-review-card__avatar">
-                      {inquiry.full_name.slice(0, 1).toUpperCase()}
-                    </span>
+                    <AccountAvatar
+                      avatarUrl={
+                        authAvatars.get(inquiry.email.trim().toLowerCase()) ??
+                        null
+                      }
+                      className="admin-review-card__avatar"
+                      displayName={inquiry.full_name}
+                      email={inquiry.email}
+                      imgClassName="admin-review-card__avatar-img"
+                      initials={inquiry.full_name.slice(0, 1).toUpperCase()}
+                      size={36}
+                    />
                     <span className="admin-review-card__copy">
                       <strong>{inquiry.subject}</strong>
                       <small>{inquiry.full_name}</small>
@@ -928,9 +1013,32 @@ export async function AdminAnalyticsDashboard({
                     href={`/admin/testimonials?status=pending#testimonial-${testimonial.id}`}
                     key={testimonial.id}
                   >
-                    <span className="admin-review-card__avatar admin-review-card__avatar--gold">
-                      {testimonial.author_name.slice(0, 1).toUpperCase()}
-                    </span>
+                    <AccountAvatar
+                      avatarUrl={
+                        (testimonial.profile_photo_path
+                          ? signedTestimonialPhotos.get(
+                              testimonial.profile_photo_path,
+                            )
+                          : null) ??
+                        (testimonial.profile_photo_data
+                          ? `data:image/webp;base64,${testimonial.profile_photo_data}`
+                          : null) ??
+                        (testimonial.email
+                          ? authAvatars.get(
+                              testimonial.email.trim().toLowerCase(),
+                            )
+                          : null) ??
+                        null
+                      }
+                      className="admin-review-card__avatar admin-review-card__avatar--gold"
+                      displayName={testimonial.author_name}
+                      email={testimonial.email}
+                      imgClassName="admin-review-card__avatar-img"
+                      initials={testimonial.author_name
+                        .slice(0, 1)
+                        .toUpperCase()}
+                      size={36}
+                    />
                     <span className="admin-review-card__copy">
                       <strong>{testimonial.author_name}</strong>
                       <small>
@@ -955,7 +1063,8 @@ export async function AdminAnalyticsDashboard({
               )}
             </div>
           </article>
-        </section>
+          </section>
+        </AnimatedContent>
       </div>
     </section>
   )

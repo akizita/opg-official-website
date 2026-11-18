@@ -7,6 +7,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
+import {
+  extractUserAvatarUrl,
+  extractUserDisplayName,
+} from '@/lib/auth/avatar-utils'
 import { siteConfig } from '@/lib/site-config'
 import { createClient } from '@/lib/supabase/client'
 
@@ -26,8 +30,10 @@ export function SiteHeader() {
     setMobileOpen(false)
   }
   const [auth, setAuth] = useState<{
-    pathname: string
+    avatarUrl: string | null
+    displayName: string | null
     email: string | null
+    pathname: string
   } | null>(null)
 
   useEffect(() => {
@@ -78,21 +84,42 @@ export function SiteHeader() {
     let active = true
     const supabase = createClient()
 
-    void supabase.auth
-      .getClaims()
-      .then(({ data, error }) => {
+    void Promise.all([
+      supabase.auth.getClaims(),
+      typeof supabase.auth.getUser === 'function'
+        ? supabase.auth.getUser().catch(() => ({
+            data: { user: null },
+            error: null,
+          }))
+        : Promise.resolve({ data: { user: null }, error: null }),
+    ])
+      .then(([claimsRes, userRes]) => {
         if (!active) return
+        const { data, error } = claimsRes
         const email = data?.claims?.email
+        const cleanEmail =
+          !error && typeof email === 'string' && email.trim()
+            ? email.trim().toLowerCase()
+            : null
+        const claims = data?.claims as Record<string, unknown> | undefined
+        const user = userRes?.data?.user ?? null
+
         setAuth({
+          avatarUrl: cleanEmail ? extractUserAvatarUrl(claims, user) : null,
+          displayName: cleanEmail ? extractUserDisplayName(claims, user) : null,
+          email: cleanEmail,
           pathname,
-          email:
-            !error && typeof email === 'string' && email.trim()
-              ? email.trim().toLowerCase()
-              : null,
         })
       })
       .catch(() => {
-        if (active) setAuth({ pathname, email: null })
+        if (active) {
+          setAuth({
+            avatarUrl: null,
+            displayName: null,
+            email: null,
+            pathname,
+          })
+        }
       })
 
     return () => {
@@ -157,7 +184,11 @@ export function SiteHeader() {
         </nav>
 
         {currentAuth?.email ? (
-          <SiteAccountMenu email={currentAuth.email} />
+          <SiteAccountMenu
+            avatarUrl={currentAuth.avatarUrl}
+            displayName={currentAuth.displayName}
+            email={currentAuth.email}
+          />
         ) : currentAuth ? (
           <div
             className={`site-header__auth ${isCareersRoute ? 'site-header__auth--quiet' : ''}`.trim()}

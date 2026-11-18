@@ -16,6 +16,7 @@ export interface RubberSegmentProps {
   className?: string
   ariaLabel?: string
   layoutId?: string
+  tone?: 'dark' | 'light'
 }
 
 export function RubberSegment({
@@ -25,10 +26,13 @@ export function RubberSegment({
   className = '',
   ariaLabel = 'Segmented options',
   layoutId = 'rubber-segment-thumb',
+  tone = 'dark',
 }: RubberSegmentProps) {
+  const isLight = tone === 'light'
+
   return (
     <div
-      className={`${styles.rubberContainer} ${className}`}
+      className={`${styles.rubberContainer} ${isLight ? styles.rubberContainerLight : ''} ${className}`}
       role="tablist"
       aria-label={ariaLabel}
     >
@@ -41,13 +45,15 @@ export function RubberSegment({
             type="button"
             role="tab"
             aria-selected={isActive}
-            className={`${styles.rubberItem} ${isActive ? styles.rubberItemActive : ''}`}
+            className={`${styles.rubberItem} ${isLight ? styles.rubberItemLight : ''} ${
+              isActive ? (isLight ? styles.rubberItemActiveLight : styles.rubberItemActive) : ''
+            }`}
             onClick={() => onChange(option.value)}
           >
             {isActive && (
               <motion.span
                 layoutId={layoutId}
-                className={styles.rubberThumb}
+                className={isLight ? styles.rubberThumbLight : styles.rubberThumb}
                 transition={{
                   type: 'spring',
                   stiffness: 460,

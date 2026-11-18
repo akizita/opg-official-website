@@ -213,34 +213,34 @@ export function VisitorSignUpForm({
             size={18}
           />
         </button>
-
-        <div className={styles.divider} role="separator">
-          <span className={styles.dividerLine} />
-          <span className={styles.dividerText}>or continue with</span>
-          <span className={styles.dividerLine} />
-        </div>
-
-        <div className={styles.oauthSection}>
-          <GoogleAuthForm
-            buttonClassName={styles.googleOauthButton}
-            next={targetPath}
-          />
-        </div>
-
-        <div className={styles.cardFooterLinks}>
-          <p className={styles.signupPrompt}>
-            Already have an account?{' '}
-            <Link className={styles.switchTabLink} href={signInHref}>
-              Sign in
-            </Link>
-          </p>
-          <p className={styles.cardTermsNotice}>
-            By registering you agree to our{' '}
-            <Link href="/terms">Terms</Link> &amp;{' '}
-            <Link href="/security">Security Policy</Link>.
-          </p>
-        </div>
       </form>
+
+      <div className={styles.divider} role="separator">
+        <span className={styles.dividerLine} />
+        <span className={styles.dividerText}>or continue with</span>
+        <span className={styles.dividerLine} />
+      </div>
+
+      <div className={styles.oauthSection}>
+        <GoogleAuthForm
+          buttonClassName={styles.googleOauthButton}
+          next={targetPath}
+        />
+      </div>
+
+      <div className={styles.cardFooterLinks}>
+        <p className={styles.signupPrompt}>
+          Already have an account?{' '}
+          <Link className={styles.switchTabLink} href={signInHref}>
+            Sign in
+          </Link>
+        </p>
+        <p className={styles.cardTermsNotice}>
+          By registering you agree to our{' '}
+          <Link href="/terms">Terms</Link> &amp;{' '}
+          <Link href="/security">Security Policy</Link>.
+        </p>
+      </div>
     </div>
   )
 }

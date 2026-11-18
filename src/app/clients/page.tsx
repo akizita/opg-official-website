@@ -18,6 +18,8 @@ import { getPublishedArticles } from '@/lib/content/articles'
 import { featuredArticles } from '@/lib/content/featured-articles'
 import {
   getPublishedTestimonials,
+  getVisibleClients,
+  type Client,
   type Testimonial,
 } from '@/lib/content/clients'
 import {
@@ -297,6 +299,16 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+function getCompanyLogoType(name: string): ClientLogoType | undefined {
+  const lower = name.toLowerCase()
+  if (lower.includes('northstar')) return 'northstar'
+  if (lower.includes('meridian')) return 'meridian'
+  if (lower.includes('harborline')) return 'harborline'
+  if (lower.includes('atlas')) return 'atlas'
+  if (lower.includes('veridian')) return 'veridian'
+  return undefined
+}
+
 export default async function ClientsPage({
   searchParams,
 }: {
@@ -307,20 +319,6 @@ export default async function ClientsPage({
   const doc = await getVisiblePageDocument(supabase, 'clients', opgPreview === '1')
   const editorial = extractClientPageContent(doc?.content)
   const copy = getPageCopy(doc?.content, CLIENTS_COPY_SECTIONS)
-  const partnerProfiles = clientPartners.map((partner, index) => {
-    const key = `partner${index + 1}`
-    return {
-      ...partner,
-      name: copy[`${key}Name`],
-      badge: copy[`${key}Badge`],
-      industry: copy[`${key}Industry`],
-      region: copy[`${key}Region`],
-      podCapability: copy[`${key}PodCapability`],
-      talentCount: copy[`${key}TalentCount`],
-      tagline: copy[`${key}Tagline`],
-      description: copy[`${key}Description`],
-    }
-  })
   const featuredTestimonials = clientTestimonials.map((testimonial, index) => {
     const key = `testimonial${index + 1}`
     return {
@@ -336,17 +334,57 @@ export default async function ClientsPage({
   })
   let dbTestimonials: Testimonial[] = []
   let publishedArticles: Article[] = []
+  let dbClients: Client[] = []
   try {
-    const [testimonials, articlesResult] = await Promise.all([
+    const [testimonials, articlesResult, clientsResult] = await Promise.all([
       getPublishedTestimonials(),
       getPublishedArticles({ page: 1, pageSize: 10 }),
+      getVisibleClients(),
     ])
     dbTestimonials = testimonials
     publishedArticles = articlesResult.articles
+    dbClients = clientsResult
   } catch {
     dbTestimonials = []
     publishedArticles = []
+    dbClients = []
   }
+
+  const partnerProfiles: PartnerProfileItem[] = (dbClients.length > 0 ? dbClients : clientPartners).map((partnerOrClient, index) => {
+    const key = `partner${index + 1}`
+    if ('is_visible' in partnerOrClient) {
+      const c = partnerOrClient as Client
+      return {
+        id: c.id,
+        name: c.name,
+        badge: c.type_of_company || copy[`${key}Badge`] || 'Strategic Partner',
+        industry: c.hero_domain || c.type_of_company || copy[`${key}Industry`] || 'Technology & Services',
+        region: c.operational_base || copy[`${key}Region`] || 'Global Distributed Hub',
+        podCapability: c.dedicated_capability || copy[`${key}PodCapability`] || 'Dedicated Team',
+        tagline: c.tagline || copy[`${key}Tagline`] || '',
+        description: c.description || copy[`${key}Description`] || '',
+        website: c.website_url || '#',
+        social: c.linkedin_url || undefined,
+        facebook: c.facebook_url || undefined,
+        instagram: c.instagram_url || undefined,
+        x: c.x_url || undefined,
+        socialLinks: c.social_links || undefined,
+        logoUrl: c.logo_url || undefined,
+        logoType: getCompanyLogoType(c.name),
+      }
+    }
+    const p = partnerOrClient as PartnerProfileItem
+    return {
+      ...p,
+      name: copy[`${key}Name`] || p.name,
+      badge: copy[`${key}Badge`] || p.badge,
+      industry: copy[`${key}Industry`] || p.industry,
+      region: copy[`${key}Region`] || p.region,
+      podCapability: copy[`${key}PodCapability`] || p.podCapability,
+      tagline: copy[`${key}Tagline`] || p.tagline,
+      description: copy[`${key}Description`] || p.description,
+    }
+  })
 
   const editorialArticles = featuredArticles
   const articleMap = new Map<string, Article>()
@@ -365,16 +403,6 @@ export default async function ClientsPage({
     fallbackMap.set(item.companyName.toLowerCase(), item)
     fallbackMap.set(item.authorName.toLowerCase(), item)
   })
-
-  function getCompanyLogoType(name: string): ClientLogoType | undefined {
-    const lower = name.toLowerCase()
-    if (lower.includes('northstar')) return 'northstar'
-    if (lower.includes('meridian')) return 'meridian'
-    if (lower.includes('harborline')) return 'harborline'
-    if (lower.includes('atlas')) return 'atlas'
-    if (lower.includes('veridian')) return 'veridian'
-    return undefined
-  }
 
   const mappedDbItems: CarouselTestimonialItem[] = dbTestimonials.map((dbItem) => {
     const compName =
@@ -421,6 +449,7 @@ export default async function ClientsPage({
         title={doc?.title || CLIENT_PAGE_DEFAULTS.title}
         summary={doc?.summary || CLIENT_PAGE_DEFAULTS.summary}
         copy={copy}
+        clients={dbClients}
       />
 
       {/* 2. Unified Showcase Band: Blog Playbooks + Client Testimonials + Partner Directory */}

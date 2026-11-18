@@ -5,6 +5,7 @@ import { InquiriesInbox, type InquiryItem } from '@/app/admin/inquiries/inquirie
 import './inquiries.css'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import { canManageInquiries, canViewInquiries } from '@/lib/auth/permissions'
+import { resolveAuthAvatarsByEmail } from '@/lib/auth/user-avatars'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -49,7 +50,14 @@ export default async function AdminInquiriesPage({
     )
     .order('submitted_at', { ascending: false })
 
-  const inquiryList = (inquiries as InquiryItem[]) || []
+  const rawInquiries = (inquiries as InquiryItem[]) || []
+  const authAvatars = await resolveAuthAvatarsByEmail(
+    rawInquiries.map((item) => item.email),
+  )
+  const inquiryList = rawInquiries.map((item) => ({
+    ...item,
+    avatar_url: authAvatars.get(item.email.trim().toLowerCase()) ?? null,
+  }))
   const canManage = canManageInquiries(profile.roleKey)
 
   return (

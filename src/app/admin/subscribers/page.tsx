@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { AnimatedContent } from '@/components/ui/animated-content'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { StatusBadge } from '@/components/ui/status-badge'
@@ -69,7 +70,17 @@ export default async function AdminSubscribersPage() {
           </div>
         </div>
 
-        <div className="admin-services-list" style={{ marginTop: '2rem' }}>
+        <AnimatedContent
+          animateOpacity
+          delay={0.08}
+          direction="vertical"
+          distance={24}
+          duration={0.55}
+          ease="power3.out"
+          initialOpacity={0}
+          playOnMount
+        >
+          <div className="admin-services-list" style={{ marginTop: '2rem' }}>
           {subscriberList.length > 0 ? (
             <div className="card-grid">
               {subscriberList.map((sub) => {
@@ -143,7 +154,8 @@ export default async function AdminSubscribersPage() {
               title="No Subscribers Found"
             />
           )}
-        </div>
+          </div>
+        </AnimatedContent>
       </div>
     </section>
   )

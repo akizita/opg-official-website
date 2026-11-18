@@ -873,7 +873,8 @@
 .fieldTextarea:focus {
   border-color: #d97706;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.16);
+  box-shadow: none;
+  outline: none;
 }
 
 .fieldInput:disabled,

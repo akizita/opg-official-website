@@ -4,9 +4,11 @@ import {
   DESIGNATED_SUPER_ADMIN_EMAIL,
   isAdminMfaRequired,
 } from '@/lib/auth/config'
+import { extractUserAvatarUrl } from '@/lib/auth/user-avatars'
 import { createClient, createPrivilegedClient } from '@/lib/supabase/server'
 
 export type AdminProfile = {
+  avatarUrl?: string | null
   displayName: string
   email: string
   id: string
@@ -94,26 +96,51 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 
     if (profileError || !profile || !profile.is_active) return null
 
-    const [{ data: role, error: roleError }, aalResponse] = await Promise.all([
-      supabase
-        .from('roles')
-        .select('role_key, display_name, is_active')
-        .eq('id', profile.role_id)
-        .maybeSingle(),
-      isAdminMfaRequired()
-        ? supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-        : Promise.resolve({
-            data: { currentLevel: 'aal1', nextLevel: 'aal1' },
-            error: null,
-          }),
-    ])
+    const [{ data: role, error: roleError }, aalResponse, userResponse] =
+      await Promise.all([
+        supabase
+          .from('roles')
+          .select('role_key, display_name, is_active')
+          .eq('id', profile.role_id)
+          .maybeSingle(),
+        isAdminMfaRequired()
+          ? supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+          : Promise.resolve({
+              data: { currentLevel: 'aal1', nextLevel: 'aal1' },
+              error: null,
+            }),
+        typeof supabase.auth.getUser === 'function'
+          ? supabase.auth.getUser().catch(() => ({
+              data: { user: null },
+              error: null,
+            }))
+          : Promise.resolve({ data: { user: null }, error: null }),
+      ])
 
     if (roleError || !role?.is_active || aalResponse.error) return null
+
+    let avatarUrl = extractUserAvatarUrl(
+      claimsData.claims as Record<string, unknown> | undefined,
+      userResponse?.data?.user ?? null,
+    )
+
+    if (!avatarUrl) {
+      const privilegedClient = createPrivilegedClient()
+      if (privilegedClient) {
+        const adminUserRes = await privilegedClient.auth.admin
+          .getUserById(userId)
+          .catch(() => null)
+        if (adminUserRes?.data?.user) {
+          avatarUrl = extractUserAvatarUrl(undefined, adminUserRes.data.user)
+        }
+      }
+    }
 
     return {
       currentLevel: aalResponse.data.currentLevel as 'aal1' | 'aal2' | null,
       nextLevel: aalResponse.data.nextLevel as 'aal1' | 'aal2' | null,
       profile: {
+        avatarUrl,
         displayName: profile.display_name,
         email,
         id: profile.id,
