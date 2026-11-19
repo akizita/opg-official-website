@@ -7,17 +7,52 @@ import {
   normalizeJazzHrJob,
   normalizeJazzHrQuestion,
 } from '@/lib/jazzhr/normalize'
-import type { CareerJob, CareerQuestion, CareersFeed } from '@/lib/jazzhr/types'
+import type {
+  CareerJob,
+  CareerQuestion,
+  CareersFeed,
+  JazzHrAccountKey,
+} from '@/lib/jazzhr/types'
 
 const JAZZHR_API_BASE_URL = 'https://api.resumatorapi.com/v1'
 const JAZZHR_PAGE_SIZE = 100
 const JAZZHR_MAX_PAGES = 25
 
-const TALENT_POOL_JOB_IDS = [
-  'job_20251203043549_1EKIK1MUNLB7HIHQ', // Loan Associate (Pooling)
-  'job_20251203223256_4SVMCPDQS2ZVFLDC', // Loan Settlement Officer (Pooling)
-  'job_20251203232902_2PLJFVRKRVTKDYLG', // Senior Loan Associate - Parabroker (Pooling)
-] as const
+type JazzHrAccountConfig = {
+  apiKey: string
+  key: JazzHrAccountKey
+}
+
+function getConfiguredJazzHrAccounts(): JazzHrAccountConfig[] {
+  const accounts: JazzHrAccountConfig[] = []
+  const offshoreKey = process.env.JAZZHR_API_KEY?.trim()
+  if (offshoreKey) {
+    accounts.push({ apiKey: offshoreKey, key: 'offshore' })
+  }
+
+  const onshoreKey = process.env.JAZZHR_FPI_API_KEY?.trim()
+  if (onshoreKey && onshoreKey !== offshoreKey) {
+    accounts.push({ apiKey: onshoreKey, key: 'onshore' })
+  }
+
+  return accounts
+}
+
+export function resolveJazzHrApiKey(
+  job?: Pick<CareerJob, 'account'>,
+): string | null {
+  if (job?.account === 'onshore') {
+    return process.env.JAZZHR_FPI_API_KEY?.trim() || null
+  }
+  if (job?.account === 'offshore') {
+    return process.env.JAZZHR_API_KEY?.trim() || null
+  }
+  return (
+    process.env.JAZZHR_API_KEY?.trim() ||
+    process.env.JAZZHR_FPI_API_KEY?.trim() ||
+    null
+  )
+}
 
 export class JazzHrApiError extends Error {
   status: number | null
@@ -64,34 +99,12 @@ function extractRows(payload: unknown, resource: string): unknown[] {
   )
 }
 
-async function fetchJazzHrJobById(
-  apiKey: string,
-  id: string,
-): Promise<unknown | null> {
-  const endpoint = new URL(
-    `${JAZZHR_API_BASE_URL}/jobs/${encodeURIComponent(id)}`,
-  )
-  endpoint.searchParams.set('apikey', apiKey)
-
-  try {
-    const response = await fetch(endpoint, {
-      cache: 'no-store',
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(8_000),
-    })
-    if (!response.ok) return null
-    return await response.json()
-  } catch {
-    return null
-  }
-}
-
 async function fetchJazzHrPage(
   apiKey: string,
   page: number,
 ): Promise<unknown[]> {
   const endpoint = new URL(
-    `${JAZZHR_API_BASE_URL}/jobs/status/open/confidential/false/private/false/page/${page}`,
+    `${JAZZHR_API_BASE_URL}/jobs/status/open/page/${page}`,
   )
   endpoint.searchParams.set('apikey', apiKey)
 
@@ -127,15 +140,17 @@ async function fetchJazzHrPage(
   return extractRows(payload, 'jobs')
 }
 
-async function fetchAllJazzHrJobs(apiKey: string): Promise<CareerJob[]> {
+async function fetchAllJazzHrJobs(
+  account: JazzHrAccountConfig,
+): Promise<CareerJob[]> {
   const jobs = new Map<string, CareerJob>()
 
   for (let page = 1; page <= JAZZHR_MAX_PAGES; page += 1) {
-    const rows = await fetchJazzHrPage(apiKey, page)
+    const rows = await fetchJazzHrPage(account.apiKey, page)
 
     for (const row of rows) {
       if (!isJazzHrRecord(row)) continue
-      const job = normalizeJazzHrJob(row)
+      const job = normalizeJazzHrJob(row, { account: account.key })
       if (job) jobs.set(job.id, job)
     }
 
@@ -147,22 +162,7 @@ async function fetchAllJazzHrJobs(apiKey: string): Promise<CareerJob[]> {
     }
   }
 
-  // Ensure active talent pooling opportunities are accessible for candidates
-  for (const poolId of TALENT_POOL_JOB_IDS) {
-    if (!jobs.has(poolId)) {
-      const raw = await fetchJazzHrJobById(apiKey, poolId)
-      if (isJazzHrRecord(raw)) {
-        const job = normalizeJazzHrJob(raw, { allowPooling: true })
-        if (job) jobs.set(job.id, job)
-      }
-    }
-  }
-
-  return [...jobs.values()].sort((left, right) => {
-    const leftDate = left.publishedAt ? Date.parse(left.publishedAt) : 0
-    const rightDate = right.publishedAt ? Date.parse(right.publishedAt) : 0
-    return rightDate - leftDate || left.title.localeCompare(right.title)
-  })
+  return [...jobs.values()]
 }
 
 async function fetchQuestionnaireQuestions(
@@ -221,24 +221,45 @@ async function fetchQuestionnaireQuestions(
 }
 
 export const getCareersFeed = cache(async (): Promise<CareersFeed> => {
-  const apiKey = process.env.JAZZHR_API_KEY?.trim()
-  if (!apiKey) {
+  const accounts = getConfiguredJazzHrAccounts()
+  if (accounts.length === 0) {
     return { configured: false, fetchedAt: null, jobs: [] }
   }
 
-  try {
-    const jobs = await fetchAllJazzHrJobs(apiKey)
-    return {
-      configured: true,
-      fetchedAt: new Date().toISOString(),
-      jobs,
+  const results = await Promise.allSettled(
+    accounts.map((account) => fetchAllJazzHrJobs(account)),
+  )
+
+  const mergedJobs = new Map<string, CareerJob>()
+  let anySucceeded = false
+
+  for (const result of results) {
+    if (result.status !== 'fulfilled') continue
+    anySucceeded = true
+    for (const job of result.value) {
+      const dedupeKey = `${job.account || 'offshore'}:${job.id}`
+      mergedJobs.set(dedupeKey, job)
     }
-  } catch {
+  }
+
+  if (!anySucceeded) {
     return {
       configured: true,
       fetchedAt: null,
       jobs: [],
     }
+  }
+
+  const jobs = [...mergedJobs.values()].sort((left, right) => {
+    const leftDate = left.publishedAt ? Date.parse(left.publishedAt) : 0
+    const rightDate = right.publishedAt ? Date.parse(right.publishedAt) : 0
+    return rightDate - leftDate || left.title.localeCompare(right.title)
+  })
+
+  return {
+    configured: true,
+    fetchedAt: new Date().toISOString(),
+    jobs,
   }
 })
 
@@ -260,7 +281,7 @@ export const getCareerQuestions = cache(
   async (job: CareerJob): Promise<CareerQuestion[]> => {
     if (!job.questionnaireId) return []
 
-    const apiKey = process.env.JAZZHR_API_KEY?.trim()
+    const apiKey = resolveJazzHrApiKey(job)
     if (!apiKey) {
       throw new JazzHrApiError('JazzHR is not configured.')
     }

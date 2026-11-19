@@ -71,6 +71,17 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
   ])
   const copy = getPageCopy(doc?.content, CAREERS_COPY_SECTIONS)
 
+  const openingsHeading = copy.openingsTitle || 'Explore Open Roles'
+  const openingsLead =
+    !copy.openingsLead || copy.openingsLead.includes('verified talent portal')
+      ? 'Explore open roles across our global partner network. All applications are reviewed directly by our recruitment team.'
+      : copy.openingsLead
+  const emptyMessage =
+    !copy.emptyMessage ||
+    copy.emptyMessage.includes('active openings matching your criteria')
+      ? 'We do not have any open positions at the moment. You can still share your CV or introduce yourself to recruitment@opglobal.com.hk for upcoming opportunities.'
+      : copy.emptyMessage
+
   return (
     <div className={`${styles.page} careers-page`}>
       {/* Subtle, restrained ambient warmth */}
@@ -94,49 +105,47 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
         <div className={styles.openingsBottomBlend} aria-hidden="true" />
 
         <div className="container">
-          <header className={styles.pageHeader}>
-            <div className={styles.pageHeaderContent}>
-              <p className={styles.eyebrow}>Careers at OPG</p>
-              <h1 className={styles.pageTitle} id="open-roles-title">
-                {copy.openingsTitle || 'Explore Open Roles'}
-              </h1>
-              <p className={styles.pageLead}>
-                {!copy.openingsLead ||
-                copy.openingsLead.includes('verified talent portal')
-                  ? 'Explore open roles across our global partner network. All applications are reviewed directly by our recruitment team.'
-                  : copy.openingsLead}
-              </p>
-            </div>
-            <div className={styles.openingsCountBadge}>
-              <span className={styles.openingsPulse} aria-hidden="true" />
-              <span>
-                {feed.jobs.length} {feed.jobs.length === 1 ? 'role' : 'roles'}{' '}
-                available
-              </span>
-            </div>
-          </header>
-
           {!feed.configured ? (
-            <Notice
-              className={styles.configNotice}
-              title="Live role sync is being configured"
-              variant="warning"
-            >
-              <p>
-                The live careers connection is not configured yet. Please check
-                back shortly or contact our recruitment team for assistance.
-              </p>
-              <a href="mailto:recruitment@opglobal.com.hk">
-                Contact recruitment
-              </a>
-            </Notice>
+            <>
+              <header className={styles.pageHeader}>
+                <div className={styles.pageHeaderContent}>
+                  <p className={styles.eyebrow}>Careers at OPG</p>
+                  <h1 className={styles.pageTitle} id="open-roles-title">
+                    {openingsHeading}
+                  </h1>
+                  <p className={styles.pageLead}>{openingsLead}</p>
+                </div>
+                <div
+                  className={`${styles.openingsCountBadge} ${styles.openingsCountBadgeEmpty}`}
+                >
+                  <span className={styles.openingsPulseIdle} aria-hidden="true" />
+                  <span>Sync pending</span>
+                </div>
+              </header>
+              <Notice
+                className={styles.configNotice}
+                title="Live role sync is being configured"
+                variant="warning"
+              >
+                <p>
+                  The live careers connection is not configured yet. Please
+                  check back shortly or contact our recruitment team for
+                  assistance.
+                </p>
+                <a href="mailto:recruitment@opglobal.com.hk">
+                  Contact recruitment
+                </a>
+              </Notice>
+            </>
           ) : (
             <CareerOpeningsExplorer
               applyLabel={copy.applyCta}
               detailsLabel={copy.detailsCta}
-              emptyMessage={copy.emptyMessage}
+              emptyMessage={emptyMessage}
               emptyTitle={copy.emptyTitle}
+              heading={openingsHeading}
               jobs={feed.jobs}
+              lead={openingsLead}
             />
           )}
         </div>
@@ -144,7 +153,7 @@ export default async function CareersPage({ searchParams }: CareersPageProps) {
 
       <div className={styles.processAndCtaWrapper}>
         <ApplicationSteps />
-        <RecruitmentCTA />
+        <RecruitmentCTA hasOpenRoles={feed.jobs.length > 0} />
       </div>
     </div>
   )

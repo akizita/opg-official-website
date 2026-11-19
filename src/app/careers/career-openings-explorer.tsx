@@ -5,6 +5,7 @@ import {
   Briefcase01Icon,
   Cancel01Icon,
   Location01Icon,
+  Mail01Icon,
   Money01Icon,
   Search01Icon,
 } from '@hugeicons/core-free-icons'
@@ -33,7 +34,9 @@ type CareerOpeningsExplorerProps = {
   detailsLabel: string
   emptyMessage: string
   emptyTitle: string
+  heading?: string
   jobs: CareerJob[]
+  lead?: string
 }
 
 type FilterOptions = {
@@ -517,7 +520,9 @@ export function CareerOpeningsExplorer({
   detailsLabel,
   emptyMessage,
   emptyTitle,
+  heading = 'Explore Open Roles',
   jobs: initialJobs,
+  lead = 'Explore open roles across our global partner network. All applications are reviewed directly by our recruitment team.',
 }: CareerOpeningsExplorerProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -619,61 +624,125 @@ export function CareerOpeningsExplorer({
     setFilters(EMPTY_CAREER_FILTERS)
   }
 
+  const roleCountLabel =
+    jobs.length === 0
+      ? 'No open roles right now'
+      : `${jobs.length} ${jobs.length === 1 ? 'role' : 'roles'} available`
+
+  const openingsHeader = (
+    <header className={styles.pageHeader}>
+      <div className={styles.pageHeaderContent}>
+        <p className={styles.eyebrow}>Careers at OPG</p>
+        <h1 className={styles.pageTitle} id="open-roles-title">
+          {heading}
+        </h1>
+        <p className={styles.pageLead}>{lead}</p>
+      </div>
+      <div
+        className={`${styles.openingsCountBadge} ${
+          jobs.length === 0 ? styles.openingsCountBadgeEmpty : ''
+        }`}
+      >
+        <span
+          aria-hidden="true"
+          className={
+            jobs.length === 0 ? styles.openingsPulseIdle : styles.openingsPulse
+          }
+        />
+        <span>{roleCountLabel}</span>
+      </div>
+    </header>
+  )
+
   if (jobs.length === 0) {
     return (
-      <EmptyState
-        className={styles.emptyState}
-        message={emptyMessage}
-        title={emptyTitle}
-      />
+      <>
+        {openingsHeader}
+        <EmptyState
+          action={
+            <div className={styles.emptyStateActions}>
+              <a
+                className={styles.emptyPrimaryBtn}
+                href="mailto:recruitment@opglobal.com.hk?subject=General%20Application%20%E2%80%94%20OPG%20Careers"
+              >
+                <HugeiconsIcon aria-hidden="true" icon={Mail01Icon} size={16} />
+                <span>Send Your CV</span>
+              </a>
+              <Link className={styles.emptySecondaryBtn} href="/contact">
+                <span>Contact Recruitment</span>
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={ArrowRight01Icon}
+                  size={15}
+                />
+              </Link>
+            </div>
+          }
+          className={styles.emptyState}
+          icon={
+            <span className={styles.emptyStateIconBadge}>
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={Briefcase01Icon}
+                size={24}
+              />
+            </span>
+          }
+          message={emptyMessage}
+          title={emptyTitle}
+        />
+      </>
     )
   }
 
   return (
-    <div className={styles.explorer}>
-      <JobFilters
-        filters={filters}
-        hasFilters={hasFilters}
-        isSearching={isSearching}
-        matchCount={filteredJobs.length}
-        onChange={updateFilter}
-        onClear={clearFilters}
-        options={options}
-        searchInputValue={searchInputValue}
-      />
-
-      {filteredJobs.length === 0 ? (
-        <AnimatePresence>
-          <motion.div
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            initial={{ opacity: 0, y: 6 }}
-            key="empty-state"
-            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <EmptyState
-              action={
-                <button
-                  className={`button ${styles.clearAllButton}`}
-                  onClick={clearFilters}
-                  type="button"
-                >
-                  Clear all filters
-                </button>
-              }
-              className={styles.emptyState}
-              description="Try removing keywords or broadening your department or location filters."
-              title="No matching roles found"
-            />
-          </motion.div>
-        </AnimatePresence>
-      ) : (
-        <JobList
-          applyLabel={applyLabel}
-          detailsLabel={detailsLabel}
-          jobs={filteredJobs}
+    <>
+      {openingsHeader}
+      <div className={styles.explorer}>
+        <JobFilters
+          filters={filters}
+          hasFilters={hasFilters}
+          isSearching={isSearching}
+          matchCount={filteredJobs.length}
+          onChange={updateFilter}
+          onClear={clearFilters}
+          options={options}
+          searchInputValue={searchInputValue}
         />
-      )}
-    </div>
+
+        {filteredJobs.length === 0 ? (
+          <AnimatePresence>
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              initial={{ opacity: 0, y: 6 }}
+              key="empty-state"
+              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <EmptyState
+                action={
+                  <button
+                    className={`button ${styles.clearAllButton}`}
+                    onClick={clearFilters}
+                    type="button"
+                  >
+                    Clear all filters
+                  </button>
+                }
+                className={styles.emptyState}
+                description="Try removing keywords or broadening your department or location filters."
+                title="No matching roles found"
+              />
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <JobList
+            applyLabel={applyLabel}
+            detailsLabel={detailsLabel}
+            jobs={filteredJobs}
+          />
+        )}
+      </div>
+    </>
   )
 }

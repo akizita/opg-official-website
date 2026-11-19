@@ -181,12 +181,14 @@ export function ApplicationSteps() {
 
 export function RecruitmentCTA({
   copy,
+  hasOpenRoles = true,
 }: {
   copy?: {
     closingEyebrow?: string
     closingTitle?: string
     closingLead?: string
   }
+  hasOpenRoles?: boolean
 } = {}) {
   return (
     <section
@@ -233,17 +235,28 @@ export function RecruitmentCTA({
 
             {/* Action Buttons */}
             <div className={styles.closingActions}>
-              <ButtonLink
-                className={styles.closingPrimaryBtn}
-                href="#open-roles-title"
-              >
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={Briefcase01Icon}
-                  size={16}
-                />
-                Review current openings
-              </ButtonLink>
+              {hasOpenRoles ? (
+                <ButtonLink
+                  className={styles.closingPrimaryBtn}
+                  href="#open-roles-title"
+                >
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Briefcase01Icon}
+                    size={16}
+                  />
+                  Review current openings
+                </ButtonLink>
+              ) : (
+                <ButtonLink className={styles.closingPrimaryBtn} href="/about">
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Globe02Icon}
+                    size={16}
+                  />
+                  Discover life at OPG
+                </ButtonLink>
+              )}
               <ButtonLink
                 className={styles.closingSecondaryBtn}
                 href="mailto:recruitment@opglobal.com.hk"

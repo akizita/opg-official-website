@@ -952,7 +952,7 @@ export const CAREERS_COPY_SECTIONS: readonly CopySection[] = [
       field(
         'emptyMessage',
         'Empty state message',
-        'We do not have active openings matching your criteria at this moment. You can still send your CV to recruitment@opglobal.com.hk.',
+        'We do not have any open positions at the moment. You can still share your CV or introduce yourself to recruitment@opglobal.com.hk for upcoming opportunities.',
         true,
       ),
       field('applyCta', 'Apply button', 'Apply Now ↗'),

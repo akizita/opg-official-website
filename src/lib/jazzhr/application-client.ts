@@ -1,7 +1,7 @@
 import 'server-only'
 
 import type { CareerJob, CareerQuestion } from '@/lib/jazzhr/types'
-import { JazzHrApiError } from '@/lib/jazzhr/client'
+import { JazzHrApiError, resolveJazzHrApiKey } from '@/lib/jazzhr/client'
 import type { CareerApplicationInput } from '@/lib/jazzhr/application-validation'
 import { sanitizeResumeFilename } from '@/lib/jazzhr/application-validation'
 
@@ -117,7 +117,7 @@ export async function submitApplicationToJazzHr(
   questions: CareerQuestion[],
   application: CareerApplicationInput,
 ): Promise<JazzHrWriteResult> {
-  const apiKey = process.env.JAZZHR_API_KEY?.trim()
+  const apiKey = resolveJazzHrApiKey(job)
   if (!apiKey) throw new JazzHrApiError('JazzHR is not configured.')
 
   const applicantResponse = await postJazzHr(apiKey, 'applicants', {

@@ -46,6 +46,13 @@ describe('JazzHR job normalization', () => {
     }
 
     expect(normalizeJazzHrJob({ ...base, status: 'Closed' })).toBeNull()
+    expect(
+      normalizeJazzHrJob({
+        ...base,
+        status: 'Closed',
+        title: 'Loan Associate (Pooling)',
+      }),
+    ).toBeNull()
     expect(normalizeJazzHrJob({ ...base, status: 'Filled' })).toBeNull()
     expect(normalizeJazzHrJob({ ...base, status: 'Cancelled' })).toBeNull()
     expect(normalizeJazzHrJob({ ...base, status: 'Drafting' })).toBeNull()
@@ -56,6 +63,21 @@ describe('JazzHR job normalization', () => {
     expect(normalizeJazzHrJob({ ...base, private: 'Yes' })).toBeNull()
     expect(normalizeJazzHrJob({ ...base, confidential: true })).toBeNull()
     expect(normalizeJazzHrJob({ ...base, board_code: '' })).toBeNull()
+  })
+
+  it('rejects internal test/placeholder job titles while keeping real QA roles', () => {
+    const base = {
+      board_code: 'Test1234',
+      id: 'job_test',
+      status: 'Open',
+    }
+
+    expect(normalizeJazzHrJob({ ...base, title: 'Testing' })).toBeNull()
+    expect(normalizeJazzHrJob({ ...base, title: 'Test' })).toBeNull()
+    expect(normalizeJazzHrJob({ ...base, title: 'Test Job' })).toBeNull()
+    expect(
+      normalizeJazzHrJob({ ...base, title: 'QA Testing Specialist' }),
+    ).not.toBeNull()
   })
 
   it('converts JazzHR HTML to inert readable text', () => {
@@ -126,7 +148,18 @@ describe('JazzHR job normalization', () => {
       '$1,200–$1,800 / month · Depending on experience',
     )
 
-    // Pattern 3: Awkward "Benefits: • Service Fee: Php 35,000"
+    // Pattern 3: AUD onshore salary range
+    const compAud = parseCareerCompensation('Salary: AUD 90,000 - 110,000')
+    expect(compAud).toEqual({
+      currency: 'AUD',
+      minimum: 90000,
+      maximum: 110000,
+      payPeriod: 'year',
+      variesByExperience: false,
+    })
+    expect(formatCareerCompensation(compAud!)).toBe('A$90,000–A$110,000 / year')
+
+    // Pattern 4: Awkward "Benefits: • Service Fee: Php 35,000"
     const comp3 = parseCareerCompensation('Benefits: • Service Fee: Php 35,000')
     expect(comp3?.currency).toBe('PHP')
     expect(comp3?.minimum).toBe(35000)
@@ -149,5 +182,21 @@ describe('JazzHR job normalization', () => {
     expect(job?.descriptionText).not.toContain('Benefits: • Service Fee:')
     expect(job?.descriptionText).toContain('Compensation:')
     expect(job?.compensation?.minimum).toBe(40000)
+  })
+
+  it('normalizes "0" questionnaire IDs to null and avoids duplicate country suffixes', () => {
+    const job = normalizeJazzHrJob({
+      board_code: 'lQUff88Io5',
+      city: 'Sydney, Australia',
+      country_id: 'Australia',
+      id: 'job_appt',
+      questionnaire: '0',
+      status: 'Open',
+      title: 'Appointment Setter – Warm Leads | $120K–$160K OTE',
+    })
+
+    expect(job).not.toBeNull()
+    expect(job?.questionnaireId).toBeNull()
+    expect(job?.location).toBe('Sydney, Australia')
   })
 })

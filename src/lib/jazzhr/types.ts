@@ -28,8 +28,10 @@ export type CareerQuestion = {
   order: number
 }
 
+export type JazzHrAccountKey = 'offshore' | 'onshore'
+
 export type CareerCompensation = {
-  currency: 'PHP' | 'USD'
+  currency: 'PHP' | 'USD' | 'AUD'
   maximum: number | null
   minimum: number
   payPeriod: 'hour' | 'day' | 'week' | 'month' | 'year' | null
@@ -37,6 +39,7 @@ export type CareerCompensation = {
 }
 
 export type CareerJob = {
+  account?: JazzHrAccountKey
   applyPath: string
   boardCode: string
   city: string | null

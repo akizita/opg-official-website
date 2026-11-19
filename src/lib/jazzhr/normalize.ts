@@ -5,6 +5,7 @@ import type {
   CareerQuestion,
   CareerQuestionFormat,
   CareerWorkArrangement,
+  JazzHrAccountKey,
 } from '@/lib/jazzhr/types'
 
 type JazzHrRecord = Record<string, unknown>
@@ -179,13 +180,28 @@ function normalizeDate(value: unknown): string | null {
 }
 
 function uniqueLocationParts(parts: string[]): string[] {
+  const result: string[] = []
   const seen = new Set<string>()
-  return parts.filter((part) => {
+  for (const part of parts) {
     const normalized = part.toLowerCase()
-    if (!part || seen.has(normalized) || /^\d+$/.test(part)) return false
+    if (!part || seen.has(normalized) || /^\d+$/.test(part)) continue
+    const escaped = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const alreadyEmbedded = result.some((existing) =>
+      new RegExp(`\\b${escaped}\\b`, 'i').test(existing),
+    )
+    if (alreadyEmbedded) continue
     seen.add(normalized)
-    return true
-  })
+    result.push(part)
+  }
+  return result
+}
+
+function normalizeQuestionnaireId(raw: JazzHrRecord): string | null {
+  const id = text(
+    raw.questionnaire || raw.custom_questions_id || raw.questionnaire_id,
+  )
+  if (!id || id === '0' || /^(?:none|null|false)$/i.test(id)) return null
+  return id
 }
 
 function compensationSource(description: string): string | null {
@@ -218,9 +234,11 @@ export function parseCareerCompensation(
 
   const currency = /(?:₱|\bphp\b)/i.test(source)
     ? 'PHP'
-    : /(?:\$|\busd\b)/i.test(source)
-      ? 'USD'
-      : null
+    : /(?:\baud\b|au\$|\ba\$)/i.test(source)
+      ? 'AUD'
+      : /(?:\$|\busd\b)/i.test(source)
+        ? 'USD'
+        : null
 
   // Support numbers with commas, decimals, or k/K multiplier
   const amounts = [...source.matchAll(/(\d[\d,]*(?:\.\d+)?)\s*(k\b)?/gi)]
@@ -240,7 +258,9 @@ export function parseCareerCompensation(
       ? 'month'
       : currency === 'USD' && amounts[0] >= 800 && amounts[0] <= 25000
         ? 'month'
-        : null)
+        : currency === 'AUD' && amounts[0] >= 35000
+          ? 'year'
+          : null)
 
   return {
     currency,
@@ -254,7 +274,12 @@ export function parseCareerCompensation(
 export function formatCareerCompensation(
   compensation: CareerCompensation,
 ): string {
-  const symbol = compensation.currency === 'PHP' ? '₱' : '$'
+  const symbol =
+    compensation.currency === 'PHP'
+      ? '₱'
+      : compensation.currency === 'AUD'
+        ? 'A$'
+        : '$'
   const formatAmount = (val: number) =>
     `${symbol}${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(val)}`
 
@@ -306,26 +331,28 @@ function cleanDescriptionContent(rawText: string): string {
     .trim()
 }
 
+const PLACEHOLDER_JOB_TITLE_PATTERN =
+  /^(?:test|testing|test\s+(?:job|role|position|opening|posting)|sample\s+(?:job|role|posting)|dummy\s+(?:job|role))$/i
+
 export function normalizeJazzHrJob(
   raw: JazzHrRecord,
-  options?: { allowPooling?: boolean },
+  options?: { account?: JazzHrAccountKey },
 ): CareerJob | null {
   const id = text(raw.id || raw.job_id)
   const boardCode = text(raw.board_code || raw.boardCode)
   const title = text(raw.title)
   const status = text(raw.status).toLowerCase()
 
-  const isPooling =
-    options?.allowPooling || title.toLowerCase().includes('(pooling)')
-
-  // Must have valid identifiers and status MUST be explicitly 'open' (or active talent pooling role)
+  // Must have valid identifiers, must not be an internal test/placeholder posting,
+  // and status MUST be explicitly 'open'.
   if (!id || !boardCode || !title) return null
-  if (status !== 'open' && !isPooling) return null
+  if (PLACEHOLDER_JOB_TITLE_PATTERN.test(title)) return null
+  if (status !== 'open') return null
   if (flag(raw.private) || flag(raw.confidential)) return null
-  if (flag(raw.closed) && !isPooling) return null
+  if (flag(raw.closed)) return null
 
-  // If a close_date is specified and already passed, consider closed unless pooling role
-  if (raw.close_date && !isPooling) {
+  // If a close_date is specified and already passed, consider closed
+  if (raw.close_date) {
     const closeTime = Date.parse(String(raw.close_date))
     if (!Number.isNaN(closeTime) && closeTime <= Date.now()) {
       return null
@@ -359,6 +386,7 @@ export function normalizeJazzHrJob(
   const slug = `${boardCode}-${titleSlug}`
 
   return {
+    ...(options?.account ? { account: options.account } : {}),
     applyPath: `/careers/${slug}/apply`,
     boardCode,
     city,
@@ -372,10 +400,7 @@ export function normalizeJazzHrJob(
     location,
     minimumExperience: text(raw.minimum_experience) || null,
     publishedAt: normalizeDate(raw.original_open_date || raw.open_date),
-    questionnaireId:
-      text(
-        raw.questionnaire || raw.custom_questions_id || raw.questionnaire_id,
-      ) || null,
+    questionnaireId: normalizeQuestionnaireId(raw),
     slug,
     state,
     summary: summarize(descriptionText),
