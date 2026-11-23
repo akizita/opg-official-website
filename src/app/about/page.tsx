@@ -6,16 +6,14 @@ import { AboutCtaCard } from '@/components/ui/about-cta-card'
 import { AboutHeroSection } from '@/components/ui/about-hero-section'
 import { AboutServicesSection } from '@/components/ui/about-services-section'
 import { AboutTeamShowcase } from '@/components/ui/about-team-showcase'
+import { AboutWhyWorkWithUsSection } from '@/components/ui/about-why-work-with-us-section'
 import { ButtonLink } from '@/components/ui/button-link'
 import { Card } from '@/components/ui/card'
 import { DotField } from '@/components/ui/dot-field'
-import { EmptyState } from '@/components/ui/empty-state'
 import { MissionVisionSection } from '@/components/ui/mission-vision-section'
 import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { ResponsiveImage } from '@/components/ui/responsive-image'
 import { SpotlightCard } from '@/components/ui/spotlight-card'
-import { getAdminSession } from '@/lib/auth/admin-session'
-import { canViewContent } from '@/lib/auth/permissions'
 import type { PageDocument } from '@/lib/content/page-documents'
 import { getAboutPageCopy } from '@/lib/content/page-copy'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
@@ -23,6 +21,8 @@ import { ABOUT_PAGE_DEFAULTS } from '@/lib/content/site-page-defaults'
 import { getActiveDepartmentsWithMembers } from '@/lib/content/team'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 import { createClient } from '@/lib/supabase/server'
+
+import styles from './about.module.css'
 
 export const revalidate = 3600 // 1 hour ISR
 
@@ -85,7 +85,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AboutPage() {
   const supabase = await createClient()
-  const session = await getAdminSession()
 
   const [{ data: doc }, { data: legacyMission }, departments] =
     await Promise.all([
@@ -93,6 +92,7 @@ export default async function AboutPage() {
         .from('page_documents')
         .select('*')
         .eq('slug', 'about')
+        .eq('status', 'published')
         .maybeSingle<PageDocument>(),
       supabase
         .from('page_documents')
@@ -103,47 +103,88 @@ export default async function AboutPage() {
       getActiveDepartmentsWithMembers(),
     ])
 
-  const hasStaffAccess = session
-    ? canViewContent(session.profile.roleKey)
-    : false
-
-  // If doc exists and is draft, require staff access
-  if (doc && doc.status !== 'published' && !hasStaffAccess) {
-    return (
-      <main className="container status-page">
-        <EmptyState
-          action={<ButtonLink href="/">Return to Homepage</ButtonLink>}
-          description="The official About Us statement is being updated and will be published shortly."
-          title="About OPG Coming Soon"
-        />
-      </main>
-    )
-  }
-
-  const isDraft = doc && doc.status !== 'published'
-
   const heroTitle = doc?.title || ABOUT_PAGE_DEFAULTS.title
   const heroSummary = doc?.summary || ABOUT_PAGE_DEFAULTS.summary
-  const copy = getAboutPageCopy(doc?.content, legacyMission)
+  const defaults = getAboutPageCopy(null, null)
+  const rawCopy = getAboutPageCopy(doc?.content, legacyMission)
+  const hasLegacyServicesCopy =
+    rawCopy.service1Title === 'Candidate Sourcing' ||
+    rawCopy.servicesTitleAccent === 'Talent Acquisition' ||
+    rawCopy.processTitle.includes('first search to long-term success')
+  const hasLegacyValuesCopy =
+    rawCopy.value1Name === 'Integrity' &&
+    rawCopy.value1Description.includes('honesty, openness')
+  const copy: Record<string, string> = {
+    ...rawCopy,
+    whoEyebrow:
+      rawCopy.whoEyebrow === 'Who We Are' ? 'About Us' : rawCopy.whoEyebrow,
+    whoTitle:
+      rawCopy.whoTitle === 'Connecting Businesses with the Right People'
+        ? 'Connecting Growing Businesses with the Right People'
+        : rawCopy.whoTitle,
+    ...(hasLegacyServicesCopy
+      ? {
+          servicesTitlePrefix: defaults.servicesTitlePrefix,
+          servicesTitleAccent: defaults.servicesTitleAccent,
+          servicesLead: defaults.servicesLead,
+          processEyebrow: defaults.processEyebrow,
+          processTitle: defaults.processTitle,
+          processLead: defaults.processLead,
+          service1Label: defaults.service1Label,
+          service1Tag: defaults.service1Tag,
+          service1Title: defaults.service1Title,
+          service1Summary: defaults.service1Summary,
+          service1Bullets: defaults.service1Bullets,
+          service2Label: defaults.service2Label,
+          service2Tag: defaults.service2Tag,
+          service2Title: defaults.service2Title,
+          service2Summary: defaults.service2Summary,
+          service2Bullets: defaults.service2Bullets,
+          service3Label: defaults.service3Label,
+          service3Tag: defaults.service3Tag,
+          service3Title: defaults.service3Title,
+          service3Summary: defaults.service3Summary,
+          service3Bullets: defaults.service3Bullets,
+        }
+      : {}),
+    ...(hasLegacyValuesCopy
+      ? {
+          value1Name: defaults.value1Name,
+          value1Description: defaults.value1Description,
+          value2Name: defaults.value2Name,
+          value2Description: defaults.value2Description,
+          value3Name: defaults.value3Name,
+          value3Description: defaults.value3Description,
+          value4Name: defaults.value4Name,
+          value4Description: defaults.value4Description,
+          value5Name: defaults.value5Name,
+          value5Description: defaults.value5Description,
+        }
+      : {}),
+  }
   const story = (Array.isArray(doc?.content) ? doc.content : []).flatMap(
     (block) =>
       block.type === 'paragraph' && !block.key ? [block.content] : [],
   )
-  const storyParagraphs = story.length
-    ? story
-    : ABOUT_PAGE_DEFAULTS.body.split(/\n\n+/)
+  const hasLegacyStory =
+    story.length > 0 &&
+    (story[0].includes('connect businesses with the right people') ||
+      story.some((p) =>
+        p.includes('More than filling roles, we build lasting partnerships'),
+      ))
+  const storyParagraphs =
+    story.length > 0 && !hasLegacyStory
+      ? story
+      : ABOUT_PAGE_DEFAULTS.body.split(/\n\n+/)
 
   return (
     <main className="about-page">
       <PageVisualRuntime page="about" config={getPageVisualConfig(doc?.content)} />
       {/* 1. Hero Section - Bento Showcase */}
       <AboutHeroSection
-        doc={doc}
         copy={copy}
         heroTitle={heroTitle}
         heroSummary={heroSummary}
-        isDraft={Boolean(isDraft)}
-        hasStaffAccess={Boolean(hasStaffAccess)}
       />
 
       {/* Unified Showcase Band */}
@@ -155,11 +196,14 @@ export default async function AboutPage() {
           aria-labelledby="about-who-heading"
         >
           <div className="container">
-            <div className="about-who-section__header">
+            <div className={`about-who-section__header ${styles.whoHeader}`}>
               <div className="about-who-section__badge">
                 <span className="eyebrow">{copy.whoEyebrow}</span>
               </div>
-              <h2 id="about-who-heading" className="about-who-section__title">
+              <h2
+                id="about-who-heading"
+                className={`about-who-section__title ${styles.whoTitle}`}
+              >
                 {copy.whoTitle}
               </h2>
             </div>
@@ -183,9 +227,22 @@ export default async function AboutPage() {
               {/* Right: Narrative & Highlights */}
               <div className="about-who-section__content">
                 <p className="about-who-section__text">{storyParagraphs[0]}</p>
-                <p className="about-who-section__text about-who-section__text--highlight">
-                  {storyParagraphs[1]}
-                </p>
+                {(() => {
+                  const secondParagraph = storyParagraphs[1] || ''
+                  const sentenceMatch = /^([^.!?]+[.!?])\s+(.*)$/.exec(
+                    secondParagraph,
+                  )
+                  return sentenceMatch ? (
+                    <p className="about-who-section__text">
+                      <span className={styles.leadAccent}>
+                        {sentenceMatch[1]}
+                      </span>{' '}
+                      {sentenceMatch[2]}
+                    </p>
+                  ) : (
+                    <p className="about-who-section__text">{secondParagraph}</p>
+                  )
+                })()}
                 {storyParagraphs.slice(2).map((paragraph, index) => (
                   <p className="about-who-section__text" key={index}>
                     {paragraph}
@@ -279,6 +336,9 @@ export default async function AboutPage() {
             </div>
           </div>
         </section>
+
+        {/* 2.2 Why Work With Us Section */}
+        <AboutWhyWorkWithUsSection copy={copy} />
       </div>
 
       {/* 2.5 What We Offer (Talent Acquisition Services) Section */}

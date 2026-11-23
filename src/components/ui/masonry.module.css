@@ -15,7 +15,7 @@
   display: flex;
   gap: 0.75rem;
   width: 100%;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .masonryColumn {
@@ -26,24 +26,32 @@
   min-width: 0;
 }
 
+.masonryColumnStagger {
+  padding-top: 0.85rem;
+}
+
+.masonryColumnCentered {
+  justify-content: center;
+}
+
 /* --------------------------------------------------------------------------
    Masonry Item Card (Clean & Compact Photo Frame)
    -------------------------------------------------------------------------- */
 .masonryCard {
   position: relative;
   width: 100%;
-  border-radius: 0.85rem;
+  border-radius: 1rem;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.94);
   box-shadow:
-    0 4px 14px -3px rgba(217, 130, 0, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.03),
+    0 8px 20px -6px rgba(180, 83, 9, 0.14),
+    0 2px 6px rgba(15, 23, 42, 0.04),
     inset 0 1.5px 2px 0 rgba(255, 255, 255, 1);
   cursor: pointer;
-  outline: 1px solid rgba(242, 159, 4, 0.15);
+  outline: 1px solid rgba(242, 159, 4, 0.16);
   outline-offset: -1px;
   transition:
     transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
@@ -57,8 +65,8 @@
   border-color: rgba(242, 159, 4, 0.65);
   outline-color: rgba(242, 159, 4, 0.4);
   box-shadow:
-    0 12px 24px -6px rgba(217, 130, 0, 0.22),
-    0 0 14px rgba(242, 159, 4, 0.2),
+    0 14px 26px -6px rgba(217, 130, 0, 0.22),
+    0 0 14px rgba(242, 159, 4, 0.18),
     inset 0 1.5px 2px 0 rgba(255, 255, 255, 1);
 }
 
@@ -71,7 +79,7 @@
 .imageWrapper {
   position: relative;
   width: 100%;
-  background: #fdf6e7;
+  background: linear-gradient(180deg, #fffdf9 0%, #fdf5e4 100%);
   overflow: hidden;
 }
 
@@ -79,6 +87,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 12%;
   display: block;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -115,14 +124,24 @@
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(15, 23, 42, 0.35) 40%,
-    rgba(15, 23, 42, 0.85) 100%
+    rgba(15, 23, 42, 0.45) 45%,
+    rgba(15, 23, 42, 0.88) 100%
   );
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   z-index: 2;
   pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.cardOverlayHover {
+  opacity: 0;
+}
+
+.masonryCard:hover .cardOverlayHover,
+.masonryCard:focus-visible .cardOverlayHover {
+  opacity: 1;
 }
 
 .cardName {
@@ -264,12 +283,13 @@
 .lightboxImageWrap {
   position: relative;
   width: 100%;
-  height: 20rem;
-  background: #f8fafc;
+  height: 22rem;
+  background: #fffaf0;
 }
 
 .lightboxImage {
   object-fit: cover;
+  object-position: center 12%;
 }
 
 .lightboxContent {

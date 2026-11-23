@@ -318,7 +318,39 @@ export default async function ClientsPage({
   const supabase = await createClient()
   const doc = await getVisiblePageDocument(supabase, 'clients', opgPreview === '1')
   const editorial = extractClientPageContent(doc?.content)
-  const copy = getPageCopy(doc?.content, CLIENTS_COPY_SECTIONS)
+  const defaults = getPageCopy(null, CLIENTS_COPY_SECTIONS)
+  const rawCopy = getPageCopy(doc?.content, CLIENTS_COPY_SECTIONS)
+  const hasLegacyBlogCopy =
+    editorial.editorialTitle.includes('How OPG Handles Client Partnerships') ||
+    rawCopy.articleIntro.includes('In the modern digital landscape') ||
+    rawCopy.articleSection1Title.includes('The Power of OPG:')
+
+  const copy = hasLegacyBlogCopy
+    ? {
+        ...rawCopy,
+        articleReadTime: defaults.articleReadTime,
+        articleIntro: defaults.articleIntro,
+        articleSection1Title: defaults.articleSection1Title,
+        articleSection1Body: defaults.articleSection1Body,
+        articleSection1Items: defaults.articleSection1Items,
+        articleSection2Title: defaults.articleSection2Title,
+        articleSection2Body: defaults.articleSection2Body,
+        articleSection2Items: defaults.articleSection2Items,
+        articleClosingTitle: defaults.articleClosingTitle,
+        articleClosingBody: defaults.articleClosingBody,
+      }
+    : rawCopy
+
+  const resolvedEditorialTitle = hasLegacyBlogCopy
+    ? CLIENT_PAGE_DEFAULTS.editorialTitle
+    : editorial.editorialTitle
+  const resolvedEditorialLead = hasLegacyBlogCopy
+    ? CLIENT_PAGE_DEFAULTS.editorialLead
+    : editorial.editorialLead
+  const articleIntroParagraphs = copy.articleIntro
+    .split(/\r?\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
   const featuredTestimonials = clientTestimonials.map((testimonial, index) => {
     const key = `testimonial${index + 1}`
     return {
@@ -473,10 +505,10 @@ export default async function ClientsPage({
               </div>
 
               <h2 id="clients-blog-heading" className="clients-blog-title">
-                {editorial.editorialTitle}
+                {resolvedEditorialTitle}
               </h2>
 
-              <p className="clients-blog-lead">{editorial.editorialLead}</p>
+              <p className="clients-blog-lead">{resolvedEditorialLead}</p>
             </header>
 
             {/* Widescreen Hero Featured Image Showcase */}
@@ -604,9 +636,18 @@ export default async function ClientsPage({
 
               {/* Right Column: Editorial Article Body */}
               <div className="clients-blog-content">
-                <p className="clients-blog-paragraph clients-blog-paragraph--lead">
-                  {copy.articleIntro}
-                </p>
+                {articleIntroParagraphs.map((paragraph, index) => (
+                  <p
+                    className={
+                      index === 0
+                        ? 'clients-blog-paragraph clients-blog-paragraph--lead'
+                        : 'clients-blog-paragraph'
+                    }
+                    key={index}
+                  >
+                    {paragraph}
+                  </p>
+                ))}
 
                 <h3 className="clients-blog-h3">{copy.articleSection1Title}</h3>
                 <p className="clients-blog-paragraph">
@@ -646,6 +687,11 @@ export default async function ClientsPage({
                       <ArticleListItem key={index} text={item} />
                     ))}
                 </ol>
+
+                <h3 className="clients-blog-h3">{copy.articleClosingTitle}</h3>
+                <p className="clients-blog-paragraph">
+                  {copy.articleClosingBody}
+                </p>
               </div>
             </div>
           </div>

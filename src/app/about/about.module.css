@@ -1,0 +1,15 @@
+.whoHeader.whoHeader {
+  max-width: 52rem;
+}
+
+.whoTitle.whoTitle {
+  max-width: 44rem;
+  font-size: clamp(1.75rem, 2.75vw, 2.45rem);
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+.leadAccent {
+  font-weight: 700;
+  color: #9a5b00;
+}

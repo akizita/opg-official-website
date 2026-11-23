@@ -20,6 +20,7 @@ const pages = [
     sections: ABOUT_COPY_SECTIONS,
     files: [
       'src/app/about/page.tsx',
+      'src/components/ui/about-why-work-with-us-section.tsx',
       'src/components/ui/about-services-section.tsx',
       'src/components/ui/mission-vision-section.tsx',
       'src/components/ui/about-team-showcase.tsx',

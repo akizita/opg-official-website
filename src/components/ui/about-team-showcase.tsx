@@ -12,6 +12,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 
+import { OPG_TEAM_MEMBERS } from '@/lib/content/team-media'
+
+import styles from './about-team-showcase.module.css'
+
 export interface TeamMemberData {
   id: string
   name: string
@@ -19,96 +23,24 @@ export interface TeamMemberData {
   department: string
   headline: string
   bio: string
-  experience: string
-  location: string
-  specialty: string
   image: string
   linkedin?: string
   alt?: string
 }
 
-export const TEAM_MEMBERS: TeamMemberData[] = [
-  {
-    id: 'hannah-reyes',
-    name: 'Hannah Reyes',
-    position: 'Director of Global Talent Acquisition',
-    department: 'Talent Sourcing & Evaluation',
-    headline:
-      'Curating specialized offshore shortlists matched precisely to client tech stack and culture in 72 hours.',
-    bio: 'With over a decade of technical recruitment leadership, Hannah steers OPG’s 45,000+ candidate network, orchestrating multi-stage technical evaluations and cultural alignment across three continents.',
-    experience: '10+ Years Experience',
-    location: 'Manila Hub',
-    specialty: 'Technical Sourcing & Pipeline Strategy',
-    image:
-      'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/general/hannah-1789806689447.png',
-    linkedin: 'https://www.linkedin.com/company/outsourced-pro-global',
-    alt: 'Hannah Reyes, Director of Global Talent Acquisition',
-  },
-  {
-    id: 'marcus-sterling',
-    name: 'Marcus Sterling',
-    position: 'VP of Offshore Operations & Delivery',
-    department: 'Global Operations & Scaling',
-    headline:
-      'Engineering scalable offshore pods that integrate smoothly into client sprint cadences.',
-    bio: 'Marcus specializes in cross-border operational infrastructure, turnkey equipment logistics, and synchronous workflow alignment for tier-one US and Australian technology enterprises.',
-    experience: '12+ Years Experience',
-    location: 'Sydney / Cebu Hub',
-    specialty: 'Turnkey Logistics & Pod Integration',
-    image:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
-    linkedin: 'https://www.linkedin.com/company/outsourced-pro-global',
-    alt: 'Marcus Sterling, VP of Offshore Operations',
-  },
-  {
-    id: 'elena-vance',
-    name: 'Dr. Elena Vance',
-    position: 'Chief Technology Officer & Vetting Lead',
-    department: 'Technical Rigor & Code Quality',
-    headline:
-      'Conducting rigorous architecture reviews, live coding, and technical problem-solving assessments.',
-    bio: 'Former principal systems architect, Elena designs OPG’s domain-specific technical evaluation tracks, ensuring senior engineers and data specialists meet strict top 1.5% acceptance thresholds.',
-    experience: '14+ Years Experience',
-    location: 'Singapore / Manila',
-    specialty: 'Systems Architecture & Live Vetting',
-    image:
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
-    linkedin: 'https://www.linkedin.com/company/outsourced-pro-global',
-    alt: 'Dr. Elena Vance, Chief Technology Officer',
-  },
-  {
-    id: 'julian-alvarez',
-    name: 'Julian Alvarez',
-    position: 'Head of Client Success & Retention',
-    department: 'Client Partnerships & Health',
-    headline:
-      'Championing long-term retention, proactive feedback loops, and team engagement.',
-    bio: 'Julian manages OPG’s client success partnerships, sustaining an industry-leading 98% client retention rate through proactive talent check-ins, structured upskilling, and long-term capacity planning.',
-    experience: '9+ Years Experience',
-    location: 'London / Global Hub',
-    specialty: 'Pod Health & Retention Governance',
-    image:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
-    linkedin: 'https://www.linkedin.com/company/outsourced-pro-global',
-    alt: 'Julian Alvarez, Head of Client Success',
-  },
-  {
-    id: 'sophia-chen',
-    name: 'Sophia Chen',
-    position: 'Head of Legal & Global Compliance',
-    department: 'Governance & International Law',
-    headline:
-      'Navigating multi-jurisdictional labor frameworks, IP security, and bulletproof benefits governance.',
-    bio: 'Sophia brings deep legal expertise in international employment law, establishing localized compliant contracts, airtight IP protection agreements, and frictionless payroll operations across all offshore centers.',
-    experience: '11+ Years Experience',
-    location: 'Hong Kong / Clark Hub',
-    specialty: 'Cross-Border Employment Law & IP Security',
-    image:
-      'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=80',
-    linkedin: 'https://www.linkedin.com/company/outsourced-pro-global',
-    alt: 'Sophia Chen, Head of Legal & Global Compliance',
-  },
-]
+export const TEAM_MEMBERS: TeamMemberData[] = OPG_TEAM_MEMBERS.map(
+  (member) => ({
+    id: member.id,
+    name: member.name,
+    position: member.role,
+    department: member.department,
+    headline: member.headline,
+    bio: member.bio,
+    image: member.image,
+    linkedin: member.linkedin,
+    alt: member.alt,
+  }),
+)
 
 // Warm amber placeholder blur data URL
 const BLUR_DATA_URL =
@@ -129,19 +61,7 @@ export function AboutTeamShowcase({
   const [isPaused, setIsPaused] = useState(false)
   const shouldReduceMotion = useReducedMotion()
 
-  const members = TEAM_MEMBERS.map((member, index) => {
-    const key = `teamMember${index + 1}`
-    return {
-      ...member,
-      name: copy[`${key}Name`],
-      position: copy[`${key}Position`],
-      department: copy[`${key}Department`],
-      bio: copy[`${key}Bio`],
-      experience: copy[`${key}Experience`],
-      location: copy[`${key}Location`],
-      specialty: copy[`${key}Specialty`],
-    }
-  })
+  const members = TEAM_MEMBERS
   const count = members.length
   const activeMember = members[activeIndex] || members[0]
 
@@ -195,7 +115,6 @@ export function AboutTeamShowcase({
     return () => clearInterval(timer)
   }, [autoplay, autoplayDelay, isPaused, handleNext])
 
-  // Spring physics requested: stiffness 260, damping 26
   const springTransition = shouldReduceMotion
     ? { duration: 0.01 }
     : { type: 'spring' as const, stiffness: 260, damping: 26 }
@@ -203,7 +122,7 @@ export function AboutTeamShowcase({
   return (
     <section
       aria-labelledby="about-team-showcase-title"
-      className="about-team-showcase"
+      className={`about-team-showcase ${styles.showcase}`}
       id="leadership-team"
       onBlur={() => setIsPaused(false)}
       onFocus={() => setIsPaused(true)}
@@ -212,9 +131,11 @@ export function AboutTeamShowcase({
       onMouseLeave={() => setIsPaused(false)}
       tabIndex={0}
       role="region"
-      aria-label="Our People Leadership Showcase"
+      aria-label="Our People Team Showcase"
     >
-      <div className="container about-team-showcase__container">
+      <div
+        className={`container about-team-showcase__container ${styles.container}`}
+      >
         {/* Ambient Yellow Aurora Glow Patches */}
         <div
           aria-hidden="true"
@@ -226,21 +147,24 @@ export function AboutTeamShowcase({
         />
 
         {/* Section Header */}
-        <header className="about-team-header">
+        <header className={`about-team-header ${styles.header}`}>
           <div className="about-team-header__content">
             <div className="about-team-badge" role="text">
               <span aria-hidden="true" className="about-team-badge__dot" />
               <span>{copy.teamEyebrow}</span>
             </div>
 
-            <h2 className="about-team-title" id="about-team-showcase-title">
+            <h2
+              className={`about-team-title ${styles.title}`}
+              id="about-team-showcase-title"
+            >
               {copy.teamTitlePrefix}{' '}
               <span className="about-team-title__accent">
                 {copy.teamTitleAccent}
               </span>
             </h2>
 
-            <p className="about-team-lead">{copy.teamLead}</p>
+            <p className={`about-team-lead ${styles.lead}`}>{copy.teamLead}</p>
           </div>
 
           <div className="about-team-header__action">
@@ -269,14 +193,19 @@ export function AboutTeamShowcase({
           </div>
         </header>
 
-        <div className="about-team-showcase__grid">
+        <div className={`about-team-showcase__grid ${styles.grid}`}>
           {/* Left Column: Member Details Glass Card */}
           <div className="about-team-showcase__content-col">
-            <div aria-live="polite" className="about-team-card">
-              <div className="about-team-card__body">
+            <div
+              aria-live="polite"
+              className={`about-team-card ${styles.card}`}
+            >
+              <div className={`about-team-card__body ${styles.cardBody}`}>
                 {/* Card Meta Top: Pill + Animated Zero-Padded Live Counter */}
                 <div className="about-team-card__meta">
-                  <span className="about-team-card__pill">Leadership Pod</span>
+                  <span className="about-team-card__pill">
+                    {activeMember.department}
+                  </span>
 
                   {/* Tabular numbers live counter with smooth roll */}
                   <div className="about-team-card__counter">
@@ -289,7 +218,9 @@ export function AboutTeamShowcase({
                           }
                           animate={{ y: 0, opacity: 1 }}
                           exit={
-                            shouldReduceMotion ? undefined : { y: 14, opacity: 0 }
+                            shouldReduceMotion
+                              ? undefined
+                              : { y: 14, opacity: 0 }
                           }
                           transition={{ duration: 0.2 }}
                           className="about-team-card__counter-curr"
@@ -305,20 +236,16 @@ export function AboutTeamShowcase({
                   </div>
                 </div>
 
-                {/* Group Tagline Header */}
-                <h3 className="about-team-card__group-title">
-                  Dedicated Specialist Leadership
-                </h3>
-
-                {/* Subtle Warm Divider */}
-                <div aria-hidden="true" className="about-team-card__divider" />
-
                 {/* Person Info: Crossfade with AnimatePresence */}
-                <div className="about-team-card__person-wrap">
+                <div
+                  className={`about-team-card__person-wrap ${styles.personWrap}`}
+                >
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeMember.id}
-                      initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+                      initial={
+                        shouldReduceMotion ? false : { opacity: 0, y: 6 }
+                      }
                       animate={{ opacity: 1, y: 0 }}
                       exit={
                         shouldReduceMotion ? undefined : { opacity: 0, y: -6 }
@@ -327,33 +254,22 @@ export function AboutTeamShowcase({
                       className="about-team-card__person"
                     >
                       <div className="about-team-card__name-row">
-                        <h4 className="about-team-card__name">
+                        <h4
+                          className={`about-team-card__name ${styles.cardName}`}
+                        >
                           {activeMember.name}
                         </h4>
                       </div>
 
                       {/* Role text */}
-                      <p className="about-team-card__role">
+                      <p className={`about-team-card__role ${styles.cardRole}`}>
                         {activeMember.position}
                       </p>
 
                       {/* Bio text */}
-                      <p className="about-team-card__bio">{activeMember.bio}</p>
-
-                      <dl className="about-team-card__credentials">
-                        <div>
-                          <dt>Experience</dt>
-                          <dd>{activeMember.experience}</dd>
-                        </div>
-                        <div>
-                          <dt>Operating hub</dt>
-                          <dd>{activeMember.location}</dd>
-                        </div>
-                        <div>
-                          <dt>Specialization</dt>
-                          <dd>{activeMember.specialty}</dd>
-                        </div>
-                      </dl>
+                      <p className={`about-team-card__bio ${styles.cardBio}`}>
+                        {activeMember.bio}
+                      </p>
 
                       {/* LinkedIn button */}
                       <div className="about-team-card__actions">
@@ -404,32 +320,13 @@ export function AboutTeamShowcase({
                 </div>
               </div>
 
-              {/* Carousel Controls: Left-aligned Progress Indicator Dots */}
-              <div className="about-team-card__controls">
-                <button
-                  type="button"
-                  className="about-team-card__nav-btn"
-                  aria-label="View previous leadership profile"
-                  onClick={handlePrev}
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="m15 18-6-6 6-6" />
-                  </svg>
-                </button>
-
+              {/* Carousel Controls */}
+              <div
+                className={`about-team-card__controls ${styles.cardControls}`}
+              >
                 {/* Progress Dots with Active Pill */}
                 <div
-                  className="about-team-card__dots"
+                  className={`about-team-card__dots ${styles.cardDots}`}
                   role="tablist"
                   aria-label="Team member slides"
                 >
@@ -443,58 +340,39 @@ export function AboutTeamShowcase({
                         aria-selected={isActive}
                         aria-label={`Go to slide ${idx + 1}: ${member.name}`}
                         onClick={() => setActiveIndex(idx)}
-                        className={`about-team-card__dot ${
-                          isActive ? 'about-team-card__dot--active' : ''
+                        className={`about-team-card__dot ${styles.cardDot} ${
+                          isActive
+                            ? `about-team-card__dot--active ${styles.cardDotActive}`
+                            : ''
                         }`}
                       />
                     )
                   })}
                 </div>
-
-                <button
-                  type="button"
-                  className="about-team-card__nav-btn"
-                  aria-label="View next leadership profile"
-                  onClick={handleNext}
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="m9 18 6-6-6-6" />
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
 
           {/* Right Column: Portrait Card Stack */}
           <div
-            className="about-team-showcase__portrait-col"
+            className={`about-team-showcase__portrait-col ${styles.portraitCol}`}
             onTouchEnd={handleTouchEnd}
             onTouchStart={handleTouchStart}
           >
-            {/* Card Stack Stage (aspect-[4/5] 380px) */}
-            <div className="about-team-stack-stage">
-              {/* Back Card 2 (Deepest): scale 0.90, rotate ~8.5deg, opacity 0.4, soft shadow */}
+            {/* Card Stack Stage */}
+            <div className={`about-team-stack-stage ${styles.stackStage}`}>
+              {/* Back Card 2 (Deepest) */}
               <motion.div
                 key={`back2-${backMember2.id}`}
-                className="about-team-card-back about-team-card-back--2"
+                className={`about-team-card-back about-team-card-back--2 ${styles.cardBack}`}
                 initial={
                   shouldReduceMotion ? false : { scale: 0.88, opacity: 0.3 }
                 }
                 animate={{
                   scale: 0.9,
-                  rotate: 8.5,
-                  x: 32,
-                  y: 16,
+                  rotate: 8,
+                  x: 22,
+                  y: 11,
                   opacity: 0.4,
                   zIndex: 10,
                 }}
@@ -504,25 +382,26 @@ export function AboutTeamShowcase({
                   src={backMember2.image}
                   alt=""
                   fill
-                  className="about-team-card-back__img"
-                  sizes="420px"
+                  unoptimized
+                  className={`about-team-card-back__img ${styles.cardImg}`}
+                  sizes="(max-width: 640px) 260px, 295px"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
                 />
               </motion.div>
 
-              {/* Back Card 1 (Mid): scale 0.95, rotate ~4.5deg, opacity 0.7, soft shadow */}
+              {/* Back Card 1 (Mid) */}
               <motion.div
                 key={`back1-${backMember1.id}`}
-                className="about-team-card-back about-team-card-back--1"
+                className={`about-team-card-back about-team-card-back--1 ${styles.cardBack}`}
                 initial={
                   shouldReduceMotion ? false : { scale: 0.92, opacity: 0.5 }
                 }
                 animate={{
                   scale: 0.95,
-                  rotate: 4.5,
-                  x: 16,
-                  y: 8,
+                  rotate: 4,
+                  x: 11,
+                  y: 5,
                   opacity: 0.7,
                   zIndex: 20,
                 }}
@@ -532,18 +411,19 @@ export function AboutTeamShowcase({
                   src={backMember1.image}
                   alt=""
                   fill
-                  className="about-team-card-back__img"
-                  sizes="420px"
+                  unoptimized
+                  className={`about-team-card-back__img ${styles.cardImg}`}
+                  sizes="(max-width: 640px) 260px, 295px"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
                 />
               </motion.div>
 
-              {/* Front Card (Active Portrait): aspect-[4/5] object-cover object-top, 1px border-amber, hover lift 2px */}
+              {/* Front Card (Active Portrait) */}
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
                   key={`front-${activeMember.id}`}
-                  className="about-team-card-front"
+                  className={`about-team-card-front ${styles.cardFront}`}
                   onClick={handleNext}
                   role="button"
                   tabIndex={0}
@@ -572,11 +452,12 @@ export function AboutTeamShowcase({
                 >
                   <Image
                     src={activeMember.image}
-                    alt={activeMember.name}
+                    alt={activeMember.alt || activeMember.name}
                     fill
                     priority
-                    className="about-team-card-front__img"
-                    sizes="(max-width: 640px) 90vw, (max-width: 1024px) 340px, 420px"
+                    unoptimized
+                    className={`about-team-card-front__img ${styles.cardImg}`}
+                    sizes="(max-width: 640px) 260px, 315px"
                     placeholder="blur"
                     blurDataURL={BLUR_DATA_URL}
                   />
@@ -584,14 +465,8 @@ export function AboutTeamShowcase({
                   {/* Subtle rim highlight */}
                   <div
                     aria-hidden="true"
-                    className="about-team-card-front__rim"
+                    className={`about-team-card-front__rim ${styles.cardRim}`}
                   />
-
-                  <div className="about-team-card-front__caption">
-                    <span>Leadership profile</span>
-                    <strong>{activeMember.name}</strong>
-                    <small>{activeMember.department}</small>
-                  </div>
                 </motion.div>
               </AnimatePresence>
             </div>

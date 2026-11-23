@@ -5,6 +5,8 @@ import Image from 'next/image'
 
 import { ButtonLink } from '@/components/ui/button-link'
 
+import tabStyles from './about-services-tabs.module.css'
+
 const HANNAH_IMAGE_URL =
   'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/general/hannah-1789806689447.png'
 
@@ -18,14 +20,14 @@ interface ServiceFeature {
 
 const SERVICE_FEATURES: ServiceFeature[] = [
   {
-    title: 'Candidate Sourcing',
-    tag: 'Global Discovery',
+    title: 'End-to-End Talent Acquisition',
+    tag: 'Full-Cycle Hiring',
     summary:
-      'We turn a broad global search into a focused shortlist built around your role, stack, and working culture.',
+      'We manage the full recruitment lifecycle—from market mapping and direct headhunting to structured technical assessments and onboarding—operating as a seamless extension of your team.',
     bullets: [
-      'Pre-vetted network of 45,000+ specialized offshore professionals',
-      'Curated candidate shortlists matched to your stack in 72 hours',
-      'Dedicated talent partner managing end-to-end recruitment',
+      'Market mapping and direct headhunting across APAC & ANZ hubs',
+      'Structured technical assessments and in-house quality vetting',
+      'Seamless onboarding integrated directly into your team workflows',
     ],
     icon: (
       <svg
@@ -46,14 +48,14 @@ const SERVICE_FEATURES: ServiceFeature[] = [
     ),
   },
   {
-    title: 'Screening & Technical Vetting',
-    tag: 'Technical Rigor',
+    title: 'Managed Resume Screening as a Service',
+    tag: 'Pipeline Filtering',
     summary:
-      'Every shortlisted professional is assessed for technical depth, communication, and real-world problem solving.',
+      'Acting as a dedicated screening filter for your existing job ads and applicant pools, our recruiters review, grade, and shortlist incoming CVs so your hiring managers only interview top-tier candidates.',
     bullets: [
-      'Live architecture reviews, pair coding, and problem-solving evaluations',
-      'CEFR C2 English fluency checks for synchronous collaboration',
-      'Strict top 1.5% acceptance threshold across domain applicants',
+      'Dedicated screening filter for existing job ads and applicant pools',
+      'Recruiter-led CV review, structured grading, and calibration',
+      'Vetted shortlists so hiring managers interview only top talent',
     ],
     icon: (
       <svg
@@ -72,14 +74,14 @@ const SERVICE_FEATURES: ServiceFeature[] = [
     ),
   },
   {
-    title: 'Turnkey Onboarding Support',
-    tag: 'Turnkey Logistics',
+    title: 'HR Admin & Global Payroll',
+    tag: 'Cross-Border Ops',
     summary:
-      'From contracts and equipment to the first team sync, we coordinate the details that make day one productive.',
+      'We take the friction out of cross-border workforce management—handling timekeeping, compliance, record management, and accurate, on-time multi-currency salary disbursements.',
     bullets: [
-      'Hardware logistics, configured laptops, and security setup',
-      'Compliant local contracts, payroll, and IP protection',
-      'Day-one integration, sprint planning, and manager welcome sync',
+      'Timekeeping, attendance tracking, and employee record management',
+      'Cross-border compliance and localized employment administration',
+      'Accurate, on-time multi-currency salary disbursements',
     ],
     icon: (
       <svg
@@ -98,33 +100,6 @@ const SERVICE_FEATURES: ServiceFeature[] = [
       </svg>
     ),
   },
-  {
-    title: 'Ongoing Talent Pipeline & Retention',
-    tag: 'Long-Term Scale',
-    summary:
-      'The partnership continues after placement with active support for performance, retention, and team growth.',
-    bullets: [
-      'Dedicated Client Success Director and performance check-ins',
-      'Continuous professional development and upskilling support',
-      'Replacement guarantee and proactive capacity scaling',
-    ],
-    icon: (
-      <svg
-        fill="none"
-        height="24"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.8"
-        viewBox="0 0 24 24"
-        width="24"
-      >
-        <polyline points="23 4 23 10 17 10" />
-        <polyline points="1 20 1 14 7 14" />
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-      </svg>
-    ),
-  },
 ]
 
 function renderHeadingWithAccent(title: string) {
@@ -138,6 +113,19 @@ function renderHeadingWithAccent(title: string) {
         <span>{parts[0].trim()}</span> &amp;{' '}
         <span className="about-sticky-process__title-accent">
           {parts.slice(1).join('&').trim()}
+        </span>
+      </>
+    )
+  }
+
+  // Handle phrases ending with "as a Service" cleanly
+  if (title.toLowerCase().endsWith('as a service')) {
+    const splitIndex = title.length - 'as a service'.length
+    return (
+      <>
+        <span>{title.slice(0, splitIndex).trim()}</span>{' '}
+        <span className="about-sticky-process__title-accent">
+          {title.slice(splitIndex)}
         </span>
       </>
     )
@@ -181,6 +169,8 @@ function renderHeadingWithAccent(title: string) {
   return <span className="about-sticky-process__title-accent">{title}</span>
 }
 
+const STEP_COUNT = SERVICE_FEATURES.length
+
 export function AboutServicesSection({
   copy,
 }: {
@@ -191,7 +181,7 @@ export function AboutServicesSection({
 
   /* ------------------------------------------------------------------ */
   /*  Scroll-progress driven step detection                              */
-  /*  Maps page scroll position through the track to 4 equal stages      */
+  /*  Maps page scroll position through the track to equal stages        */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
     const track = trackRef.current
@@ -212,7 +202,7 @@ export function AboutServicesSection({
 
       // Sticky active range: begins when rect.top <= 0, completes when rect.bottom <= window.innerHeight
       const progress = Math.max(0, Math.min(1, -rect.top / scrollable))
-      const step = Math.min(3, Math.floor(progress * 4))
+      const step = Math.min(STEP_COUNT - 1, Math.floor(progress * STEP_COUNT))
       setActiveStep(step)
     }
 
@@ -249,8 +239,9 @@ export function AboutServicesSection({
     const scrollable = rect.height - window.innerHeight
     if (scrollable <= 0) return
 
+    const denominator = Math.max(1, STEP_COUNT - 0.01)
     const targetScroll =
-      window.scrollY + rect.top + (index / 3.99) * scrollable
+      window.scrollY + rect.top + (index / denominator) * scrollable
     window.scrollTo({ top: targetScroll, behavior: 'smooth' })
   }, [])
 
@@ -266,11 +257,11 @@ export function AboutServicesSection({
         : feature.bullets,
     }
   })
-  const activeFeature = features[activeStep]
+  const activeFeature = features[activeStep] ?? features[0]
   const processLabels = features.map(
     (_, index) =>
       copy[`service${index + 1}Label`] ||
-      ['Sourcing', 'Vetting', 'Onboarding', 'Retention'][index],
+      ['Acquisition', 'Screening', 'HR & Payroll'][index],
   )
 
   return (
@@ -394,8 +385,8 @@ export function AboutServicesSection({
                         <i />
                       </span>
                       <div
-                        aria-label="Process stages"
-                        className="about-sticky-process__tabs"
+                        aria-label="Core services"
+                        className={`about-sticky-process__tabs ${tabStyles.tabsThree}`}
                         role="tablist"
                       >
                         {processLabels.map((label, index) => (
@@ -427,7 +418,7 @@ export function AboutServicesSection({
                         </span>
                         <div>
                           <span>
-                            Stage {String(activeStep + 1).padStart(2, '0')}
+                            Service {String(activeStep + 1).padStart(2, '0')}
                           </span>
                           <strong>{activeFeature.tag}</strong>
                         </div>
@@ -449,9 +440,10 @@ export function AboutServicesSection({
                       </div>
 
                       <div className="about-sticky-process__stage-footer">
-                        <span>OPG managed process</span>
+                        <span>OPG core services</span>
                         <strong>
-                          {String(activeStep + 1).padStart(2, '0')} / 04
+                          {String(activeStep + 1).padStart(2, '0')} /{' '}
+                          {String(STEP_COUNT).padStart(2, '0')}
                         </strong>
                       </div>
                     </div>

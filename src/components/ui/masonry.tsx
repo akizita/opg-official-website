@@ -141,76 +141,103 @@ export function Masonry({
   const activeItem =
     selectedItemIndex !== null ? items[selectedItemIndex] : null
 
+  const maxColumnCount = useMemo(
+    () => Math.max(0, ...columnData.map((col) => col.length)),
+    [columnData],
+  )
+
   return (
     <div className={`${styles.masonryContainer} ${className}`.trim()}>
       <div className={styles.masonryGrid}>
-        {columnData.map((colItems, colIdx) => (
-          <div key={`col-${colIdx}`} className={styles.masonryColumn}>
-            {colItems.map((item, itemIdx) => {
-              const itemHeight = item.height || 140
-              return (
-                <motion.div
-                  aria-label={`View details for ${item.name}, ${item.role}`}
-                  className={styles.masonryCard}
-                  initial={
-                    shouldReduceMotion
-                      ? { opacity: 1 }
-                      : { opacity: 0, y: 14 }
-                  }
-                  key={item.id}
-                  onClick={() => (lightbox ? openLightbox(item) : onItemClick?.(item))}
-                  onKeyDown={(e: ReactKeyboardEvent<HTMLDivElement>) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      if (lightbox) openLightbox(item)
-                      else onItemClick?.(item)
+        {columnData.map((colItems, colIdx) => {
+          const isStaggered = activeColumns >= 3 && colIdx === 1
+          const isBalancedShortCol =
+            activeColumns >= 4 && colItems.length < maxColumnCount
+          const colClasses = [
+            styles.masonryColumn,
+            isStaggered ? styles.masonryColumnStagger : '',
+            isBalancedShortCol ? styles.masonryColumnCentered : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+
+          return (
+            <div key={`col-${colIdx}`} className={colClasses}>
+              {colItems.map((item, itemIdx) => {
+                const itemHeight = Math.max(item.height || 156, 150)
+                return (
+                  <motion.div
+                    aria-label={`View details for ${item.name}, ${item.role}`}
+                    className={styles.masonryCard}
+                    initial={
+                      shouldReduceMotion
+                        ? { opacity: 1 }
+                        : { opacity: 0, y: 14 }
                     }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  transition={{
-                    duration: 0.4,
-                    delay: itemIdx * 0.05 + colIdx * 0.03,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                  viewport={{ once: true, margin: '-30px' }}
-                  whileInView={
-                    shouldReduceMotion
-                      ? { opacity: 1 }
-                      : { opacity: 1, y: 0 }
-                  }
-                >
-                  <div
-                    className={styles.imageWrapper}
-                    style={{ height: `${itemHeight}px` }}
+                    key={item.id}
+                    onClick={() =>
+                      lightbox ? openLightbox(item) : onItemClick?.(item)
+                    }
+                    onKeyDown={(e: ReactKeyboardEvent<HTMLDivElement>) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        if (lightbox) openLightbox(item)
+                        else onItemClick?.(item)
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    transition={{
+                      duration: 0.4,
+                      delay: itemIdx * 0.05 + colIdx * 0.03,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    viewport={{ once: true, margin: '-30px' }}
+                    whileInView={
+                      shouldReduceMotion
+                        ? { opacity: 1 }
+                        : { opacity: 1, y: 0 }
+                    }
                   >
-                    {showLabels && item.department && (
-                      <span className={styles.topBadge}>{item.department}</span>
-                    )}
+                    <div
+                      className={styles.imageWrapper}
+                      style={{ aspectRatio: `150 / ${itemHeight}` }}
+                    >
+                      {showLabels && item.department && (
+                        <span className={styles.topBadge}>
+                          {item.department}
+                        </span>
+                      )}
 
-                    <Image
-                      alt={item.alt || `${item.name} - ${item.role}`}
-                      blurDataURL={BLUR_DATA_URL}
-                      className={styles.cardImage}
-                      fill
-                      placeholder="blur"
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      src={item.img}
-                    />
+                      <Image
+                        alt={item.alt || `${item.name} - ${item.role}`}
+                        blurDataURL={BLUR_DATA_URL}
+                        className={styles.cardImage}
+                        fill
+                        placeholder="blur"
+                        sizes="(max-width: 640px) 46vw, (max-width: 1024px) 32vw, 175px"
+                        src={item.img}
+                        unoptimized
+                      />
 
-                    {/* Gradient overlay with Name and Role if showLabels enabled */}
-                    {showLabels && (
-                      <div className={styles.cardOverlay}>
+                      {/* Gradient overlay with Name and Role */}
+                      <div
+                        className={
+                          showLabels
+                            ? styles.cardOverlay
+                            : `${styles.cardOverlay} ${styles.cardOverlayHover}`
+                        }
+                      >
                         <h4 className={styles.cardName}>{item.name}</h4>
                         <p className={styles.cardRole}>{item.role}</p>
                       </div>
-                    )}
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
-        ))}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )
+        })}
       </div>
 
       {/* Accessible Interactive Lightbox Modal */}
@@ -262,7 +289,9 @@ export function Masonry({
                 className={styles.lightboxImage}
                 fill
                 priority
+                sizes="(max-width: 640px) 92vw, 512px"
                 src={activeItem.img}
+                unoptimized
               />
             </div>
 

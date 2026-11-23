@@ -1,0 +1,10 @@
+.tabsThree {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 42rem) {
+  .tabsThree {
+    grid-template-columns: 1fr !important;
+    border-radius: 1rem !important;
+  }
+}

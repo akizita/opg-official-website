@@ -71,9 +71,9 @@ type StatementTab = 'mission' | 'vision'
 
 const CORE_VALUES = [
   {
-    name: 'Integrity',
+    name: 'Integrity First',
     description:
-      'We build trust through honesty, openness, and doing the right thing—even when it’s hard.',
+      'Trust is our bedrock. We operate with complete transparency, accountability, and the courage to do what is right for our clients and talent alike.',
     icon: (
       <svg
         aria-hidden="true"
@@ -92,9 +92,9 @@ const CORE_VALUES = [
     ),
   },
   {
-    name: 'Growth',
+    name: 'Relentless Growth',
     description:
-      'We commit to continuous learning, embracing challenges as opportunities to improve ourselves and our results.',
+      'We believe in continuous development. By turning challenges into learning opportunities, we consistently elevate the performance of our teams and partners.',
     icon: (
       <svg
         aria-hidden="true"
@@ -113,9 +113,9 @@ const CORE_VALUES = [
     ),
   },
   {
-    name: 'Collaboration',
+    name: 'True Collaboration',
     description:
-      'We succeed together, valuing every voice and celebrating shared wins.',
+      'Shared success drives everything we do. We build bridges across teams, cultures, and borders, ensuring every contributor has a voice.',
     icon: (
       <svg
         aria-hidden="true"
@@ -136,9 +136,9 @@ const CORE_VALUES = [
     ),
   },
   {
-    name: 'Innovation',
+    name: 'Smart Innovation',
     description:
-      'We listen, adapt, and explore new ways to create better outcomes for people and businesses.',
+      'Markets change, and so do we. We continually refine our processes, implement smart tools, and find modern solutions that keep your operations ahead of the curve.',
     icon: (
       <svg
         aria-hidden="true"
@@ -158,9 +158,9 @@ const CORE_VALUES = [
     ),
   },
   {
-    name: 'People-First',
+    name: 'People at the Core',
     description:
-      'We put people at the heart of every decision, fostering growth, respect, and lasting relationships.',
+      'Technology and processes drive efficiency, but people drive outcomes. We foster an environment grounded in empathy, mutual respect, and career fulfillment.',
     icon: (
       <svg
         aria-hidden="true"
@@ -187,8 +187,8 @@ export function MissionVisionSection({
   const [activeTab, setActiveTab] = useState<StatementTab>('mission')
   const coreValues = CORE_VALUES.map((value, index) => ({
     ...value,
-    name: copy[`value${index + 1}Name`],
-    description: copy[`value${index + 1}Description`],
+    name: copy[`value${index + 1}Name`] || value.name,
+    description: copy[`value${index + 1}Description`] || value.description,
   }))
 
   return (

@@ -18,8 +18,7 @@ export const ABOUT_PAGE_DEFAULTS = {
   summary:
     'We connect forward-thinking businesses with exceptional offshore talent — engineering seamless partnerships that accelerate growth and empower careers.',
   body: [
-    'At Outsourced Pro Global Limited, we connect businesses with the right people — and people with the right opportunities. With a global reach and a personal touch, we make recruitment simple, smart, and effective. Our mission is to help companies grow stronger and professionals achieve their potential.',
-    'More than filling roles, we build lasting partnerships that drive success.',
-    'Founded on principles of operational transparency, rigorous technical vetting, and shared cultural alignment, OPG operates as a direct extension of your organization. We eliminate the administrative, compliance, and recruitment overhead of global staffing so you can focus on sustainable execution.',
+    'At Outsourced Pro Global Limited, we simplify the way companies scale. By pairing global reach with a hands-on, personal approach, we take the stress out of hiring and workforce management.',
+    'We do not just fill empty seats. We match you with dependable, skilled professionals who align with your goals and daily operations. Whether you need dedicated support to handle heavy workloads, optimize operational costs, or build a reliable remote team, we act as a seamless extension of your business to drive steady, measurable results.',
   ].join('\n\n'),
 } as const
