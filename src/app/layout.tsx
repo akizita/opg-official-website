@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { Suspense, type ReactNode } from 'react'
 
+import { BrandLoaderOverlay } from '@/components/loading/brand-loader-overlay'
 import { SiteFooter } from '@/components/site/site-footer'
 import { SiteHeader } from '@/components/site/site-header'
+import { SiteSplashScreen } from '@/components/site/site-splash-screen'
 import { SiteVisitTracker } from '@/components/site/site-visit-tracker'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 
@@ -45,6 +47,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={GeistSans.variable}>
       <body>
+        <SiteSplashScreen />
+        <BrandLoaderOverlay />
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>

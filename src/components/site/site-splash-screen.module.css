@@ -1,0 +1,320 @@
+.splashScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: clamp(16px, 3vw, 40px);
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(
+      ellipse 44% 40% at 50% 50%,
+      rgba(254, 249, 195, 0.28) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 46% 42% at 8% 12%,
+      rgba(254, 240, 138, 0.52) 0%,
+      rgba(253, 224, 71, 0.14) 48%,
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 44% 40% at 92% 16%,
+      rgba(253, 224, 71, 0.32) 0%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 48% 44% at 88% 88%,
+      rgba(251, 191, 36, 0.3) 0%,
+      rgba(253, 224, 71, 0.12) 48%,
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 42% 38% at 12% 88%,
+      rgba(254, 243, 199, 0.44) 0%,
+      transparent 70%
+    );
+  transition:
+    opacity 0.4s ease-out,
+    visibility 0.4s ease-out;
+}
+
+.splashScreen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(180, 83, 9, 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Defer background painting beneath opaque splash so WebGL/canvas playback stays 60fps */
+:global(html[data-splash-active='true'] #main-content),
+:global(html[data-splash-active='true'] .site-header-wrapper),
+:global(html[data-splash-active='true'] footer) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.auraOrbPrimary,
+.auraOrbSecondary {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+
+.auraOrbPrimary {
+  top: -14%;
+  left: -10%;
+  width: clamp(24rem, 48vw, 44rem);
+  height: clamp(24rem, 48vw, 44rem);
+  background: radial-gradient(
+    circle,
+    rgba(253, 224, 71, 0.34) 0%,
+    rgba(254, 240, 138, 0.14) 44%,
+    transparent 70%
+  );
+}
+
+.auraOrbSecondary {
+  right: -12%;
+  bottom: -14%;
+  width: clamp(24rem, 50vw, 46rem);
+  height: clamp(24rem, 50vw, 46rem);
+  background: radial-gradient(
+    circle,
+    rgba(251, 191, 36, 0.24) 0%,
+    rgba(253, 224, 71, 0.14) 44%,
+    transparent 70%
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auraOrbPrimary {
+    animation: auraDriftPrimary 7s ease-in-out infinite alternate;
+  }
+
+  .auraOrbSecondary {
+    animation: auraDriftSecondary 8s ease-in-out infinite alternate;
+  }
+}
+
+.splashScreen[data-leaving='true'] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mediaStage {
+  position: relative;
+  z-index: 1;
+  width: min(94vw, 68rem);
+  aspect-ratio: 16 / 9;
+  max-height: 82vh;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* Keep source video actively decoding without visible box */
+.sourceVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.001;
+  pointer-events: none;
+}
+
+/* WebGL transparent-keyed canvas — strictly compositor-only opacity transition, no per-frame blur filters */
+.keyedCanvas {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transform: translateZ(0);
+  transition: opacity 0.16s ease-out;
+  pointer-events: none;
+}
+
+.splashScreen[data-video-ready='true'] .keyedCanvas {
+  opacity: 1;
+}
+
+/* Graceful fallback if WebGL is unavailable */
+.splashScreen[data-webgl-fallback='true'] .keyedCanvas {
+  display: none;
+}
+
+.splashScreen[data-webgl-fallback='true'][data-video-ready='true'] .sourceVideo {
+  opacity: 1;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(
+    ellipse 36% 42% at 50% 50%,
+    #000 46%,
+    transparent 90%
+  );
+  mask-image: radial-gradient(
+    ellipse 36% 42% at 50% 50%,
+    #000 46%,
+    transparent 90%
+  );
+}
+
+.splashScreen[data-fallback='true'] .mediaStage {
+  display: none;
+}
+
+/* Fallback Brand Lockup (only shown if video playback fails/stalls) */
+.fallbackContent {
+  position: relative;
+  z-index: 3;
+  display: none;
+  place-items: center;
+  text-align: center;
+  max-width: min(92vw, 34rem);
+  padding: 1.5rem;
+}
+
+.splashScreen[data-fallback='true'] .fallbackContent {
+  display: grid;
+}
+
+.fallbackBrand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.85rem, 2.2vw, 1.35rem);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .splashScreen[data-fallback='true'] .fallbackBrand {
+    animation: splashBrandEnter 0.55s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  }
+}
+
+.fallbackLogo {
+  width: clamp(3.5rem, 8vw, 4.75rem);
+  height: clamp(3.5rem, 8vw, 4.75rem);
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.fallbackWordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: clamp(1.45rem, 3.4vw, 2.15rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.fallbackWordmarkAccent {
+  color: #d97706;
+}
+
+.fallbackTagline {
+  margin: 0.9rem 0 0;
+  font-size: clamp(0.88rem, 1.4vw, 1rem);
+  font-weight: 500;
+  color: #475569;
+  line-height: 1.45;
+}
+
+/* Accessible Skip Button */
+.skipButton {
+  position: fixed;
+  right: clamp(1rem, 2.5vw, 2rem);
+  bottom: clamp(1rem, 2.5vh, 2rem);
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(180, 83, 9, 0.22);
+  background: rgba(255, 255, 255, 0.94);
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(180, 83, 9, 0.12);
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.skipButton:hover {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(217, 119, 6, 0.45);
+  transform: translateY(-1px);
+}
+
+.skipButton:focus-visible {
+  outline: 2px solid #d97706;
+  outline-offset: 3px;
+}
+
+@keyframes auraDriftPrimary {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(3%, 4%, 0) scale(1.06);
+  }
+}
+
+@keyframes auraDriftSecondary {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(-4%, -3%, 0) scale(1.06);
+  }
+}
+
+@keyframes splashBrandEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Scale up the centered emblem stage on mobile/portrait screens */
+@media (max-width: 768px) {
+  .mediaStage {
+    width: min(138vw, 48rem);
+    max-height: 68vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .mediaStage {
+    width: 152vw;
+    max-height: 60vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splashScreen {
+    display: none;
+  }
+}

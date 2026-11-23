@@ -1,0 +1,190 @@
+/* Route fallback surface: holds clean white background until overlay takes over at 150ms */
+.brandLoaderPlaceholder {
+  width: 100%;
+  min-height: clamp(64vh, 74vh, 84vh);
+  background-color: #ffffff;
+}
+
+.brandLoaderCompact {
+  min-height: 44vh;
+}
+
+/* Standalone fallback when rendered without BrandLoaderOverlay host */
+.brandLoaderStandalone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: clamp(64vh, 74vh, 84vh);
+  padding: clamp(5rem, 10vh, 7rem) 1.5rem clamp(4rem, 8vh, 6rem);
+  background-color: #ffffff;
+  background-image: radial-gradient(
+    circle 14rem at 50% 50%,
+    rgba(242, 159, 4, 0.055) 0%,
+    transparent 74%
+  );
+  opacity: 0;
+  animation: brandLoaderFadeIn 220ms 150ms ease-out forwards;
+}
+
+/* Persistent global overlay kept visible until draw+fill intro finishes */
+.brandOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: clamp(5rem, 10vh, 7rem) 1.5rem clamp(4rem, 8vh, 6rem);
+  background-color: #ffffff;
+  background-image: radial-gradient(
+    circle 14rem at 50% 50%,
+    rgba(242, 159, 4, 0.055) 0%,
+    transparent 74%
+  );
+  opacity: 1;
+  transition: opacity 250ms ease-out;
+}
+
+@starting-style {
+  .brandOverlay {
+    opacity: 0;
+  }
+}
+
+.brandOverlayCompact {
+  padding: 2.5rem 1.25rem;
+}
+
+.brandOverlay[data-exiting='true'],
+.brandLoaderStandalone[data-exiting='true'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.markFrame {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.logoSvg {
+  width: clamp(56px, 5vw, 72px);
+  height: clamp(56px, 5vw, 72px);
+  display: block;
+  transform-origin: center;
+  animation: opgLogoIdlePulse 1.6s 1.3s ease-in-out infinite;
+}
+
+.logoOutline {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  opacity: 1;
+  animation:
+    opgLogoDraw 1.2s 0s ease-in-out forwards,
+    opgLogoOutlineFade 0.38s 1.15s ease-out forwards;
+}
+
+.logoFill {
+  opacity: 0;
+  animation: opgLogoFillIn 0.58s 0.85s ease-out forwards;
+}
+
+.logoShine {
+  opacity: 0;
+  transform: translate3d(-90px, 0, 0);
+  animation: opgLogoShineSweep 1.6s 1.3s ease-in-out infinite;
+}
+
+@keyframes brandLoaderFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes opgLogoDraw {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes opgLogoOutlineFade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes opgLogoFillIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes opgLogoShineSweep {
+  0% {
+    opacity: 0;
+    transform: translate3d(-90px, 0, 0);
+  }
+  15% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 1;
+    transform: translate3d(145px, 0, 0);
+  }
+  65%,
+  100% {
+    opacity: 0;
+    transform: translate3d(145px, 0, 0);
+  }
+}
+
+@keyframes opgLogoIdlePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brandOverlay {
+    transition: opacity 200ms ease-out;
+  }
+
+  .brandLoaderStandalone {
+    animation: brandLoaderFadeIn 200ms 150ms ease-out forwards;
+  }
+
+  .logoSvg {
+    animation: none;
+    transform: none;
+  }
+
+  .logoOutline {
+    display: none;
+  }
+
+  .logoFill {
+    opacity: 1;
+    animation: none;
+  }
+
+  .logoShine {
+    display: none;
+  }
+}

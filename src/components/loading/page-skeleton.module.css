@@ -1,0 +1,395 @@
+.skeletonRoot {
+  width: 100%;
+  background: #ffffff;
+  padding: clamp(6.25rem, 11vw, 8.25rem) clamp(1rem, 3vw, 2rem) clamp(3.5rem, 6vw, 5rem);
+  opacity: 0;
+  animation: skeletonReveal 200ms 150ms ease-out forwards;
+}
+
+.skeletonCompact {
+  padding: 0.5rem 0 2rem;
+}
+
+.skeletonEmbedded {
+  padding: 0;
+}
+
+.skeletonContainer {
+  width: 100%;
+  max-width: var(--container, 75rem);
+  margin-inline: auto;
+}
+
+.skeletonBlock {
+  position: relative;
+  overflow: hidden;
+  background-color: #f1f1f0;
+  border-radius: var(--radius-small, 0.5rem);
+}
+
+.skeletonBlock::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.72) 50%,
+    transparent 100%
+  );
+  transform: translate3d(-100%, 0, 0);
+  animation: skeletonShimmer 1.9s ease-in-out infinite;
+}
+
+.pill {
+  border-radius: 9999px;
+}
+
+.cardRadius {
+  border-radius: var(--radius-medium, 1rem);
+}
+
+/* Shared header blocks */
+.headerStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
+}
+
+.headerCentered {
+  align-items: center;
+  text-align: center;
+}
+
+.eyebrowBar {
+  width: 8.5rem;
+  height: 1.5rem;
+}
+
+.titleBar {
+  width: min(85%, 28rem);
+  height: clamp(2rem, 4vw, 2.75rem);
+}
+
+.leadBar {
+  width: min(92%, 38rem);
+  height: 1.15rem;
+}
+
+.leadBarShort {
+  width: min(72%, 28rem);
+  height: 1.15rem;
+}
+
+/* Variant: cards */
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 2rem;
+}
+
+.filterPill {
+  width: 5.5rem;
+  height: 2.15rem;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.cardFrame {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.15rem;
+  border-radius: var(--radius-medium, 1rem);
+  border: 1px solid #ededec;
+  background: #ffffff;
+}
+
+.cardMedia {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+}
+
+.cardTag {
+  width: 5.25rem;
+  height: 1.25rem;
+}
+
+.cardTitle {
+  width: 88%;
+  height: 1.45rem;
+}
+
+.cardLine {
+  width: 100%;
+  height: 0.9rem;
+}
+
+.cardLineShort {
+  width: 68%;
+  height: 0.9rem;
+}
+
+/* Variant: list */
+.listToolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr);
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.listToolbarItem {
+  height: 2.85rem;
+}
+
+.listStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.listRowCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: clamp(1.1rem, 2vw, 1.5rem);
+  border-radius: var(--radius-medium, 1rem);
+  border: 1px solid #ededec;
+  background: #ffffff;
+}
+
+.listRowMain {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.listRowMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.listMetaPill {
+  width: 6.25rem;
+  height: 1.35rem;
+}
+
+.listRowTitle {
+  width: min(90%, 24rem);
+  height: 1.45rem;
+}
+
+.listRowSubtitle {
+  width: min(76%, 18rem);
+  height: 0.95rem;
+}
+
+.listRowAction {
+  width: 7.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+}
+
+/* Variant: article */
+.articleColumn {
+  width: 100%;
+  max-width: 48rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.backLinkBar {
+  width: 8.5rem;
+  height: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.articleTitle {
+  width: 92%;
+  height: clamp(2.1rem, 4vw, 3rem);
+}
+
+.articleMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.articleMetaChip {
+  width: 6.75rem;
+  height: 1.4rem;
+}
+
+.articleHero {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-block: 0.75rem;
+}
+
+.articleParagraph {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.textLineFull {
+  width: 100%;
+  height: 1rem;
+}
+
+.textLineMed {
+  width: 86%;
+  height: 1rem;
+}
+
+.textLineShort {
+  width: 62%;
+  height: 1rem;
+}
+
+/* Variant: table */
+.tableStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1.15rem;
+  border-radius: var(--radius-medium, 1rem);
+  border: 1px solid #ededec;
+  background: #ffffff;
+}
+
+.statLabel {
+  width: 55%;
+  height: 0.9rem;
+}
+
+.statValue {
+  width: 35%;
+  height: 1.85rem;
+}
+
+.tableSurface {
+  border-radius: var(--radius-medium, 1rem);
+  border: 1px solid #ededec;
+  background: #ffffff;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.tableToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.tableSearch {
+  width: min(100%, 18rem);
+  height: 2.4rem;
+}
+
+.tableAction {
+  width: 7.5rem;
+  height: 2.4rem;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 0.75fr 0.55fr;
+  gap: 1rem;
+  align-items: center;
+  padding-block: 0.7rem;
+  border-top: 1px solid #f4f4f3;
+}
+
+.tableCell {
+  height: 1rem;
+}
+
+@keyframes skeletonReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes skeletonShimmer {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+  to {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+@media (max-width: 64rem) {
+  .cardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tableStatsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .cardsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .listToolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .listRowCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tableStatsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tableRow {
+    grid-template-columns: 1fr 0.75fr;
+  }
+
+  .tableRow > :nth-child(n + 3) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonRoot {
+    animation: skeletonReveal 180ms 150ms ease-out forwards;
+  }
+
+  .skeletonBlock::after {
+    display: none;
+  }
+}

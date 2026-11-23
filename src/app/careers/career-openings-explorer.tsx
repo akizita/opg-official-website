@@ -15,6 +15,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
+import { PageSkeleton } from '@/components/loading'
 import { EmptyState } from '@/components/ui/empty-state'
 import {
   EMPTY_CAREER_FILTERS,
@@ -500,19 +501,7 @@ export function JobList({
 }
 
 export function CareersOpeningsSkeleton() {
-  return (
-    <div className={styles.skeletonWrapper} aria-label="Loading open positions">
-      <div className={`${styles.skeleton} ${styles.skeletonToolbar}`} />
-      <div className={styles.jobsList}>
-        {[1, 2, 3, 4, 5, 6].map((id) => (
-          <div
-            className={`${styles.skeleton} ${styles.skeletonCard}`}
-            key={id}
-          />
-        ))}
-      </div>
-    </div>
-  )
+  return <PageSkeleton embedded label="Loading open positions" variant="list" />
 }
 
 export function CareerOpeningsExplorer({
