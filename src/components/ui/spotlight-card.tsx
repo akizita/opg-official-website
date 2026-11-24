@@ -17,7 +17,7 @@ export interface SpotlightCardProps extends React.PropsWithChildren {
 export function SpotlightCard({
   children,
   className = '',
-  spotlightColor = 'rgba(242, 159, 4, 0.20)',
+  spotlightColor = 'rgba(242, 159, 4, 0.08)',
   tabIndex = 0,
   trackPointerWhileFocused = false,
 }: SpotlightCardProps) {

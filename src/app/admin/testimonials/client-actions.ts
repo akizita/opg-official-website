@@ -96,7 +96,6 @@ export async function createClientTestimonialAction(
 
   revalidatePath('/clients')
   revalidatePath('/admin/testimonials')
-  revalidatePath('/admin/clients')
   revalidatePath('/admin')
 
   return { success: true, id: (data as { id: string } | null)?.id }
@@ -172,7 +171,6 @@ export async function updateClientTestimonialAction(
 
   revalidatePath('/clients')
   revalidatePath('/admin/testimonials')
-  revalidatePath('/admin/clients')
   revalidatePath('/admin')
 
   return { success: true, id }
@@ -209,7 +207,6 @@ export async function deleteClientTestimonialAction(
 
   revalidatePath('/clients')
   revalidatePath('/admin/testimonials')
-  revalidatePath('/admin/clients')
   revalidatePath('/admin')
 
   return { success: true, id }

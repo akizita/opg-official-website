@@ -60,11 +60,11 @@
 }
 
 .pillarCard:hover {
-  border-color: rgba(242, 183, 5, 0.45);
+  border-color: rgba(15, 23, 42, 0.16);
   box-shadow:
-    0 20px 44px -16px rgba(140, 92, 0, 0.14),
+    0 16px 32px -12px rgba(15, 23, 42, 0.1),
     inset 0 1px 1px rgba(255, 255, 255, 1);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
 .cardTopRow {
@@ -93,14 +93,10 @@
 }
 
 .indexPill {
-  background: rgba(242, 159, 4, 0.1);
-  border: 1px solid rgba(242, 183, 5, 0.32);
-  border-radius: 9999px;
-  color: #8c5a00;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  padding: 0.24rem 0.65rem;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .cardTitle {

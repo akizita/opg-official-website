@@ -33,6 +33,7 @@ export function SiteHeader() {
     avatarUrl: string | null
     displayName: string | null
     email: string | null
+    gravatarUrl: string | null
     pathname: string
   } | null>(null)
 
@@ -84,46 +85,103 @@ export function SiteHeader() {
     let active = true
     const supabase = createClient()
 
-    void Promise.all([
-      supabase.auth.getClaims(),
-      typeof supabase.auth.getUser === 'function'
-        ? supabase.auth.getUser().catch(() => ({
-            data: { user: null },
-            error: null,
-          }))
-        : Promise.resolve({ data: { user: null }, error: null }),
-    ])
-      .then(([claimsRes, userRes]) => {
-        if (!active) return
-        const { data, error } = claimsRes
-        const email = data?.claims?.email
-        const cleanEmail =
-          !error && typeof email === 'string' && email.trim()
-            ? email.trim().toLowerCase()
+    function syncVisitorAuth() {
+      void Promise.all([
+        supabase.auth.getClaims(),
+        typeof supabase.auth.getUser === 'function'
+          ? supabase.auth.getUser().catch(() => ({
+              data: { user: null },
+              error: null,
+            }))
+          : Promise.resolve({ data: { user: null }, error: null }),
+      ])
+        .then(async ([claimsRes, userRes]) => {
+          if (!active) return
+          const { data, error } = claimsRes
+          const user = userRes?.data?.user ?? null
+          const rawEmail =
+            typeof data?.claims?.email === 'string' && data.claims.email.trim()
+              ? data.claims.email
+              : user?.email
+          const cleanEmail =
+            !error && typeof rawEmail === 'string' && rawEmail.trim()
+              ? rawEmail.trim().toLowerCase()
+              : null
+          const claims = data?.claims as Record<string, unknown> | undefined
+          const initialAvatarUrl = cleanEmail
+            ? extractUserAvatarUrl(claims, user)
             : null
-        const claims = data?.claims as Record<string, unknown> | undefined
-        const user = userRes?.data?.user ?? null
+          const initialDisplayName = cleanEmail
+            ? extractUserDisplayName(claims, user)
+            : null
 
-        setAuth({
-          avatarUrl: cleanEmail ? extractUserAvatarUrl(claims, user) : null,
-          displayName: cleanEmail ? extractUserDisplayName(claims, user) : null,
-          email: cleanEmail,
-          pathname,
-        })
-      })
-      .catch(() => {
-        if (active) {
           setAuth({
-            avatarUrl: null,
-            displayName: null,
-            email: null,
+            avatarUrl: initialAvatarUrl,
+            displayName: initialDisplayName,
+            email: cleanEmail,
+            gravatarUrl: null,
             pathname,
           })
-        }
-      })
+
+          if (!cleanEmail) return
+
+          try {
+            const profileRes = await fetch('/api/account/profile', {
+              cache: 'no-store',
+              credentials: 'same-origin',
+            })
+            if (!active || !profileRes.ok) return
+            const profileData = (await profileRes.json()) as {
+              avatarUrl?: string | null
+              displayName?: string | null
+              email?: string | null
+              gravatarUrl?: string | null
+            }
+            if (!active) return
+            setAuth((prev) => ({
+              avatarUrl:
+                profileData.avatarUrl ?? prev?.avatarUrl ?? initialAvatarUrl,
+              displayName:
+                profileData.displayName ??
+                prev?.displayName ??
+                initialDisplayName,
+              email: profileData.email ?? prev?.email ?? cleanEmail,
+              gravatarUrl: profileData.gravatarUrl ?? null,
+              pathname,
+            }))
+          } catch {
+            // Keep initial client auth resolution on network error.
+          }
+        })
+        .catch(() => {
+          if (active) {
+            setAuth({
+              avatarUrl: null,
+              displayName: null,
+              email: null,
+              gravatarUrl: null,
+              pathname,
+            })
+          }
+        })
+    }
+
+    syncVisitorAuth()
+
+    const authSubscription =
+      typeof supabase.auth.onAuthStateChange === 'function'
+        ? supabase.auth.onAuthStateChange(() => {
+            syncVisitorAuth()
+          })
+        : null
+
+    const handleProfileUpdated = () => syncVisitorAuth()
+    window.addEventListener('opg:profile-updated', handleProfileUpdated)
 
     return () => {
       active = false
+      authSubscription?.data?.subscription?.unsubscribe()
+      window.removeEventListener('opg:profile-updated', handleProfileUpdated)
     }
   }, [pathname])
 
@@ -188,6 +246,7 @@ export function SiteHeader() {
             avatarUrl={currentAuth.avatarUrl}
             displayName={currentAuth.displayName}
             email={currentAuth.email}
+            gravatarUrl={currentAuth.gravatarUrl}
           />
         ) : currentAuth ? (
           <div

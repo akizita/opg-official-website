@@ -367,13 +367,7 @@ export function ClientsPartnerProfiles({
           <div className="container clients-sticky-directory__inner">
             {/* Executive Section Intro Header (matching Hero standards) */}
             <header className="clients-sticky-directory__intro">
-              <div className="clients-sticky-directory__badge" role="text">
-                <span
-                  aria-hidden="true"
-                  className="clients-sticky-directory__badge-dot"
-                />
-                <span>{copy.directoryEyebrow}</span>
-              </div>
+              <p className="eyebrow">{copy.directoryEyebrow}</p>
               <h2 id="clients-directory-heading">{copy.directoryTitle}</h2>
               <p className="clients-sticky-directory__lead">
                 {copy.directoryLead}

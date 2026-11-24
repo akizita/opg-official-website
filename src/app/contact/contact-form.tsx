@@ -6,14 +6,9 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import {
   ArrowRight01Icon,
   Cancel01Icon,
-  FlashIcon,
   InformationCircleIcon,
-  Layers01Icon,
   LockKeyIcon,
   Login01Icon,
-  Mail01Icon,
-  Tag01Icon,
-  UserIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
@@ -306,9 +301,9 @@ export function ContactForm({
             />
           </div>
 
-          {/* Header inside the Card: Eyebrow + Subtitle */}
+          {/* Header inside the Card */}
           <div className="contact-form__header">
-            <span className="contact-form__eyebrow">Get in touch</span>
+            <h2 className="contact-form__title">Send an inquiry</h2>
             <p className="contact-form__subtitle">
               Tell us what you need and we will route your inquiry to the right
               team.
@@ -322,9 +317,6 @@ export function ContactForm({
                 {copy.nameLabel} <span className="field-required">*</span>
               </label>
               <div className="contact-input-wrapper">
-                <span aria-hidden="true" className="contact-input-icon">
-                  <HugeiconsIcon icon={UserIcon} size={18} strokeWidth={1.8} />
-                </span>
                 <input
                   aria-describedby={
                     result?.errors?.fullName ? 'fullName-error' : undefined
@@ -355,9 +347,6 @@ export function ContactForm({
               </label>
               {currentUserEmail ? (
                 <div className="contact-input-wrapper contact-input-wrapper--readonly">
-                  <span aria-hidden="true" className="contact-input-icon">
-                    <HugeiconsIcon icon={Mail01Icon} size={18} strokeWidth={1.8} />
-                  </span>
                   <input
                     aria-describedby={
                       result?.errors?.email ? 'email-error' : undefined
@@ -375,7 +364,7 @@ export function ContactForm({
                     type="email"
                   />
                   <span className="contact-verified-badge" title="Verified OPG Account">
-                    <HugeiconsIcon icon={LockKeyIcon} size={13} strokeWidth={2.2} />
+                    <span aria-hidden="true" className="contact-verified-dot" />
                     <span>Verified</span>
                   </span>
                 </div>
@@ -424,9 +413,6 @@ export function ContactForm({
               </label>
               <input name="intent" type="hidden" value={intent} />
               <div className="contact-input-wrapper contact-custom-select-wrapper">
-                <span aria-hidden="true" className="contact-input-icon">
-                  <HugeiconsIcon icon={Layers01Icon} size={18} strokeWidth={1.8} />
-                </span>
                 <button
                   aria-describedby={
                     result?.errors?.intent ? 'intent-error' : undefined
@@ -568,9 +554,6 @@ export function ContactForm({
                 {copy.subjectLabel} <span className="field-required">*</span>
               </label>
               <div className="contact-input-wrapper">
-                <span aria-hidden="true" className="contact-input-icon">
-                  <HugeiconsIcon icon={Tag01Icon} size={18} strokeWidth={1.8} />
-                </span>
                 <input
                   aria-describedby={
                     result?.errors?.subject ? 'subject-error' : undefined
@@ -709,10 +692,8 @@ export function ContactForm({
           {/* Row 5: Submit Button Row & SLA Note (Right-aligned Submit Button) */}
           <div className="contact-form__submit-row">
             <div className="contact-sla-badge">
-              <span aria-hidden="true" className="contact-sla-icon">
-                <HugeiconsIcon icon={FlashIcon} size={15} strokeWidth={2} />
-              </span>
-              <span>{copy.formSla}</span>
+              <span aria-hidden="true" className="contact-sla-dot" />
+              <span>{(copy.formSla || '').replace(/^⚡\s*/, '')}</span>
             </div>
             <button
               className="contact-submit-btn"

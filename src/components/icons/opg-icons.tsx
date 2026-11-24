@@ -879,3 +879,35 @@ export function OpgIconCalendar({
     </svg>
   )
 }
+
+/**
+ * 32. OPG Global FAQ Assistant Globe Icon (24x24)
+ * Precision enterprise globe with smooth equatorial and meridian geometry.
+ */
+export function OpgIconFaqGlobe({
+  className,
+  size = 24,
+  ...props
+}: OpgIconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      height={size}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.75}
+      viewBox="0 0 24 24"
+      width={size}
+      {...props}
+    >
+      <circle cx="12" cy="12" r="9" />
+      <ellipse cx="12" cy="12" rx="4" ry="9" />
+      <path d="M3.2 12h17.6" />
+      <path d="M5.2 7.2c2 .9 4.3 1.4 6.8 1.4s4.8-.5 6.8-1.4" />
+      <path d="M5.2 16.8c2-.9 4.3-1.4 6.8-1.4s4.8.5 6.8 1.4" />
+    </svg>
+  )
+}

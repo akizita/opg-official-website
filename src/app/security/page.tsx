@@ -27,14 +27,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Security Policy | ${siteConfig.shortName}`,
     description:
-      'Learn about Outsource Pro Global enterprise security standards, data encryption, Zero Trust access controls, physical hub protection, and compliance frameworks.',
+      'Learn about Outsourced Pro Global enterprise security standards, data encryption, Zero Trust access controls, physical hub protection, and compliance frameworks.',
     alternates: {
       canonical: pageUrl,
     },
     openGraph: {
       title: `Security Policy | ${siteConfig.name}`,
       description:
-        'Enterprise security, cryptographic protection, Zero Trust architecture, and global talent pod compliance at Outsource Pro Global.',
+        'Enterprise security, cryptographic protection, Zero Trust architecture, and global talent pod compliance at Outsourced Pro Global.',
       url: pageUrl,
       siteName: siteConfig.name,
       type: 'website',
@@ -67,7 +67,7 @@ export default function SecurityPolicyPage() {
         <header className={styles.headerSection}>
           <h1 className={styles.pageTitle}>Security Policy</h1>
           <p className={styles.pageSubtitle}>
-            Outsource Pro Global maintains rigorous physical, technical, and
+            Outsourced Pro Global maintains rigorous physical, technical, and
             organizational safeguards to protect enterprise client operations,
             proprietary work product, and candidate data worldwide.
           </p>
@@ -234,7 +234,7 @@ export default function SecurityPolicyPage() {
                 </h2>
               </div>
               <p className={styles.paragraph}>
-                Security is embedded in every layer of Outsource Pro Global
+                Security is embedded in every layer of Outsourced Pro Global
                 operations. Our executive leadership team and dedicated Chief
                 Information Security Officer (CISO) mandate strict compliance
                 with international cybersecurity frameworks, including{' '}
@@ -569,7 +569,7 @@ export default function SecurityPolicyPage() {
               <p className={styles.paragraph}>
                 We value contributions from security researchers and the global
                 infosec community. If you discover a potential vulnerability
-                within any Outsource Pro Global web application or service:
+                within any Outsourced Pro Global web application or service:
               </p>
               <ul className={styles.bulletList}>
                 <li className={styles.bulletItem}>

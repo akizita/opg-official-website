@@ -49,7 +49,7 @@ export function ClientsCtaAsciiMapCorners() {
               height="14"
               patternUnits="userSpaceOnUse"
             >
-              <circle cx="10" cy="10" r="0.75" fill="rgba(245, 179, 1, 0.12)" />
+              <circle cx="10" cy="10" r="0.75" fill="rgba(180, 83, 9, 0.16)" />
             </pattern>
           </defs>
 
@@ -63,33 +63,33 @@ export function ClientsCtaAsciiMapCorners() {
               cx={x}
               cy={y}
               r={1.5}
-              fill="#f5b301"
-              opacity={0.78}
+              fill="#d97706"
+              opacity={0.55}
             />
           ))}
 
           {/* Connection Arc Trails */}
           <path
             d="M 38 52 Q 94 22 150 52"
-            stroke="rgba(245, 179, 1, 0.45)"
+            stroke="rgba(180, 83, 9, 0.36)"
             strokeWidth="1"
             strokeDasharray="3 3"
           />
           <path
             d="M 38 52 Q 110 88 178 136"
-            stroke="rgba(242, 159, 4, 0.32)"
+            stroke="rgba(217, 119, 6, 0.28)"
             strokeWidth="0.8"
             strokeDasharray="2 3"
           />
 
           {/* Active Hub Beacons */}
           <g>
-            <circle cx={38} cy={52} r={3} fill="#f5b301" />
+            <circle cx={38} cy={52} r={3} fill="#d97706" />
             <circle
               cx={38}
               cy={52}
               r={6.5}
-              stroke="rgba(245, 179, 1, 0.55)"
+              stroke="rgba(180, 83, 9, 0.48)"
               strokeWidth="0.8"
               strokeDasharray="2 2"
             />
@@ -97,13 +97,13 @@ export function ClientsCtaAsciiMapCorners() {
               cx={38}
               cy={52}
               r={10.5}
-              stroke="rgba(242, 159, 4, 0.22)"
+              stroke="rgba(217, 119, 6, 0.22)"
               strokeWidth="0.6"
             />
             <text
               x={38}
               y={38}
-              fill="rgba(245, 179, 1, 0.75)"
+              fill="rgba(146, 64, 14, 0.85)"
               fontSize="6.5"
               fontFamily="monospace"
               textAnchor="middle"
@@ -114,12 +114,12 @@ export function ClientsCtaAsciiMapCorners() {
           </g>
 
           <g>
-            <circle cx={150} cy={52} r={2.4} fill="#f5b301" opacity={0.9} />
+            <circle cx={150} cy={52} r={2.4} fill="#d97706" opacity={0.85} />
             <circle
               cx={150}
               cy={52}
               r={5.5}
-              stroke="rgba(245, 179, 1, 0.4)"
+              stroke="rgba(180, 83, 9, 0.36)"
               strokeWidth="0.6"
               strokeDasharray="2 2"
             />
@@ -129,7 +129,7 @@ export function ClientsCtaAsciiMapCorners() {
           <text
             x={10}
             y={174}
-            fill="rgba(245, 179, 1, 0.32)"
+            fill="rgba(146, 64, 14, 0.52)"
             fontSize="6.5"
             fontFamily="monospace"
             letterSpacing="0.08em"
@@ -158,7 +158,7 @@ export function ClientsCtaAsciiMapCorners() {
               height="14"
               patternUnits="userSpaceOnUse"
             >
-              <circle cx="10" cy="10" r="0.75" fill="rgba(245, 179, 1, 0.12)" />
+              <circle cx="10" cy="10" r="0.75" fill="rgba(180, 83, 9, 0.16)" />
             </pattern>
           </defs>
 
@@ -172,33 +172,33 @@ export function ClientsCtaAsciiMapCorners() {
               cx={x}
               cy={y}
               r={1.5}
-              fill="#f5b301"
-              opacity={0.78}
+              fill="#d97706"
+              opacity={0.55}
             />
           ))}
 
           {/* Connection Arc Trails */}
           <path
             d="M 136 108 Q 182 122 206 150"
-            stroke="rgba(245, 179, 1, 0.5)"
+            stroke="rgba(180, 83, 9, 0.4)"
             strokeWidth="1"
             strokeDasharray="3 3"
           />
           <path
             d="M 136 108 Q 72 60 10 38"
-            stroke="rgba(242, 159, 4, 0.32)"
+            stroke="rgba(217, 119, 6, 0.28)"
             strokeWidth="0.8"
             strokeDasharray="2 3"
           />
 
           {/* Active Hub Beacons */}
           <g>
-            <circle cx={136} cy={108} r={3.2} fill="#f5b301" />
+            <circle cx={136} cy={108} r={3.2} fill="#d97706" />
             <circle
               cx={136}
               cy={108}
               r={7}
-              stroke="rgba(245, 179, 1, 0.65)"
+              stroke="rgba(180, 83, 9, 0.5)"
               strokeWidth="0.8"
               strokeDasharray="2 2"
             />
@@ -206,13 +206,13 @@ export function ClientsCtaAsciiMapCorners() {
               cx={136}
               cy={108}
               r={11}
-              stroke="rgba(242, 159, 4, 0.28)"
+              stroke="rgba(217, 119, 6, 0.24)"
               strokeWidth="0.6"
             />
             <text
               x={136}
               y={94}
-              fill="rgba(245, 179, 1, 0.85)"
+              fill="rgba(146, 64, 14, 0.88)"
               fontSize="6.5"
               fontFamily="monospace"
               textAnchor="middle"
@@ -223,19 +223,19 @@ export function ClientsCtaAsciiMapCorners() {
           </g>
 
           <g>
-            <circle cx={206} cy={150} r={2.8} fill="#f5b301" opacity={0.9} />
+            <circle cx={206} cy={150} r={2.8} fill="#d97706" opacity={0.85} />
             <circle
               cx={206}
               cy={150}
               r={6}
-              stroke="rgba(245, 179, 1, 0.45)"
+              stroke="rgba(180, 83, 9, 0.4)"
               strokeWidth="0.6"
               strokeDasharray="2 2"
             />
             <text
               x={206}
               y={138}
-              fill="rgba(245, 179, 1, 0.7)"
+              fill="rgba(146, 64, 14, 0.8)"
               fontSize="6.5"
               fontFamily="monospace"
               textAnchor="middle"
@@ -249,7 +249,7 @@ export function ClientsCtaAsciiMapCorners() {
           <text
             x={130}
             y={174}
-            fill="rgba(245, 179, 1, 0.32)"
+            fill="rgba(146, 64, 14, 0.52)"
             fontSize="6.5"
             fontFamily="monospace"
             letterSpacing="0.08em"

@@ -149,19 +149,13 @@ export function AboutTeamShowcase({
         {/* Section Header */}
         <header className={`about-team-header ${styles.header}`}>
           <div className="about-team-header__content">
-            <div className="about-team-badge" role="text">
-              <span aria-hidden="true" className="about-team-badge__dot" />
-              <span>{copy.teamEyebrow}</span>
-            </div>
+            <p className="eyebrow">{copy.teamEyebrow}</p>
 
             <h2
               className={`about-team-title ${styles.title}`}
               id="about-team-showcase-title"
             >
-              {copy.teamTitlePrefix}{' '}
-              <span className="about-team-title__accent">
-                {copy.teamTitleAccent}
-              </span>
+              {copy.teamTitlePrefix} {copy.teamTitleAccent}
             </h2>
 
             <p className={`about-team-lead ${styles.lead}`}>{copy.teamLead}</p>

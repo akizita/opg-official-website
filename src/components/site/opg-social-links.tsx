@@ -51,7 +51,7 @@ const socialLinks = [
 export function OpgSocialLinks() {
   return (
     <div className="contact-social">
-      <p className="contact-social__eyebrow">Follow us</p>
+      <p className="contact-social__eyebrow">Connect with OPG</p>
       <nav aria-label="OPG social media" className="contact-social__links">
         {socialLinks.map(({ account, href, icon, label }) => (
           <a
@@ -61,13 +61,14 @@ export function OpgSocialLinks() {
             key={label}
             rel="noopener noreferrer"
             target="_blank"
+            title={`${label} (${account})`}
           >
             <span aria-hidden="true" className="contact-social__icon">
-              <HugeiconsIcon icon={icon} size={20} strokeWidth={1.8} />
+              <HugeiconsIcon icon={icon} size={17} strokeWidth={1.8} />
             </span>
-            <span className="contact-social__account">{account}</span>
+            <span className="contact-social__account">{label}</span>
             <span aria-hidden="true" className="contact-link-arrow">
-              <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} strokeWidth={2} />
+              <HugeiconsIcon icon={ArrowUpRight01Icon} size={14} strokeWidth={2} />
             </span>
           </a>
         ))}

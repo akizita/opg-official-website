@@ -1,0 +1,117 @@
+.profileForm {
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-top: 1.25rem;
+}
+
+.avatarSection {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.avatarCircle {
+  align-items: center;
+  background: #2b2720;
+  border-radius: 9999px;
+  color: #fff7e4;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 3.5rem;
+  justify-content: center;
+  overflow: hidden;
+  width: 3.5rem;
+}
+
+.avatarImg {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.avatarControls {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.uploadRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.uploadButton {
+  background: #fffdf8;
+  border: 1px solid #d6c5a7;
+  border-radius: 9999px;
+  color: var(--color-ink);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+}
+
+.uploadButton:hover {
+  background: #fff1cd;
+}
+
+.fileInput {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.hintText {
+  color: var(--color-ink-soft);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.fieldRow {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.fieldLabel {
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.textInput {
+  background: #ffffff;
+  border: 1px solid #d6c5a7;
+  border-radius: var(--radius-small);
+  color: var(--color-ink);
+  font: inherit;
+  min-height: 2.6rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+}
+
+.textInput:focus {
+  border-color: #f29f04;
+  outline: 2px solid rgba(242, 183, 5, 0.28);
+}
+
+.statusMessage {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.statusSuccess {
+  color: #166534;
+}
+
+.statusError {
+  color: #b91c1c;
+}

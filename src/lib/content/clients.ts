@@ -371,7 +371,7 @@ export const DEFAULT_CLIENT_TESTIMONIALS: Testimonial[] = [
     author_name: 'Marcus Vance',
     author_role: 'VP of Engineering & Product Infrastructure',
     quote:
-      'Outsource Pro Global integrated seamlessly into our GitHub and Jira workflows within two weeks. Their QA and full-stack engineering pod didn’t just execute sprint tickets—they overhauled our automated CI/CD pipeline, reducing release regression cycles by 65%. It feels like having our own senior in-house engineers down the hall.',
+      'Outsourced Pro Global integrated seamlessly into our GitHub and Jira workflows within two weeks. Their QA and full-stack engineering pod didn’t just execute sprint tickets—they overhauled our automated CI/CD pipeline, reducing release regression cycles by 65%. It feels like having our own senior in-house engineers down the hall.',
     rating: 5,
     photo_url: '/images/testimonial-marcus-vance.jpg',
     status: 'published',

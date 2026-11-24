@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 
 import { ButtonLink } from '@/components/ui/button-link'
+import { getTeamPhotoUrl } from '@/lib/content/team-media'
 
 import tabStyles from './about-services-tabs.module.css'
 
-const HANNAH_IMAGE_URL =
-  'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/general/hannah-1789806689447.png'
+const TEAM_LEAD_IMAGE_URL = getTeamPhotoUrl('Armi.png')
 
 interface ServiceFeature {
   title: string
@@ -103,70 +103,7 @@ const SERVICE_FEATURES: ServiceFeature[] = [
 ]
 
 function renderHeadingWithAccent(title: string) {
-  if (!title) return null
-
-  // If title has an ampersand like "Screening & Technical Vetting"
-  if (title.includes('&')) {
-    const parts = title.split('&')
-    return (
-      <>
-        <span>{parts[0].trim()}</span> &amp;{' '}
-        <span className="about-sticky-process__title-accent">
-          {parts.slice(1).join('&').trim()}
-        </span>
-      </>
-    )
-  }
-
-  // Handle phrases ending with "as a Service" cleanly
-  if (title.toLowerCase().endsWith('as a service')) {
-    const splitIndex = title.length - 'as a service'.length
-    return (
-      <>
-        <span>{title.slice(0, splitIndex).trim()}</span>{' '}
-        <span className="about-sticky-process__title-accent">
-          {title.slice(splitIndex)}
-        </span>
-      </>
-    )
-  }
-
-  // If title includes "long-term success"
-  if (title.toLowerCase().includes('long-term success')) {
-    const parts = title.split(/long-term success/i)
-    return (
-      <>
-        <span>{parts[0]}</span>{' '}
-        <span className="about-sticky-process__title-accent">
-          long-term success{parts[1] || ''}
-        </span>
-      </>
-    )
-  }
-
-  // General fallback: accent on the last 1-2 words
-  const words = title.trim().split(/\s+/)
-  if (words.length > 2) {
-    const prefix = words.slice(0, -2).join(' ')
-    const accent = words.slice(-2).join(' ')
-    return (
-      <>
-        <span>{prefix}</span>{' '}
-        <span className="about-sticky-process__title-accent">{accent}</span>
-      </>
-    )
-  }
-
-  if (words.length === 2) {
-    return (
-      <>
-        <span>{words[0]}</span>{' '}
-        <span className="about-sticky-process__title-accent">{words[1]}</span>
-      </>
-    )
-  }
-
-  return <span className="about-sticky-process__title-accent">{title}</span>
+  return title || null
 }
 
 const STEP_COUNT = SERVICE_FEATURES.length
@@ -285,10 +222,7 @@ export function AboutServicesSection({
                   className="about-services-section__title"
                   id="about-services-heading"
                 >
-                  {copy.servicesTitlePrefix}{' '}
-                  <span className="about-services-section__title-accent">
-                    {copy.servicesTitleAccent}
-                  </span>
+                  {copy.servicesTitlePrefix} {copy.servicesTitleAccent}
                 </h2>
               </div>
               <div className="about-services-anim-item">
@@ -304,7 +238,19 @@ export function AboutServicesSection({
                     className="about-services-metric-chip__icon"
                     aria-hidden="true"
                   >
-                    ⚡
+                    <svg
+                      fill="none"
+                      height="16"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      width="16"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
                   </span>
                   <div>
                     <strong>72 Hours</strong>
@@ -316,7 +262,20 @@ export function AboutServicesSection({
                     className="about-services-metric-chip__icon"
                     aria-hidden="true"
                   >
-                    🌐
+                    <svg
+                      fill="none"
+                      height="16"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      width="16"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M2 12h20" />
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z" />
+                    </svg>
                   </span>
                   <div>
                     <strong>45,000+</strong>
@@ -328,7 +287,19 @@ export function AboutServicesSection({
                     className="about-services-metric-chip__icon"
                     aria-hidden="true"
                   >
-                    🏆
+                    <svg
+                      fill="none"
+                      height="16"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      width="16"
+                    >
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
                   </span>
                   <div>
                     <strong>98%</strong>
@@ -342,12 +313,12 @@ export function AboutServicesSection({
             <div className="about-services-hero__visual about-services-anim-item">
               <div className="about-services-cutout-frame">
                 <Image
-                  alt="Hannah Reyes - Director of Global Talent Acquisition at Outsourced Pro Global"
+                  alt="Armi Escamilla - Talent Acquisition Team Leader at Outsourced Pro Global"
                   className="about-services-cutout-image"
                   height={800}
                   priority
                   sizes="(max-width: 62rem) 100vw, 42vw"
-                  src={HANNAH_IMAGE_URL}
+                  src={TEAM_LEAD_IMAGE_URL}
                   width={800}
                 />
               </div>

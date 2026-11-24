@@ -11,8 +11,10 @@ import React, {
 } from 'react'
 
 export interface DriftWallItem {
-  image: string
+  image?: string
+  eyebrow?: string
   title?: string
+  subtitle?: string
   href?: string
 }
 
@@ -47,17 +49,68 @@ interface ColumnMeta {
   copies: number
 }
 
-const DEFAULT_ITEMS: DriftWallItem[] = Array.from({ length: 15 }, (_, i) => {
-  const ids = [
-    1015, 1025, 1039, 1043, 1044, 1050, 1062, 1069, 1074, 1080, 1084, 106, 110,
-    133, 164,
-  ]
-  return {
-    image: `https://picsum.photos/id/${ids[i % ids.length]}/600/400`,
-    title: `Tile ${i + 1}`,
-    href: undefined,
-  }
-})
+const DEFAULT_ITEMS: DriftWallItem[] = [
+  {
+    eyebrow: '01 · Standards',
+    title: 'Direct Pod Ownership',
+    subtitle: 'Full-time embedded teams',
+  },
+  {
+    eyebrow: '02 · Vetting',
+    title: 'Technical Precision',
+    subtitle: 'Structured domain screening',
+  },
+  {
+    eyebrow: '03 · Continuity',
+    title: '98% Retention',
+    subtitle: 'Long-term career stability',
+  },
+  {
+    eyebrow: '04 · Alignment',
+    title: 'Global Timezones',
+    subtitle: 'APAC, US & UK overlap',
+  },
+  {
+    eyebrow: '05 · Culture',
+    title: 'People at the Core',
+    subtitle: 'Empathy & shared growth',
+  },
+  {
+    eyebrow: '06 · Governance',
+    title: 'ISO-Aligned Security',
+    subtitle: 'Zero-trust access standards',
+  },
+  {
+    eyebrow: '07 · Delivery',
+    title: '72-Hour Shortlist',
+    subtitle: 'Calibrated candidate slates',
+  },
+  {
+    eyebrow: '08 · Operations',
+    title: 'Manila Delivery Hub',
+    subtitle: 'Managed HR & IT support',
+  },
+  {
+    eyebrow: '09 · Trust',
+    title: 'Complete Transparency',
+    subtitle: 'Clear direct reporting',
+  },
+  {
+    eyebrow: '10 · Growth',
+    title: 'Continuous Learning',
+    subtitle: 'Mentorship & upskilling',
+  },
+  {
+    eyebrow: '11 · Scale',
+    title: 'Flexible Pods',
+    subtitle: 'Built to grow with demand',
+  },
+  {
+    eyebrow: '12 · Quality',
+    title: 'Executive Oversight',
+    subtitle: 'Ongoing partner check-ins',
+  },
+]
 
 const subscribeReducedMotion = (callback: () => void) => {
   if (typeof window === 'undefined') return () => {}
@@ -345,7 +398,7 @@ export function DriftWall({
   )
 
   const renderTile = (item: DriftWallItem, id: string, colIndex: number) => {
-    const inner = (
+    const inner = item.image ? (
       <span className="drift-wall__inner">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -356,6 +409,20 @@ export function DriftWall({
           draggable={false}
         />
         <span className="drift-wall__overlay" aria-hidden="true" />
+      </span>
+    ) : (
+      <span className="drift-wall__inner drift-wall__inner--card">
+        <span className="drift-wall__card">
+          {item.eyebrow ? (
+            <span className="drift-wall__eyebrow">{item.eyebrow}</span>
+          ) : null}
+          {item.title ? (
+            <span className="drift-wall__title">{item.title}</span>
+          ) : null}
+          {item.subtitle ? (
+            <span className="drift-wall__subtitle">{item.subtitle}</span>
+          ) : null}
+        </span>
       </span>
     )
     const commonProps = {

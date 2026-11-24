@@ -14,6 +14,8 @@ export interface OffshoreHubLocation {
   country: string
   svgX: number
   svgY: number
+  tagOffsetX?: number
+  tagOffsetY?: number
   isHeadquarters?: boolean
   talentsConnected: string
 }
@@ -39,6 +41,8 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
     country: 'United States',
     svgX: 135,
     svgY: 388,
+    tagOffsetX: -18,
+    tagOffsetY: -17,
     talentsConnected: '85+ Talents Placed',
   },
   {
@@ -49,6 +53,8 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
     country: 'United States',
     svgX: 232,
     svgY: 375,
+    tagOffsetX: 18,
+    tagOffsetY: 18,
     talentsConnected: '50+ Talents Placed',
   },
   {
@@ -59,6 +65,8 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
     country: 'United Kingdom',
     svgX: 398,
     svgY: 345,
+    tagOffsetX: 0,
+    tagOffsetY: -17,
     talentsConnected: '35+ Talents Placed',
   },
   {
@@ -69,6 +77,8 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
     country: 'United Arab Emirates',
     svgX: 532,
     svgY: 468,
+    tagOffsetX: -34,
+    tagOffsetY: -17,
     talentsConnected: '25+ Talents Placed',
   },
   {
@@ -79,6 +89,8 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
     country: 'India',
     svgX: 575,
     svgY: 472,
+    tagOffsetX: 14,
+    tagOffsetY: 18,
     talentsConnected: 'Technical Collaboration',
   },
   {
@@ -89,6 +101,8 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
     country: 'Singapore',
     svgX: 658,
     svgY: 528,
+    tagOffsetX: -24,
+    tagOffsetY: 18,
     talentsConnected: '30+ Talents Placed',
   },
   {
@@ -99,6 +113,8 @@ export const GLOBAL_DESTINATIONS: OffshoreHubLocation[] = [
     country: 'Australia',
     svgX: 715,
     svgY: 660,
+    tagOffsetX: 0,
+    tagOffsetY: -17,
     talentsConnected: '40+ Talents Placed',
   },
 ]
@@ -137,6 +153,7 @@ function getHarmoniousArcPath(dest: OffshoreHubLocation): string {
 
 export interface OffshoreMapSectionProps {
   hideDotField?: boolean
+  frameless?: boolean
   layout?: 'full' | 'two-column' | 'one-column'
   variant?: 'detailed' | 'overview'
   showDescriptions?: boolean
@@ -153,6 +170,7 @@ export interface OffshoreMapSectionProps {
 
 export function OffshoreMapSection({
   hideDotField = false,
+  frameless = false,
   layout = 'one-column',
   variant = 'detailed',
   showDescriptions,
@@ -184,13 +202,19 @@ export function OffshoreMapSection({
   ]
 
   const mapViewport = (
-    <div className="offshore-map-card">
+    <div
+      className={
+        frameless
+          ? 'offshore-map-card offshore-map-card--frameless'
+          : 'offshore-map-card'
+      }
+    >
       <div className="offshore-schematic-viewport">
         <svg
-          viewBox="30.767 241.591 784.077 458.627"
+          viewBox="42 252 762 436"
           className="offshore-schematic-svg"
           preserveAspectRatio="xMidYMid meet"
-          aria-label="World map showing Outsource Pro Global offshore network connections from Philippines to global partners"
+          aria-label="World map showing Outsourced Pro Global offshore network connections from Philippines to global partners"
         >
           <defs>
             {/* Subtle Grid Pattern */}
@@ -224,15 +248,19 @@ export function OffshoreMapSection({
             </radialGradient>
           </defs>
 
-          {/* Ocean Background & Grid */}
-          <rect x="30" y="240" width="790" height="465" fill="#fafbfc" />
-          <rect
-            x="30"
-            y="240"
-            width="790"
-            height="465"
-            fill="url(#map-grid-dots)"
-          />
+          {/* Ocean Background & Grid (framed card mode only) */}
+          {!frameless && (
+            <>
+              <rect x="30" y="240" width="790" height="465" fill="#fafbfc" />
+              <rect
+                x="30"
+                y="240"
+                width="790"
+                height="465"
+                fill="url(#map-grid-dots)"
+              />
+            </>
+          )}
 
           {/* Real World Country Vector Boundaries */}
           <WorldMapPaths />
@@ -290,37 +318,37 @@ export function OffshoreMapSection({
             />
             {/* Core Golden Hub Badge */}
             <circle
-              r="5.5"
+              r="6.5"
               fill="#f29f04"
               stroke="#ffffff"
-              strokeWidth="1.6"
+              strokeWidth="1.8"
               className="offshore-hq-core"
             />
-            <circle r="1.8" fill="#ffffff" />
+            <circle r="2.2" fill="#ffffff" />
             {/* HQ Floating Badge */}
             <g
-              transform="translate(0, -18)"
+              transform="translate(10, -20)"
               className="offshore-hq-badge"
               pointerEvents="none"
             >
               <rect
-                x="-45"
-                y="-9"
-                width="90"
-                height="16"
-                rx="8"
+                x="-56"
+                y="-10"
+                width="112"
+                height="20"
+                rx="10"
                 fill="#0d0d0d"
                 stroke="#f29f04"
-                strokeWidth="1"
+                strokeWidth="1.15"
               />
               <text
                 x="0"
-                y="2.5"
+                y="3"
                 textAnchor="middle"
                 fill="#ffffff"
-                fontSize="6.8"
+                fontSize="8.8"
                 fontWeight="800"
-                letterSpacing="0.4"
+                letterSpacing="0.45"
               >
                 ★ HQ: PHILIPPINES
               </text>
@@ -329,6 +357,10 @@ export function OffshoreMapSection({
 
           {/* Global Destination Pins */}
           {filteredDestinations.map((dest) => {
+            const labelWidth = Math.max(66, Math.round(dest.label.length * 5.25) + 20)
+            const tagX = dest.tagOffsetX ?? 0
+            const tagY = dest.tagOffsetY ?? -17
+
             return (
               <g
                 key={dest.id}
@@ -340,44 +372,44 @@ export function OffshoreMapSection({
               >
                 {/* Outer Glow on Hover */}
                 <circle
-                  r="12"
-                  fill="rgba(242, 159, 4, 0.14)"
+                  r="14"
+                  fill="rgba(242, 159, 4, 0.16)"
                   className="offshore-pin-glow"
                 />
                 {/* Outer Solid Ring */}
                 <circle
-                  r="4.5"
+                  r="5.2"
                   fill="#ffffff"
                   stroke="#f29f04"
-                  strokeWidth="1.4"
+                  strokeWidth="1.6"
                   className="offshore-pin-ring"
                 />
                 {/* Inner Accent Dot */}
-                <circle r="2" fill="#0d0d0d" />
+                <circle r="2.2" fill="#0d0d0d" />
 
                 {/* Permanent High-Legibility City Tag */}
                 <g
-                  transform="translate(0, -14)"
+                  transform={`translate(${tagX}, ${tagY})`}
                   className="offshore-pin-tag"
                   pointerEvents="none"
                 >
                   <rect
-                    x="-46"
-                    y="-8"
-                    width="92"
-                    height="15"
-                    rx="7.5"
-                    fill="rgba(255, 255, 255, 0.95)"
-                    stroke="rgba(13, 13, 13, 0.18)"
-                    strokeWidth="0.7"
+                    x={-labelWidth / 2}
+                    y="-9.5"
+                    width={labelWidth}
+                    height="19"
+                    rx="9.5"
+                    fill="rgba(255, 255, 255, 0.96)"
+                    stroke="rgba(180, 100, 0, 0.34)"
+                    strokeWidth="0.9"
                     className="offshore-pin-label-bg"
                   />
                   <text
                     x="0"
-                    y="2.5"
+                    y="3"
                     textAnchor="middle"
                     fill="#0d0d0d"
-                    fontSize="6.8"
+                    fontSize="8.4"
                     fontWeight="750"
                   >
                     {dest.label}
@@ -514,19 +546,9 @@ export function OffshoreMapSection({
 
   const resolvedTitle =
     title ||
-    (isOverview ? (
-      <>
-        Our Global{' '}
-        <span className="offshore-hub__title-accent">Offshore Network</span>
-      </>
-    ) : (
-      <>
-        More Than Recruitment.{' '}
-        <span className="offshore-hub__title-accent">
-          A Complete Offshore Hub
-        </span>
-      </>
-    ))
+    (isOverview
+      ? 'Our Global Offshore Network'
+      : 'More Than Recruitment. A Complete Offshore Hub')
 
   const resolvedSummary =
     summary ||
@@ -568,15 +590,7 @@ export function OffshoreMapSection({
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              {showEyebrow && (
-                <div className="offshore-hub__split-badge" role="text">
-                  <span
-                    aria-hidden="true"
-                    className="offshore-hub__split-badge-dot"
-                  />
-                  <span>{resolvedEyebrow}</span>
-                </div>
-              )}
+              {showEyebrow && <p className="eyebrow">{resolvedEyebrow}</p>}
 
               <h2
                 id="offshore-hub-split-heading"
@@ -720,9 +734,13 @@ export function OffshoreMapSection({
           <p className="offshore-hub__summary">{resolvedSummary}</p>
         </motion.div>
 
-        {/* 2. One-Column Map Viewport (Aligned with Container) */}
+        {/* 2. One-Column Map Viewport (Centered & Spacious) */}
         <motion.div
-          className="offshore-hub__map-wrapper"
+          className={
+            frameless
+              ? 'offshore-hub__map-wrapper offshore-hub__map-wrapper--frameless'
+              : 'offshore-hub__map-wrapper'
+          }
           initial={
             shouldReduceMotion ? false : { opacity: 0, scale: 0.98, y: 20 }
           }
@@ -759,18 +777,52 @@ export function OffshoreMapSection({
           </motion.div>
         )}
 
-        {/* 5. Overview CTA Action Row (Overview Mode) */}
-        {isOverview && ctaHref && (
+        {/* 5. Compact Overview Footer: Metrics + CTA Action Row Under Map */}
+        {isOverview && (
           <motion.div
-            className="offshore-hub__cta-row"
+            className="offshore-hub__overview-footer"
             initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.5, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
           >
-            <ButtonLink href={ctaHref} variant="secondary">
-              {ctaText || 'Explore our complete offshore model →'}
-            </ButtonLink>
+            <div className="offshore-hub__overview-metrics">
+              <div className="offshore-hub__split-metric-item">
+                <span className="offshore-hub__split-metric-val">
+                  {copy?.networkMetric1 || '1,000+'}
+                </span>
+                <span className="offshore-hub__split-metric-label">
+                  {copy?.networkMetric1Label || 'Placed Talents'}
+                </span>
+              </div>
+              <div className="offshore-hub__split-metric-item">
+                <span className="offshore-hub__split-metric-val">
+                  {copy?.networkMetric2 || '7 Hubs'}
+                </span>
+                <span className="offshore-hub__split-metric-label">
+                  {copy?.networkMetric2Label || 'Global Reach'}
+                </span>
+              </div>
+              <div className="offshore-hub__split-metric-item">
+                <span className="offshore-hub__split-metric-val">
+                  {copy?.networkMetric3 || '98%'}
+                </span>
+                <span className="offshore-hub__split-metric-label">
+                  {copy?.networkMetric3Label || 'Retention'}
+                </span>
+              </div>
+            </div>
+
+            {ctaHref && (
+              <div className="offshore-hub__cta-row">
+                <ButtonLink
+                  className="offshore-hub__pill-glass-btn"
+                  href={ctaHref}
+                >
+                  {ctaText || 'Explore our complete offshore model →'}
+                </ButtonLink>
+              </div>
+            )}
           </motion.div>
         )}
       </div>

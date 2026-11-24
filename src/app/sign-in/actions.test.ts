@@ -66,6 +66,7 @@ describe('visitor sign-in', () => {
         provider: 'google',
         options: {
           redirectTo: 'http://localhost:3000/auth/callback?next=%2Fcontact',
+          scopes: 'openid email profile',
           queryParams: { prompt: 'select_account' },
         },
       })

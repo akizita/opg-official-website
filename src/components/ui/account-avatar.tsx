@@ -3,6 +3,9 @@
 import Image from 'next/image'
 import { useMemo, useState } from 'react'
 
+import { ProfileIconSvg } from '@/components/ui/profile-icon-svg'
+import { buildAvatarCandidates } from '@/lib/auth/avatar-utils'
+
 function deriveInitials(displayName: string, email?: string | null) {
   const cleanName = displayName.trim()
   if (cleanName) {
@@ -47,21 +50,10 @@ export function AccountAvatar({
   initialsClassName?: string
   size?: number
 }) {
-  const candidates = useMemo(() => {
-    const list: string[] = []
-    const trimmed = avatarUrl?.trim()
-    if (trimmed) {
-      list.push(trimmed)
-    }
-    const cleanEmail = (email ?? '').trim().toLowerCase()
-    if (cleanEmail && cleanEmail.includes('@')) {
-      const gravatarUrl = `https://unavatar.io/gravatar/${encodeURIComponent(cleanEmail)}?fallback=false`
-      if (!list.includes(gravatarUrl)) {
-        list.push(gravatarUrl)
-      }
-    }
-    return list
-  }, [avatarUrl, email])
+  const candidates = useMemo(
+    () => buildAvatarCandidates({ avatarUrl, email }),
+    [avatarUrl, email],
+  )
 
   const candidateKey = candidates.join('|')
   const [prevKey, setPrevKey] = useState(candidateKey)
@@ -98,7 +90,7 @@ export function AccountAvatar({
       ) : initialsClassName ? (
         <span className={initialsClassName}>{fallbackInitials}</span>
       ) : (
-        fallbackInitials
+        <ProfileIconSvg size={Math.max(16, Math.round(size * 0.52))} />
       )}
     </span>
   )

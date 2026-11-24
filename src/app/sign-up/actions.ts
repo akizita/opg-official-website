@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 
 import type { AuthFormState } from '@/lib/auth/form-state'
+import { uploadProfileAvatarFile } from '@/lib/auth/avatar-upload'
 import { validateAdminPassword } from '@/lib/auth/password'
 import { getSiteUrl } from '@/lib/site-config'
 import { createClient } from '@/lib/supabase/server'
@@ -14,6 +15,8 @@ export async function visitorSignUpAction(
   const rawEmail = formData.get('email')
   const password = formData.get('password')
   const confirmation = formData.get('passwordConfirmation')
+  const rawFullName = formData.get('fullName')
+  const avatarFile = formData.get('avatar')
 
   if (
     typeof rawEmail !== 'string' ||
@@ -43,10 +46,37 @@ export async function visitorSignUpAction(
       message: 'Sign out before creating another account.',
     }
   }
+
+  const metadata: Record<string, string> = {}
+  if (typeof rawFullName === 'string' && rawFullName.trim()) {
+    metadata.full_name = rawFullName.trim().slice(0, 80)
+  }
+
+  if (avatarFile instanceof File && avatarFile.size > 0) {
+    const uploadResult = await uploadProfileAvatarFile(
+      avatarFile,
+      `signup-${crypto.randomUUID()}`,
+    )
+    if (!uploadResult.ok) {
+      return { status: 'error', message: uploadResult.error }
+    }
+    metadata.avatar_url = uploadResult.avatarUrl
+  }
+
+  const signUpOptions: {
+    emailRedirectTo: string
+    data?: Record<string, string>
+  } = {
+    emailRedirectTo: callback.toString(),
+  }
+  if (Object.keys(metadata).length > 0) {
+    signUpOptions.data = metadata
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: callback.toString() },
+    options: signUpOptions,
   })
 
   if (error) {

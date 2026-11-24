@@ -49,12 +49,12 @@ export function SiteFooter() {
       <div className="container site-footer__grid">
         <div>
           <Link
-            aria-label="Return to Outsource Pro Global home"
+            aria-label="Return to Outsourced Pro Global home"
             className="brand site-footer__brand"
             href="/"
           >
             <Image
-              alt="Outsource Pro Global"
+              alt="Outsourced Pro Global"
               className="site-footer__logo"
               height={150}
               src="/images/opg-logo-white-text.png"

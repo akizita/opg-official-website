@@ -128,13 +128,10 @@ export function AboutHeroSection({
             initial="hidden"
             animate="visible"
           >
-            {/* Eyebrow Pill Badge */}
-            <motion.div className={styles.eyebrowBadge} variants={itemVariants}>
-              <span className={styles.pulseDot} aria-hidden="true" />
-              <span className={styles.eyebrowText}>
-                {copy.heroBadge || 'About Outsourced Pro Global'}
-              </span>
-            </motion.div>
+            {/* Quiet Eyebrow */}
+            <motion.p className={styles.eyebrowLabel} variants={itemVariants}>
+              {copy.heroBadge || 'About Outsourced Pro Global'}
+            </motion.p>
 
             {/* Main Headline */}
             <motion.h1
@@ -142,10 +139,8 @@ export function AboutHeroSection({
               className={styles.heroTitle}
               variants={itemVariants}
             >
-              <span className={styles.titlePrefix}>{titlePrefix} </span>
-              {titleAccent && (
-                <span className={styles.titleAccent}>{titleAccent}</span>
-              )}
+              {titlePrefix}
+              {titleAccent ? ` ${titleAccent}` : ''}
             </motion.h1>
 
             {/* Mission & Value Proposition Description */}
@@ -248,22 +243,7 @@ export function AboutHeroSection({
                   </div>
                 </div>
 
-                {/* 2. Floating Circular Rotating Seal / Stamp */}
-                <div className={styles.circularStampBadge} aria-hidden="true">
-                  <svg viewBox="0 0 100 100" className={styles.rotatingSvg}>
-                    <path
-                      id="heroStampCircle"
-                      d="M 50, 50 m -34, 0 a 34,34 0 1,1 68,0 a 34,34 0 1,1 -68,0"
-                      fill="none"
-                    />
-                    <text fontSize="9.6" fontWeight="750" fill="#92400e" letterSpacing="2.2">
-                      <textPath href="#heroStampCircle">• OUTSOURCED PRO GLOBAL • EST. 2018 </textPath>
-                    </text>
-                  </svg>
-                  <div className={styles.stampCenterIcon}>✦</div>
-                </div>
-
-                {/* 3. Portrait Photo Card with Stacked Metric Chips */}
+                {/* 2. Portrait Photo Card with Stacked Metric Chips */}
                 <div className={styles.portraitWrapper}>
                   <div className={styles.portraitCard}>
                     <Image
@@ -302,17 +282,32 @@ export function AboutHeroSection({
                 </div>
               </div>
 
-              {/* Bottom Row: Wide Team Collaboration Photo Card */}
-              <div className={styles.bottomTeamCard}>
-                <Image
-                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80"
-                  alt="Cross-border agile pod working synchronously with laptops and collaborative boards"
-                  fill
-                  priority
-                  sizes="(max-width: 64rem) 100vw, 50vw"
-                  className={styles.teamImg}
-                />
-                <div className={styles.teamOverlay} aria-hidden="true" />
+              {/* Bottom Row: Individual Glassmorphic Detail Cards (1,000+ Talents, 3+ Years, 98% Retention) */}
+              <div className={styles.bottomHubGrid}>
+                <div className={styles.bottomHubMetric}>
+                  <strong>{copy.card1Metric || '1,000+'}</strong>
+                  <em>{copy.card1Title || 'Over 1,000+ Talents'}</em>
+                  <span>
+                    {copy.card1Description ||
+                      'Rigorously vetted professionals across global operations.'}
+                  </span>
+                </div>
+                <div className={styles.bottomHubMetric}>
+                  <strong>{copy.card2Metric || '3+ Years'}</strong>
+                  <em>{copy.card2Title || 'Over 3+ Years in Service'}</em>
+                  <span>
+                    {copy.card2Description ||
+                      'Delivering sustained operational excellence.'}
+                  </span>
+                </div>
+                <div className={styles.bottomHubMetric}>
+                  <strong>{copy.card3Metric || '98%'}</strong>
+                  <em>{copy.card3Title || 'Over 98% Client Retention'}</em>
+                  <span>
+                    {copy.card3Description ||
+                      'Building enduring human partnerships.'}
+                  </span>
+                </div>
               </div>
             </div>
           </motion.div>

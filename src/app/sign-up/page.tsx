@@ -12,9 +12,9 @@ import { getVisitorSession } from '@/lib/auth/visitor-session'
 import { VisitorSignUpForm } from './sign-up-form'
 
 export const metadata: Metadata = {
-  title: 'Create an account | Outsource Pro Global',
+  title: 'Create an account | Outsourced Pro Global',
   description:
-    'Create your Outsource Pro Global account to access dedicated global talent operations and enterprise services.',
+    'Create your Outsourced Pro Global account to access dedicated global talent operations and enterprise services.',
   robots: { index: false, follow: false },
 }
 
@@ -84,7 +84,7 @@ export default async function VisitorSignUpPage({
 
           {/* Centered Copyright below card */}
           <div className={styles.pageCopyright}>
-            <span>&copy; 2026 Outsource Pro Global. All rights reserved.</span>
+            <span>&copy; 2026 Outsourced Pro Global. All rights reserved.</span>
           </div>
         </div>
       </main>

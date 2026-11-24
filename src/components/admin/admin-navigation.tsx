@@ -16,7 +16,6 @@ import { useRef, useState } from 'react'
 
 import {
   OpgIconArticles,
-  OpgIconClients,
   OpgIconContacts,
   OpgIconDashboard,
   OpgIconSubscribers,
@@ -30,7 +29,6 @@ import {
 
 type NavigationIcon =
   | 'articles'
-  | 'clients'
   | 'dashboard'
   | 'inquiries'
   | 'subscribers'
@@ -62,8 +60,6 @@ function NavigationGlyph({ name }: { name: NavigationIcon }) {
       return <OpgIconDashboard />
     case 'articles':
       return <OpgIconArticles />
-    case 'clients':
-      return <OpgIconClients />
     case 'inquiries':
       return <OpgIconContacts />
     case 'subscribers':
@@ -190,7 +186,6 @@ export function AdminNavigation({ roleKey }: { roleKey: string }) {
           icon: 'testimonials',
           label: 'Testimonials',
         },
-        { href: '/admin/clients', icon: 'clients', label: 'Clients' },
       ]
     : []
 

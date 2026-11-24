@@ -1,0 +1,47 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding-block: clamp(0.75rem, 2vw, 1.5rem);
+  user-select: none;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 7%,
+    #000 93%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 7%,
+    #000 93%,
+    transparent 100%
+  );
+}
+
+.interactive {
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.interactive:active {
+  cursor: grabbing;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: clamp(8.5rem, 15vw, 13.5rem);
+  overflow: visible;
+}
+
+.measureText,
+.loopText {
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: #14110b;
+}

@@ -39,14 +39,10 @@ export function HomeTeamMasonrySection() {
           whileInView={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
         >
           <div className={styles.leftContentTop}>
-            <div className={styles.eyebrowBadge}>
-              <span aria-hidden="true" className={styles.eyebrowDot} />
-              <span>Our Specialists & Leadership</span>
-            </div>
+            <p className={styles.eyebrowLabel}>Our Specialists &amp; Leadership</p>
 
             <h3 className={styles.title}>
-              The Dedicated Minds Behind{' '}
-              <span className={styles.titleAccent}>Your Offshore Pods</span>
+              The Dedicated Minds Behind Your Offshore Pods
             </h3>
 
             <p className={styles.description}>

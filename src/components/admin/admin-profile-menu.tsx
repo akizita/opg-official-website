@@ -20,6 +20,7 @@ import {
   OpgIconUpload,
 } from '@/components/icons/opg-icons'
 import type { AdminProfile } from '@/lib/auth/admin-session'
+import { buildAvatarCandidates } from '@/lib/auth/avatar-utils'
 
 function AdminAccountAvatar({
   avatarUrl,
@@ -34,21 +35,10 @@ function AdminAccountAvatar({
   initials: string
   size: number
 }) {
-  const candidates = useMemo(() => {
-    const list: string[] = []
-    const trimmedUrl = avatarUrl?.trim()
-    if (trimmedUrl) {
-      list.push(trimmedUrl)
-    }
-    const cleanEmail = email.trim().toLowerCase()
-    if (cleanEmail && cleanEmail.includes('@')) {
-      const gravatarUrl = `https://unavatar.io/gravatar/${encodeURIComponent(cleanEmail)}?fallback=false`
-      if (!list.includes(gravatarUrl)) {
-        list.push(gravatarUrl)
-      }
-    }
-    return list
-  }, [avatarUrl, email])
+  const candidates = useMemo(
+    () => buildAvatarCandidates({ avatarUrl, email }),
+    [avatarUrl, email],
+  )
 
   const candidateKey = candidates.join('|')
   const [prevKey, setPrevKey] = useState(candidateKey)

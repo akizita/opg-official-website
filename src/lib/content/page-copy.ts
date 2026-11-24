@@ -551,7 +551,7 @@ export const HOME_COPY_SECTIONS: readonly CopySection[] = [
       field(
         'ctaBody',
         'Description',
-        'Whether you are scaling a dedicated remote pod or looking for your next career breakthrough, Outsource Pro Global builds seamless offshore partnerships that drive tangible growth.',
+        'Whether you are scaling a dedicated remote pod or looking for your next career breakthrough, Outsourced Pro Global builds seamless offshore partnerships that drive tangible growth.',
         true,
       ),
       field('ctaPrimary', 'Primary button', 'Contact OPG'),
@@ -632,7 +632,7 @@ const testimonialCopyDefaults = [
     metricBadge: '+160% Sprint Velocity',
     industry: 'Enterprise SaaS',
     quote:
-      'Outsource Pro Global integrated seamlessly into our GitHub and Jira workflows within two weeks. Their QA and full-stack engineering pod didn’t just execute sprint tickets—they overhauled our automated CI/CD pipeline, reducing release regression cycles by 65%. It feels like having our own senior in-house engineers down the hall.',
+      'Outsourced Pro Global integrated seamlessly into our GitHub and Jira workflows within two weeks. Their QA and full-stack engineering pod didn’t just execute sprint tickets—they overhauled our automated CI/CD pipeline, reducing release regression cycles by 65%. It feels like having our own senior in-house engineers down the hall.',
   },
   {
     companyName: 'Meridian Health',

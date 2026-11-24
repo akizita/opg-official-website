@@ -23,10 +23,19 @@
   padding-top: calc(
     clamp(0.75rem, 2vw, 1.25rem) + 4.15rem + clamp(2.25rem, 4.5vw, 4rem)
   );
-  padding-bottom: clamp(3.5rem, 6.5vw, 5.5rem);
+  padding-bottom: clamp(2.75rem, 5vh, 4.5rem);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   box-shadow: none;
+}
+
+@media (min-width: 64rem) {
+  .heroSection {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+  }
 }
 
 /* Ambient Yellow Aurora Glow Patches */
@@ -142,47 +151,13 @@
   max-width: 37rem;
 }
 
-/* Eyebrow Badge */
-.eyebrowBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.38rem 0.95rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.12);
-  margin-bottom: 1.25rem;
-}
-
-.pulseDot {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: #f29f04;
-  box-shadow: 0 0 10px rgba(242, 159, 4, 0.95);
-  animation: pulseAmber 2.2s ease-in-out infinite;
-}
-
-@keyframes pulseAmber {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.35);
-    opacity: 0.75;
-  }
-}
-
-.eyebrowText {
-  font-size: 0.76rem;
-  font-weight: 750;
-  letter-spacing: 0.08em;
+.eyebrowLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #b45309;
+  color: #8c5300;
+  margin: 0 0 1rem;
 }
 
 /* Main Headline */
@@ -248,41 +223,27 @@
   color: #ffffff !important;
   text-decoration: none;
   background: #0d1117;
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.22),
-    0 10px 24px -4px rgba(15, 23, 42, 0.4),
-    0 2px 6px 0 rgba(0, 0, 0, 0.12);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    0 8px 20px -6px rgba(15, 23, 42, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    background-color 0.22s ease;
   cursor: pointer;
   overflow: hidden;
 }
 
-.primaryGlassBtn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.16) 0%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  border-radius: 9999px 9999px 0 0;
-  pointer-events: none;
-}
-
 .primaryGlassBtn:hover {
-  background: #000000;
-  border-color: rgba(255, 255, 255, 0.36);
+  background: #181f29;
+  border-color: rgba(255, 255, 255, 0.24);
   color: #ffffff !important;
   transform: translateY(-2px);
   box-shadow:
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.3),
-    0 14px 32px -4px rgba(0, 0, 0, 0.55),
-    0 4px 10px 0 rgba(0, 0, 0, 0.2);
+    0 12px 24px -6px rgba(15, 23, 42, 0.4),
+    0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
 .primaryGlassBtn:active {
@@ -667,17 +628,16 @@
 }
 
 .metricChip {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  background: rgba(255, 253, 249, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #ffffff;
   border-radius: 14px;
   padding: 0.55rem 0.95rem;
   min-width: 115px;
   box-shadow:
-    0 12px 28px -6px rgba(217, 130, 0, 0.14),
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    inset 0 1.5px 2px rgba(255, 255, 255, 1);
+    0 12px 28px -6px rgba(18, 16, 13, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   color: #0f172a;
@@ -685,11 +645,11 @@
 }
 
 .metricChip:hover {
-  transform: translateX(-3px);
-  background: rgba(255, 255, 255, 0.95);
+  transform: translateX(-2px);
+  background: #ffffff;
   box-shadow:
-    0 16px 32px -6px rgba(217, 130, 0, 0.22),
-    inset 0 1.5px 2px rgba(255, 255, 255, 1);
+    0 12px 24px -8px rgba(15, 23, 42, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .chipNumber {
@@ -713,42 +673,70 @@
   margin-top: 0.15rem;
 }
 
-/* Card 3: Bottom Wide Team Collaboration Photo Card */
-.bottomTeamCard {
-  position: relative;
-  width: 100%;
-  height: 200px;
-  border-radius: 20px;
-  overflow: hidden;
+/* Card Row 3: Individual See-Through Glassmorphism Highlight Cards */
+.bottomHubGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
   margin-top: 0.95rem;
-  border: 1.5px solid rgba(255, 255, 255, 0.92);
-  box-shadow:
-    0 18px 40px -12px rgba(180, 83, 9, 0.12),
-    0 4px 12px rgba(0, 0, 0, 0.04);
-  background: #fef3c7;
-}
-
-.teamImg {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 38%;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.bottomTeamCard:hover .teamImg {
-  transform: scale(1.03);
-}
-
-.teamOverlay {
-  position: absolute;
-  inset: 0;
+.bottomHubMetric {
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
   background: linear-gradient(
-    180deg,
-    transparent 70%,
-    rgba(180, 83, 9, 0.12) 100%
+    145deg,
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 250, 238, 0.22) 100%
   );
-  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 18px;
+  box-sizing: border-box;
+  box-shadow:
+    0 12px 28px -10px rgba(180, 83, 9, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+  padding: 1rem 0.95rem;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.22s ease;
+}
+
+.bottomHubMetric:hover {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.48) 0%,
+    rgba(255, 252, 244, 0.32) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.88);
+  transform: translateY(-2px);
+}
+
+.bottomHubMetric strong {
+  font-size: 1.08rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: #0f172a;
+}
+
+.bottomHubMetric em {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #92400e;
+  line-height: 1.25;
+}
+
+.bottomHubMetric span {
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #3f3931;
 }
 
 /* --------------------------------------------------------------------------
@@ -846,8 +834,9 @@
     min-height: 240px;
   }
 
-  .bottomTeamCard {
-    height: 160px;
+  .bottomHubGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 }
 

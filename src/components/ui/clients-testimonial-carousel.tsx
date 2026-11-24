@@ -24,6 +24,9 @@ interface ClientsTestimonialCarouselProps {
   testimonials: readonly CarouselTestimonialItem[]
 }
 
+const AUTOPLAY_INTERVAL_MS = 5200
+const NAV_UNLOCK_FALLBACK_MS = 820
+
 export function ClientsTestimonialCarousel({
   testimonials,
 }: ClientsTestimonialCarouselProps) {
@@ -56,14 +59,26 @@ export function ClientsTestimonialCarousel({
   const [enableTransition, setEnableTransition] = useState(false)
   const [containerWidth, setContainerWidth] = useState(0)
   const [isMounted, setIsMounted] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const [isFocusWithin, setIsFocusWithin] = useState(false)
+  const [isTouchActive, setIsTouchActive] = useState(false)
+  const [isDocumentHidden, setIsDocumentHidden] = useState(false)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const isNavigatingRef = useRef(false)
+  const navUnlockTimerRef = useRef<number | null>(null)
   const touchStartX = useRef<number | null>(null)
   const touchEndX = useRef<number | null>(null)
 
   // Real active index (0 to total - 1)
   const realIndex = total > 0 ? ((virtualIndex % total) + total) % total : 0
+  const isAutoplayPaused =
+    isHovered ||
+    isFocusWithin ||
+    isTouchActive ||
+    isDocumentHidden ||
+    prefersReducedMotion
 
   // Measure container width and initialize without animation
   useEffect(() => {
@@ -75,8 +90,19 @@ export function ClientsTestimonialCarousel({
       }
     }
 
+    const motionQuery =
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-reduced-motion: reduce)')
+        : null
+    const syncMotionPreference = () =>
+      setPrefersReducedMotion(Boolean(motionQuery?.matches))
+    const syncVisibility = () =>
+      setIsDocumentHidden(document.visibilityState !== 'visible')
+
     const initialFrame = requestAnimationFrame(() => {
       updateWidth()
+      syncMotionPreference()
+      syncVisibility()
       setIsMounted(true)
     })
 
@@ -86,10 +112,17 @@ export function ClientsTestimonialCarousel({
     }, 60)
 
     window.addEventListener('resize', updateWidth)
+    motionQuery?.addEventListener('change', syncMotionPreference)
+    document.addEventListener('visibilitychange', syncVisibility)
     return () => {
       cancelAnimationFrame(initialFrame)
       clearTimeout(timer)
+      if (navUnlockTimerRef.current !== null) {
+        window.clearTimeout(navUnlockTimerRef.current)
+      }
       window.removeEventListener('resize', updateWidth)
+      motionQuery?.removeEventListener('change', syncMotionPreference)
+      document.removeEventListener('visibilitychange', syncVisibility)
     }
   }, [])
 
@@ -115,47 +148,77 @@ export function ClientsTestimonialCarousel({
   const trackOffset =
     (width - cardWidth) / 2 - virtualIndex * (cardWidth + cardGap)
 
+  const stepSlide = useCallback(
+    (delta: number) => {
+      if (total <= 1 || delta === 0 || isNavigatingRef.current) return
+      isNavigatingRef.current = true
+      if (navUnlockTimerRef.current !== null) {
+        window.clearTimeout(navUnlockTimerRef.current)
+      }
+      navUnlockTimerRef.current = window.setTimeout(() => {
+        isNavigatingRef.current = false
+        navUnlockTimerRef.current = null
+      }, NAV_UNLOCK_FALLBACK_MS)
+      setEnableTransition(true)
+      setVirtualIndex((prev) => prev + delta)
+    },
+    [total],
+  )
+
   // Navigation handlers
   const goToNext = useCallback(() => {
-    if (isNavigatingRef.current) return
-    isNavigatingRef.current = true
-    setEnableTransition(true)
-    setVirtualIndex((prev) => prev + 1)
-  }, [])
+    stepSlide(1)
+  }, [stepSlide])
 
   const goToPrev = useCallback(() => {
-    if (isNavigatingRef.current) return
-    isNavigatingRef.current = true
-    setEnableTransition(true)
-    setVirtualIndex((prev) => prev - 1)
-  }, [])
+    stepSlide(-1)
+  }, [stepSlide])
 
   const goToSlide = useCallback(
     (targetRealIndex: number) => {
-      if (isNavigatingRef.current || total === 0) return
-      isNavigatingRef.current = true
-      setEnableTransition(true)
+      if (total === 0) return
       const currentReal = ((virtualIndex % total) + total) % total
       const diff = targetRealIndex - currentReal
-      setVirtualIndex((prev) => prev + diff)
+      stepSlide(diff)
+    },
+    [stepSlide, total, virtualIndex],
+  )
+
+  // Handle transition end on the track itself for seamless infinite loop
+  const handleTransitionEnd = useCallback(
+    (e: React.TransitionEvent<HTMLDivElement>) => {
+      if (e.target !== e.currentTarget || e.propertyName !== 'transform') return
+      isNavigatingRef.current = false
+      if (navUnlockTimerRef.current !== null) {
+        window.clearTimeout(navUnlockTimerRef.current)
+        navUnlockTimerRef.current = null
+      }
+      if (total === 0) return
+
+      // If we've traversed into post or pre sets, reset back to main set invisibly
+      if (virtualIndex >= 2 * total) {
+        setEnableTransition(false)
+        setVirtualIndex((prev) => prev - total)
+      } else if (virtualIndex < total) {
+        setEnableTransition(false)
+        setVirtualIndex((prev) => prev + total)
+      }
     },
     [total, virtualIndex],
   )
 
-  // Handle transition end for seamless infinite loop
-  const handleTransitionEnd = useCallback(() => {
-    isNavigatingRef.current = false
-    if (total === 0) return
-
-    // If we've traversed into post or pre sets, reset back to main set invisibly
-    if (virtualIndex >= 2 * total) {
-      setEnableTransition(false)
-      setVirtualIndex((prev) => prev - total)
-    } else if (virtualIndex < total) {
-      setEnableTransition(false)
-      setVirtualIndex((prev) => prev + total)
+  // Automatic horizontal progression when visible and idle
+  useEffect(() => {
+    if (!isMounted || total <= 1 || isAutoplayPaused) {
+      return
     }
-  }, [total, virtualIndex])
+
+    const intervalId = window.setInterval(() => {
+      stepSlide(1)
+    }, AUTOPLAY_INTERVAL_MS)
+
+    return () => window.clearInterval(intervalId)
+  }, [isAutoplayPaused, isMounted, realIndex, stepSlide, total])
 
   // Re-enable transition on next frame after invisible index jump
   useEffect(() => {
@@ -183,6 +246,7 @@ export function ClientsTestimonialCarousel({
 
   // Touch gesture support
   const handleTouchStart = (e: React.TouchEvent) => {
+    setIsTouchActive(true)
     touchStartX.current = e.touches[0].clientX
     touchEndX.current = null
   }
@@ -192,6 +256,7 @@ export function ClientsTestimonialCarousel({
   }
 
   const handleTouchEnd = () => {
+    setIsTouchActive(false)
     if (touchStartX.current !== null && touchEndX.current !== null) {
       const distance = touchStartX.current - touchEndX.current
       if (distance > 45) {
@@ -211,7 +276,16 @@ export function ClientsTestimonialCarousel({
   return (
     <div
       className="clients-testimonial-carousel"
+      data-paused={isAutoplayPaused ? 'true' : 'false'}
       ref={containerRef}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocusCapture={() => setIsFocusWithin(true)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setIsFocusWithin(false)
+        }
+      }}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="region"
@@ -220,8 +294,9 @@ export function ClientsTestimonialCarousel({
       aria-describedby="clients-carousel-instructions"
     >
       <p id="clients-carousel-instructions" className="sr-only">
-        Use the previous and next buttons or the left and right arrow keys to
-        browse testimonials.
+        Testimonials advance automatically every few seconds and pause when
+        hovered or focused. Use the previous and next buttons or the left and
+        right arrow keys to browse testimonials.
       </p>
       <p className="sr-only" aria-live="polite" aria-atomic="true">
         Testimonial {realIndex + 1} of {total}:{' '}
@@ -244,7 +319,7 @@ export function ClientsTestimonialCarousel({
             transform: `translateX(${trackOffset}px)`,
             transition:
               enableTransition && isMounted
-                ? 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)'
+                ? 'transform 0.72s cubic-bezier(0.22, 1, 0.36, 1)'
                 : 'none',
           }}
         >
@@ -387,7 +462,15 @@ export function ClientsTestimonialCarousel({
               className={`clients-carousel-dot ${
                 idx === realIndex ? 'clients-carousel-dot--active' : ''
               }`}
-            />
+            >
+              {idx === realIndex && (
+                <span
+                  aria-hidden="true"
+                  className="clients-carousel-dot__fill"
+                  key={realIndex}
+                />
+              )}
+            </button>
           ))}
         </div>
 

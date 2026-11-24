@@ -39,7 +39,7 @@ export function AuthHeroPanel({
 
   return (
     <aside
-      aria-label="Outsource Pro Global Highlights"
+      aria-label="Outsourced Pro Global Highlights"
       className={cardClassName}
     >
       {/* ASCII Style Globe in Background */}
@@ -56,7 +56,7 @@ export function AuthHeroPanel({
       {/* Top Header Row with Logo Only (Navigations removed) */}
       <div className={styles.heroHeader}>
         <Link
-          aria-label="Return to Outsource Pro Global home"
+          aria-label="Return to Outsourced Pro Global home"
           className={styles.heroBrandLink}
           href="/"
         >

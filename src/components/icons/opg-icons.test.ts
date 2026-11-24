@@ -15,6 +15,7 @@ import {
   OpgIconDashboard,
   OpgIconEdit,
   OpgIconExternalMail,
+  OpgIconFaqGlobe,
   OpgIconFilter,
   OpgIconLikes,
   OpgIconLink,
@@ -152,5 +153,10 @@ describe('OPG Bespoke Icon Suite', () => {
     const calHtml = renderToStaticMarkup(createElement(OpgIconCalendar))
     expect(calHtml).toContain('<svg')
     expect(calHtml).toContain('viewBox="0 0 24 24"')
+
+    const faqGlobeHtml = renderToStaticMarkup(createElement(OpgIconFaqGlobe))
+    expect(faqGlobeHtml).toContain('<svg')
+    expect(faqGlobeHtml).toContain('aria-hidden="true"')
+    expect(faqGlobeHtml).toContain('viewBox="0 0 24 24"')
   })
 })

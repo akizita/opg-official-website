@@ -24,14 +24,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Terms of Service | ${siteConfig.shortName}`,
     description:
-      'Official Terms of Service governing enterprise client engagements, dedicated talent pods, digital portal access, and candidate recruitment at Outsource Pro Global.',
+      'Official Terms of Service governing enterprise client engagements, dedicated talent pods, digital portal access, and candidate recruitment at Outsourced Pro Global.',
     alternates: {
       canonical: pageUrl,
     },
     openGraph: {
       title: `Terms of Service | ${siteConfig.name}`,
       description:
-        'Official Terms of Service governing enterprise talent operations, digital portal access, and cross-border staffing at Outsource Pro Global.',
+        'Official Terms of Service governing enterprise talent operations, digital portal access, and cross-border staffing at Outsourced Pro Global.',
       url: pageUrl,
       siteName: siteConfig.name,
       type: 'website',
@@ -69,7 +69,7 @@ export default function TermsPage() {
         <header className={styles.headerSection}>
           <h1 className={styles.pageTitle}>Terms of Service</h1>
           <p className={styles.pageSubtitle}>
-            These Terms of Service govern your access to Outsource Pro Global
+            These Terms of Service govern your access to Outsourced Pro Global
             digital portals, enterprise staffing operations, dedicated
             cross-border talent pods, and candidate career discovery services.
           </p>
@@ -147,7 +147,7 @@ export default function TermsPage() {
             <div className={styles.leadNotice}>
               <strong>Please read these Terms carefully.</strong> By registering
               for an account, accessing our digital portals, submitting an
-              inquiry, or engaging Outsource Pro Global for dedicated talent
+              inquiry, or engaging Outsourced Pro Global for dedicated talent
               services, you confirm your acceptance of these Terms and agree to
               be bound by all provisions herein.
             </div>
@@ -163,7 +163,7 @@ export default function TermsPage() {
               <p className={styles.paragraph}>
                 These Terms of Service (&ldquo;Terms&rdquo;) constitute a
                 legally binding contract between{' '}
-                <strong>Outsource Pro Global</strong> (&ldquo;OPG&rdquo;,
+                <strong>Outsourced Pro Global</strong> (&ldquo;OPG&rdquo;,
                 &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) and
                 the individual, enterprise, or corporate entity
                 (&ldquo;Client&rdquo;, &ldquo;Candidate&rdquo;, &ldquo;User&rdquo;,
@@ -190,7 +190,7 @@ export default function TermsPage() {
                 </h2>
               </div>
               <p className={styles.paragraph}>
-                Outsource Pro Global provides specialized cross-border talent
+                Outsourced Pro Global provides specialized cross-border talent
                 solutions, offshore staffing services, and digital management
                 infrastructure connecting organizations with qualified
                 professionals. Our core operations encompass:

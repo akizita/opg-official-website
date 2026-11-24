@@ -10,6 +10,7 @@ export interface PeekRatingProps {
   onChange?: (value: number) => void
   max?: number
   labels?: string[]
+  showLabel?: boolean
   showTip?: boolean
   disabled?: boolean
   readOnly?: boolean
@@ -33,6 +34,7 @@ export function PeekRating({
   onChange,
   max = 5,
   labels,
+  showLabel = true,
   showTip = true,
   disabled = false,
   readOnly = false,
@@ -159,9 +161,11 @@ export function PeekRating({
         })}
       </div>
 
-      <span className={styles.ratingLabelText} aria-hidden="true">
-        {activeRating > 0 ? `${activeRating} of ${max} Stars` : 'Rate'}
-      </span>
+      {showLabel && (
+        <span className={styles.ratingLabelText} aria-hidden="true">
+          {activeRating > 0 ? `${activeRating} of ${max} Stars` : 'Rate'}
+        </span>
+      )}
     </div>
   )
 }

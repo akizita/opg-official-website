@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans'
 import { Suspense, type ReactNode } from 'react'
 
 import { BrandLoaderOverlay } from '@/components/loading/brand-loader-overlay'
+import { SiteFaqWidget } from '@/components/site/site-faq-widget'
 import { SiteFooter } from '@/components/site/site-footer'
 import { SiteHeader } from '@/components/site/site-header'
 import { SiteSplashScreen } from '@/components/site/site-splash-screen'
@@ -58,6 +59,7 @@ export default function RootLayout({
         <SiteHeader />
         <main id="main-content">{children}</main>
         <SiteFooter />
+        <SiteFaqWidget />
       </body>
     </html>
   )

@@ -6,64 +6,64 @@ import { DriftWall, type DriftWallItem } from './drift-wall'
 
 const MOCK_DRIFT_ITEMS: DriftWallItem[] = [
   {
-    image:
-      'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&h=400&q=80',
+    eyebrow: '01 · Standards',
     title: 'Collaborative Excellence',
+    subtitle: 'Aligned cross-border workflows',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&h=400&q=80',
-    title: 'Strategic Leadership',
+    eyebrow: '02 · Leadership',
+    title: 'Strategic Oversight',
+    subtitle: 'Direct senior accountability',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&h=400&q=80',
-    title: 'Modern Workplace & Tech',
+    eyebrow: '03 · Infrastructure',
+    title: 'Modern Tech Pods',
+    subtitle: 'Cloud-ready engineering stacks',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&h=400&q=80',
+    eyebrow: '04 · Cadence',
     title: 'Global Team Sync',
+    subtitle: 'Seamless daily standups',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=600&h=400&q=80',
+    eyebrow: '05 · Alignment',
     title: 'Client Partnership',
+    subtitle: 'Shared roadmap execution',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=600&h=400&q=80',
+    eyebrow: '06 · Operations',
     title: 'Operational Strategy',
+    subtitle: 'Repeatable delivery playbooks',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&h=400&q=80',
+    eyebrow: '07 · Vetting',
     title: 'Talent Innovation',
+    subtitle: 'Calibrated technical screening',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=600&h=400&q=80',
-    title: 'Business Development',
+    eyebrow: '08 · Scale',
+    title: 'Business Continuity',
+    subtitle: 'Managed HR & IT readiness',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=600&h=400&q=80',
+    eyebrow: '09 · Care',
     title: 'Dedicated Support',
+    subtitle: 'Long-term retention focus',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=600&h=400&q=80',
-    title: 'Culture & Community',
+    eyebrow: '10 · Culture',
+    title: 'Shared Purpose',
+    subtitle: 'Respect across every team',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&h=400&q=80',
+    eyebrow: '11 · Craft',
     title: 'Knowledge Sharing',
+    subtitle: 'Continuous peer mentorship',
   },
   {
-    image:
-      'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&h=400&q=80',
-    title: 'Growth & Achievement',
+    eyebrow: '12 · Outcomes',
+    title: 'Sustainable Growth',
+    subtitle: 'Built for multi-year scale',
   },
 ]
 

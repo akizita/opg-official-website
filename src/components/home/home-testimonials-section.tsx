@@ -64,14 +64,10 @@ export function HomeTestimonialsSection() {
         <div className={styles.splitGrid}>
           {/* Left Column: Clean Copy & Action */}
           <div className={styles.leftColumn}>
-            <div className={styles.eyebrowBadge}>
-              <span>Client Testimonials</span>
-            </div>
+            <p className={styles.eyebrowLabel}>Client Testimonials</p>
 
             <h2 className={styles.headline} id="home-testimonials-heading">
-              What Our
-              <br />
-              <span className={styles.headlineHighlight}>Clients Say</span>
+              What Our Clients Say
             </h2>
 
             <p className={styles.description}>

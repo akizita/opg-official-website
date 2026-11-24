@@ -208,23 +208,20 @@ export function RecruitmentCTA({
         <div className={styles.closingCard}>
           {/* Left Interactive 3D ASCII Globe representing OPG Global Talent Network */}
           <div className={styles.closingLeftVisual}>
-            <AsciiGlobe className={styles.closingAsciiGlobe} />
+            <AsciiGlobe
+              className={styles.closingAsciiGlobe}
+              theme="light"
+              tone="amber"
+            />
           </div>
 
           {/* Right Content Area: Focused Header, Subtext, and Action Buttons */}
           <div className={styles.closingRightContent}>
             {/* Header with Radiant Gold Gradient Accent */}
             <h2 id="recruitment-cta-title" className={styles.closingTitle}>
-              {copy?.closingTitle ? (
-                copy.closingTitle
-              ) : (
-                <>
-                  Do not see the right role yet?{' '}
-                  <span className={styles.closingTitleAccent}>
-                    Let&apos;s build your future.
-                  </span>
-                </>
-              )}
+              {copy?.closingTitle
+                ? copy.closingTitle
+                : "Do not see the right role yet? Let's build your future."}
             </h2>
 
             {/* Subtext */}

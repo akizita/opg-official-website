@@ -11,11 +11,13 @@ import {
   ViewOffSlashIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import Image from 'next/image'
 import Link from 'next/link'
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 
 import styles from '@/app/sign-in/sign-in.module.css'
 import { GoogleAuthForm } from '@/components/site/google-auth-form'
+import { ProfileIconSvg } from '@/components/ui/profile-icon-svg'
 import { initialAuthFormState } from '@/lib/auth/form-state'
 import { MIN_ADMIN_PASSWORD_LENGTH } from '@/lib/auth/password'
 
@@ -38,6 +40,38 @@ export function VisitorSignUpForm({
   )
   const [showSignUpPassword, setShowSignUpPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(avatarPreviewUrl)
+      }
+    }
+  }, [avatarPreviewUrl])
+
+  function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    setAvatarPreviewUrl((previous) => {
+      if (previous?.startsWith('blob:')) {
+        URL.revokeObjectURL(previous)
+      }
+      return file ? URL.createObjectURL(file) : null
+    })
+  }
+
+  function handleAvatarClear() {
+    if (avatarInputRef.current) {
+      avatarInputRef.current.value = ''
+    }
+    setAvatarPreviewUrl((previous) => {
+      if (previous?.startsWith('blob:')) {
+        URL.revokeObjectURL(previous)
+      }
+      return null
+    })
+  }
 
   const signInHref =
     targetPath && targetPath !== '/contact'
@@ -72,6 +106,75 @@ export function VisitorSignUpForm({
     <div className={styles.formWrapper}>
       <form action={signUpAction} className={styles.form}>
         <div className={styles.fieldsStack}>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldLabel}>Profile photo (optional)</span>
+            <div className={styles.avatarPickerRow}>
+              <span aria-hidden="true" className={styles.avatarPreview}>
+                {avatarPreviewUrl ? (
+                  <Image
+                    alt=""
+                    className={styles.avatarPreviewImg}
+                    height={48}
+                    src={avatarPreviewUrl}
+                    unoptimized
+                    width={48}
+                  />
+                ) : (
+                  <ProfileIconSvg size={22} />
+                )}
+              </span>
+              <div className={styles.avatarPickerBody}>
+                <div className={styles.avatarPickerControls}>
+                  <label
+                    className={styles.avatarUploadBtn}
+                    htmlFor="signup-avatar"
+                  >
+                    {avatarPreviewUrl ? 'Change photo' : 'Choose photo'}
+                  </label>
+                  {avatarPreviewUrl && (
+                    <button
+                      className={styles.avatarClearBtn}
+                      onClick={handleAvatarClear}
+                      type="button"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <p className={styles.avatarHintText}>
+                  PNG, JPG, WebP, or GIF up to 2 MB.
+                </p>
+              </div>
+              <input
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className={styles.avatarFileInput}
+                id="signup-avatar"
+                name="avatar"
+                onChange={handleAvatarChange}
+                ref={avatarInputRef}
+                type="file"
+              />
+            </div>
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel} htmlFor="signup-full-name">
+              Full name
+            </label>
+            <div className={styles.inputWrapper}>
+              <ProfileIconSvg className={styles.inputIcon} size={18} />
+              <input
+                autoComplete="name"
+                className={styles.inputControl}
+                id="signup-full-name"
+                maxLength={80}
+                name="fullName"
+                placeholder="Enter your full name"
+                type="text"
+              />
+            </div>
+          </div>
+
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel} htmlFor="signup-email">
               Work email

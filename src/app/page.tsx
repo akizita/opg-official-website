@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import Link from 'next/link'
 
 import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { Aurora } from '@/components/ui/aurora'
@@ -13,7 +12,6 @@ import { HomeTeamMasonrySection } from '@/components/home/home-team-masonry-sect
 import { HomeTestimonialsSection } from '@/components/home/home-testimonials-section'
 import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { SpotlightCard } from '@/components/ui/spotlight-card'
-import { getVisibleClients } from '@/lib/content/clients'
 import type { PageDocument } from '@/lib/content/page-documents'
 import { getPageCopy, HOME_COPY_SECTIONS } from '@/lib/content/page-copy'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
@@ -24,6 +22,21 @@ import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 
 const ABOUT_IMAGE_URL =
   'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/hero/rs-1789740267024.png'
+
+const TRUSTED_CLIENT_LOGOS = [
+  {
+    id: 'compass',
+    name: 'Compass',
+    logoUrl:
+      'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/general/compass_logo_white.png',
+  },
+  {
+    id: 'fpi',
+    name: 'FPI',
+    logoUrl:
+      'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/general/fpi_logo_white.png',
+  },
+] as const
 
 export const revalidate = 3600 // 1 hour ISR
 
@@ -72,9 +85,8 @@ export default async function HomePage({
   const { opgPreview } = await searchParams
   const supabase = await createClient()
 
-  const [homeDoc, clients, careersFeed] = await Promise.all([
+  const [homeDoc, careersFeed] = await Promise.all([
     getVisiblePageDocument(supabase, 'home', opgPreview === '1'),
-    getVisibleClients(),
     getCareersFeed().catch(() => ({
       configured: false,
       fetchedAt: null,
@@ -90,10 +102,12 @@ export default async function HomePage({
   const copy = getPageCopy(homeDoc?.content, HOME_COPY_SECTIONS)
 
   return (
-    <>
+    <div className="home-snap-flow">
       <PageVisualRuntime page="home" config={getPageVisualConfig(homeDoc?.content)} />
-      {/* Hero Section */}
-      <section className="hero">
+      {/* Hero + Highlight Cards Viewport Frame */}
+      <div className="home-hero-band">
+        {/* Hero Section */}
+        <section className="hero">
         {/* Full-width Aurora Wave */}
         <div aria-hidden="true" className="hero__aurora">
           <Aurora
@@ -106,10 +120,7 @@ export default async function HomePage({
 
         <div aria-hidden="true" className="hero__scrim" />
         <div className="container hero__content">
-          <div className="hero__badge" role="text">
-            <span aria-hidden="true" className="hero__badge-dot" />
-            <span>{copy.heroBadge}</span>
-          </div>
+          <p className="hero__eyebrow">{copy.heroBadge}</p>
           <h1>{heroTitle}</h1>
           <p className="hero__summary">{heroSummary}</p>
           <div
@@ -160,7 +171,6 @@ export default async function HomePage({
                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 </span>
-                <span className="stat-card__tag">{copy.card1Tag}</span>
               </div>
               <div className="stat-card__metric">{copy.card1Metric}</div>
               <h3 className="stat-card__title">{copy.card1Title}</h3>
@@ -187,7 +197,6 @@ export default async function HomePage({
                     <polyline points="12 6 12 12 16 14" />
                   </svg>
                 </span>
-                <span className="stat-card__tag">{copy.card2Tag}</span>
               </div>
               <div className="stat-card__metric">{copy.card2Metric}</div>
               <h3 className="stat-card__title">{copy.card2Title}</h3>
@@ -215,7 +224,6 @@ export default async function HomePage({
                     <path d="M14 6.5 12.5 5a1 1 0 0 0-1.42 0L4.17 11.91a1 1 0 0 0 0 1.41l2.59 2.59a1 1 0 0 0 1.41 0L10.5 13.5" />
                   </svg>
                 </span>
-                <span className="stat-card__tag">{copy.card3Tag}</span>
               </div>
               <div className="stat-card__metric">{copy.card3Metric}</div>
               <h3 className="stat-card__title">{copy.card3Title}</h3>
@@ -224,6 +232,7 @@ export default async function HomePage({
           </div>
         </div>
       </section>
+      </div>
 
       {/* About Us Overview Section */}
       <section
@@ -274,12 +283,17 @@ export default async function HomePage({
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Extended Team Overview Section: 2-Column with Header/Copy and React Bits Masonry Gallery */}
+      {/* Extended Team Overview Section: 2-Column with Header/Copy and React Bits Masonry Gallery */}
+      <section
+        aria-label="Our Specialists and Leadership"
+        className="about-team-band"
+      >
         <HomeTeamMasonrySection />
       </section>
 
-      {/* Global Showcase Band: Unified Background extending across Offshore Map, Mission, Vision & Core Values */}
+      {/* Global Showcase Band: Unified Background extending across Offshore Map */}
       <div className="global-showcase-band">
         <DotField
           dotRadius={2.4}
@@ -299,7 +313,8 @@ export default async function HomePage({
         {/* Global Offshore Hub Overview Map Section */}
         <OffshoreMapSection
           hideDotField
-          layout="two-column"
+          frameless
+          layout="one-column"
           variant="overview"
           showEyebrow={false}
           showTabs={false}
@@ -307,10 +322,7 @@ export default async function HomePage({
           ctaText={copy.networkCta}
           title={
             <>
-              {copy.networkTitlePrefix}{' '}
-              <span className="offshore-hub__title-accent">
-                {copy.networkTitleAccent}
-              </span>
+              {copy.networkTitlePrefix} {copy.networkTitleAccent}
             </>
           }
           summary={copy.networkLead}
@@ -330,32 +342,34 @@ export default async function HomePage({
       {/* Strategic Contact Us CTA Section (Matching Inspo with DotField and Sweeping Golden Torus Arcs) */}
       <HomeContactCtaSection
         description={copy.ctaBody}
-        eyebrow={copy.ctaEyebrow}
         primaryCtaText={copy.ctaPrimary}
         title={copy.ctaTitle}
       />
 
       {/* Social Proof Strip */}
-      {clients.length > 0 && (
-        <section
-          className="section section--proof"
-          aria-label="Client Trust Banner"
-        >
-          <div className="container">
-            <p className="proof-label">{copy.proofLabel}</p>
-            <div className="proof-strip">
-              {clients.slice(0, 5).map((client) => (
-                <span className="proof-mark" key={client.id}>
-                  {client.name}
+      <section
+        className="section section--proof"
+        aria-label="Client Trust Banner"
+      >
+        <div className="container">
+          <p className="proof-label">{copy.proofLabel}</p>
+          <div className="proof-strip">
+            {TRUSTED_CLIENT_LOGOS.map((client) => (
+              <div className="proof-mark proof-mark--logo" key={client.id}>
+                <span className="proof-mark__media">
+                  <Image
+                    alt={`${client.name} logo`}
+                    className="proof-mark__img"
+                    fill
+                    sizes="(max-width: 640px) 140px, 180px"
+                    src={client.logoUrl}
+                  />
                 </span>
-              ))}
-              <Link className="proof-link" href="/clients">
-                {copy.proofCta}
-              </Link>
-            </div>
+              </div>
+            ))}
           </div>
-        </section>
-      )}
-    </>
+        </div>
+      </section>
+    </div>
   )
 }

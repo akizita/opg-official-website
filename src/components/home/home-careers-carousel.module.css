@@ -17,7 +17,7 @@
     linear-gradient(180deg, #fffaf0 0%, #fffbf2 18%, #fffdf8 35%, #fffdf8 70%, #fffaf0 100%);
   box-sizing: border-box;
   overflow: hidden;
-  padding: clamp(4.5rem, 7.5vw, 6.5rem) 0;
+  padding: clamp(5rem, 7.5vh, 6rem) 0 clamp(2.5rem, 4.5vh, 4rem);
   position: relative;
   width: 100%;
 }
@@ -337,22 +337,21 @@
 }
 
 .jobCard:hover {
-  background: rgba(255, 255, 255, 0.66);
-  border-color: rgba(245, 158, 11, 0.55);
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(15, 23, 42, 0.14);
   box-shadow:
-    0 24px 50px -10px rgba(245, 158, 11, 0.22),
-    0 6px 18px rgba(0, 0, 0, 0.03),
+    0 14px 30px -10px rgba(15, 23, 42, 0.1),
     inset 0 1px 2px 0 rgba(255, 255, 255, 1);
-  transform: translateY(-4px);
+  transform: translateY(-2px);
 }
 
 .jobCardTop {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
-/* Badges Row */
+/* Meta Header Row */
 .badgesRow {
   align-items: center;
   display: flex;
@@ -362,39 +361,17 @@
 }
 
 .deptBadge {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background: rgba(254, 240, 138, 0.55);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 9999px;
-  color: #92400e;
-  font-size: 0.74rem;
-  font-weight: 750;
-  letter-spacing: 0.02em;
-  padding: 0.22rem 0.65rem;
+  color: #78350f;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .arrangementBadge {
-  align-items: center;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background: rgba(240, 253, 244, 0.7);
-  border: 1px solid rgba(74, 222, 128, 0.35);
-  border-radius: 9999px;
-  color: #15803d;
-  display: inline-flex;
+  color: #475569;
   font-size: 0.74rem;
-  font-weight: 700;
-  gap: 0.35rem;
-  padding: 0.22rem 0.65rem;
-}
-
-.greenPulseDot {
-  background: #22c55e;
-  border-radius: 50%;
-  display: inline-block;
-  height: 0.45rem;
-  width: 0.45rem;
+  font-weight: 600;
 }
 
 /* Title & Description */

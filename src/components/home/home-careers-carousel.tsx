@@ -227,10 +227,7 @@ export function HomeCareersCarousel({ initialJobs }: HomeCareersCarouselProps) {
         <div className={styles.headerRow}>
           <div className={styles.headerContent}>
             <h2 className={styles.title} id="home-careers-carousel-heading">
-              Shape Your Career With{' '}
-              <span className={styles.titleHighlight}>
-                Global Opportunities
-              </span>
+              Shape Your Career With Global Opportunities
             </h2>
             <p className={styles.description}>
               Join high-performing cross-border pods delivering technical
@@ -298,11 +295,7 @@ export function HomeCareersCarousel({ initialJobs }: HomeCareersCarouselProps) {
                       <div className={styles.badgesRow}>
                         <span className={styles.deptBadge}>{department}</span>
                         <span className={styles.arrangementBadge}>
-                          <span
-                            aria-hidden="true"
-                            className={styles.greenPulseDot}
-                          />
-                          <span>{arrangement}</span>
+                          {arrangement}
                         </span>
                       </div>
 

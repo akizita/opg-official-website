@@ -1,12 +1,16 @@
 import type { Metadata } from 'next'
-import { ArrowUpRight01Icon, Mail01Icon } from '@hugeicons/core-free-icons'
+import {
+  ArrowUpRight01Icon,
+  Clock01Icon,
+  Globe02Icon,
+  Mail01Icon,
+} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { OpgSocialLinks } from '@/components/site/opg-social-links'
 import { ContactForm } from '@/app/contact/contact-form'
 import { Aurora } from '@/components/ui/aurora'
-import { ContactAsciiMapCorners } from '@/components/ui/contact-ascii-map'
 import { CONTACT_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
 import type { PageDocument } from '@/lib/content/page-documents'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
@@ -30,8 +34,8 @@ export async function generateMetadata(): Promise<Metadata> {
     .maybeSingle<PageDocument>()
   const siteUrl = getSiteUrl()
   const pageUrl = new URL('/contact', siteUrl).toString()
-  const title =
-    doc?.seo_title || doc?.title || `Contact Us | ${siteConfig.shortName}`
+  const rawTitle = doc?.seo_title || doc?.title || 'Contact Us'
+  const title = rawTitle.replace(/\s*\|\s*OPG$/i, '').trim() || 'Contact Us'
   const description =
     doc?.seo_description ||
     'Connect with Outsourced Pro Global. Submit client staffing inquiries or reach our talent acquisition operations team.'
@@ -106,14 +110,12 @@ export default async function ContactPage({
     <main className="contact-page">
       <div aria-hidden="true" className="contact-page__aurora">
         <Aurora
-          amplitude={0.78}
-          blend={0.35}
-          colorStops={['#d99a00', '#f29f04', '#f2b705', '#ffd000', '#ffe27a']}
-          speed={0.5}
+          amplitude={0.85}
+          blend={0.44}
+          colorStops={['#f29f04', '#facc15', '#f2b705', '#fde047', '#f59e0b']}
+          speed={0.45}
         />
       </div>
-      {/* Dotted ASCII style map accents on the background corners */}
-      <ContactAsciiMapCorners />
       <PageVisualRuntime
         page="contact"
         config={getPageVisualConfig(doc?.content)}
@@ -127,39 +129,65 @@ export default async function ContactPage({
       />
 
       <div className="container">
-        <div className="contact-layout-grid">
+        <div className="contact-unified-card">
           <div className="contact-info-column">
             <header className="contact-hero">
               <h1 className="contact-hero__title">{copy.heroTitle}</h1>
               <p className="contact-hero__lead">{copy.heroLead}</p>
             </header>
 
-            <section aria-label="Contact details" className="contact-details">
-              <div className="contact-channel-item">
-                <a
-                  aria-label={`Email us: ${copy.talentEmail}`}
-                  className="contact-channel-link"
-                  href={`mailto:${copy.talentEmail}`}
-                >
-                  <span aria-hidden="true" className="contact-channel-icon">
-                    <HugeiconsIcon
-                      icon={Mail01Icon}
-                      size={21}
-                      strokeWidth={1.8}
-                    />
+            <div className="contact-highlights" aria-label="Global operations overview">
+              <div className="contact-highlight-item">
+                <span aria-hidden="true" className="contact-highlight-icon">
+                  <HugeiconsIcon icon={Globe02Icon} size={17} strokeWidth={1.8} />
+                </span>
+                <div className="contact-highlight-copy">
+                  <span className="contact-highlight-label">Global Presence</span>
+                  <span className="contact-highlight-value">
+                    Philippines HQ · AU · US · UK · SG
                   </span>
+                </div>
+              </div>
+              <div className="contact-highlight-item">
+                <span aria-hidden="true" className="contact-highlight-icon">
+                  <HugeiconsIcon icon={Clock01Icon} size={17} strokeWidth={1.8} />
+                </span>
+                <div className="contact-highlight-copy">
+                  <span className="contact-highlight-label">Response Cadence</span>
+                  <span className="contact-highlight-value">
+                    Dedicated routing within 1 business day
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <section aria-label="Contact details" className="contact-details">
+              <a
+                aria-label={`Email us: ${copy.talentEmail}`}
+                className="contact-channel-link"
+                href={`mailto:${copy.talentEmail}`}
+              >
+                <span aria-hidden="true" className="contact-channel-icon">
+                  <HugeiconsIcon
+                    icon={Mail01Icon}
+                    size={19}
+                    strokeWidth={1.8}
+                  />
+                </span>
+                <span className="contact-channel-meta">
+                  <span className="contact-channel-label">Direct inquiries</span>
                   <span className="contact-channel-value">
                     {copy.talentEmail}
                   </span>
-                  <span aria-hidden="true" className="contact-link-arrow">
-                    <HugeiconsIcon
-                      icon={ArrowUpRight01Icon}
-                      size={16}
-                      strokeWidth={2}
-                    />
-                  </span>
-                </a>
-              </div>
+                </span>
+                <span aria-hidden="true" className="contact-link-arrow">
+                  <HugeiconsIcon
+                    icon={ArrowUpRight01Icon}
+                    size={16}
+                    strokeWidth={2}
+                  />
+                </span>
+              </a>
               <OpgSocialLinks />
             </section>
           </div>

@@ -906,8 +906,9 @@ export function CandidateTestimonialsExperience({
                           ariaLabel={`${item.rating} out of 5 stars`}
                           className="candidate-testimonials-card__rating"
                           readOnly
+                          showLabel={false}
                           showTip={false}
-                          size={19}
+                          size={16}
                           value={item.rating}
                         />
                       )}

@@ -43,6 +43,7 @@ export async function visitorGoogleSignInAction(formData: FormData) {
     provider: 'google',
     options: {
       redirectTo: callback.toString(),
+      scopes: 'openid email profile',
       queryParams: { prompt: 'select_account' },
     },
   })

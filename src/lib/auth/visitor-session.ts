@@ -2,7 +2,7 @@ import {
   extractUserAvatarUrl,
   extractUserDisplayName,
 } from '@/lib/auth/user-avatars'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createPrivilegedClient } from '@/lib/supabase/server'
 
 export async function getVisitorSession() {
   const supabase = await createClient()
@@ -18,17 +18,44 @@ export async function getVisitorSession() {
 
   const { data, error } = claimsResult
   const id = data?.claims?.sub
-  const email = data?.claims?.email
-
-  if (error || !id || typeof email !== 'string' || !email.trim()) return null
-
-  const normalizedEmail = email.trim().toLowerCase()
-  const claims = data?.claims as Record<string, unknown> | undefined
   const user = userResult?.data?.user ?? null
+  const rawEmail =
+    typeof data?.claims?.email === 'string' && data.claims.email.trim()
+      ? data.claims.email
+      : user?.email
+
+  if (error || !id || typeof rawEmail !== 'string' || !rawEmail.trim()) {
+    return null
+  }
+
+  const normalizedEmail = rawEmail.trim().toLowerCase()
+  const claims = data?.claims as Record<string, unknown> | undefined
+  let avatarUrl = extractUserAvatarUrl(claims, user)
+  let displayName = extractUserDisplayName(claims, user)
+
+  if (!avatarUrl || !displayName) {
+    const privilegedClient = createPrivilegedClient()
+    if (privilegedClient) {
+      const adminUserRes = await privilegedClient.auth.admin
+        .getUserById(id)
+        .catch(() => null)
+      if (adminUserRes?.data?.user) {
+        if (!avatarUrl) {
+          avatarUrl = extractUserAvatarUrl(undefined, adminUserRes.data.user)
+        }
+        if (!displayName) {
+          displayName = extractUserDisplayName(
+            undefined,
+            adminUserRes.data.user,
+          )
+        }
+      }
+    }
+  }
 
   return {
-    avatarUrl: extractUserAvatarUrl(claims, user),
-    displayName: extractUserDisplayName(claims, user),
+    avatarUrl,
+    displayName,
     email: normalizedEmail,
     id,
   }

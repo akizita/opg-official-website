@@ -86,21 +86,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     Manage →
                   </Link>
                 </div>
-
-                <div className="admin-card__row">
-                  <div>
-                    <strong>Clients & Partners</strong>
-                    <p className="field-hint">
-                      Client organizations and collaboration badges
-                    </p>
-                  </div>
-                  <Link
-                    className="button-link button-link--secondary"
-                    href="/admin/clients"
-                  >
-                    Manage →
-                  </Link>
-                </div>
               </>
             ) : (
               <p className="form-help">

@@ -14,6 +14,7 @@ import {
 } from 'react'
 import gsap from 'gsap'
 import Image from 'next/image'
+import { OPG_TEAM_MEMBERS } from '@/lib/content/team-media'
 
 export interface DepthCarouselItem {
   image: string
@@ -86,43 +87,14 @@ interface DragState {
   id: number
 }
 
-const DEFAULT_ITEMS: DepthCarouselItem[] = [
-  {
-    image:
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-    alt: 'Hannah Reyes',
-    name: 'Hannah Reyes',
-    position: 'Director of Talent Acquisition',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
-    alt: 'Marcus Sterling',
-    name: 'Marcus Sterling',
-    position: 'VP of Offshore Operations',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
-    alt: 'Dr. Elena Vance',
-    name: 'Dr. Elena Vance',
-    position: 'Chief Technology Officer',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
-    alt: 'Julian Alvarez',
-    name: 'Julian Alvarez',
-    position: 'Head of Client Success',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=80',
-    alt: 'Sophia Chen',
-    name: 'Sophia Chen',
-    position: 'Head of Compliance & Legal',
-  },
-]
+const DEFAULT_ITEMS: DepthCarouselItem[] = OPG_TEAM_MEMBERS.slice(0, 6).map(
+  (member) => ({
+    image: member.image,
+    alt: member.name,
+    name: member.name,
+    position: member.role,
+  }),
+)
 
 const clamp = (v: number, min: number, max: number) =>
   Math.min(Math.max(v, min), max)

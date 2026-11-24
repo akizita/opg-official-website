@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
 
@@ -9,8 +8,8 @@ import styles from './home-candidate-testimonials-section.module.css'
 export interface CandidateTestimonial {
   id: string
   name: string
+  initials: string
   role: string
-  avatar: string
   quote: string
   date: string
   spanClass: string
@@ -20,45 +19,41 @@ export const CANDIDATE_TESTIMONIALS: CandidateTestimonial[] = [
   {
     id: 'candidate-aira',
     name: 'Aira Villacorta',
+    initials: 'AV',
     role: 'Senior React Engineer',
-    avatar:
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
     quote:
       'OPG matched me with an exceptional fintech team in Sydney. The interview and onboarding was transparent, fast, and respectful of my time from day one.',
-    date: 'August 29, 2024',
+    date: 'October 14, 2025',
     spanClass: styles.bentoSpanNarrow,
   },
   {
     id: 'candidate-john',
     name: 'John Clayton Bautista',
+    initials: 'JB',
     role: 'Cloud Infrastructure Architect',
-    avatar:
-      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80',
     quote:
       'Before joining OPG, managing international remote opportunities often meant unclear expectations. With OPG, enterprise equipment and career growth are handled with world-class precision.',
-    date: 'August 29, 2024',
+    date: 'November 18, 2025',
     spanClass: styles.bentoSpanWide,
   },
   {
     id: 'candidate-kristine',
     name: 'Kristine Del Rosario',
+    initials: 'KD',
     role: 'Quantitative & Financial Analyst',
-    avatar:
-      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=400&q=80',
     quote:
       "OPG's talent team truly listened to my long-term career aspirations. Within two weeks, I was placed with an Australian wealth management firm where my expertise is celebrated every day.",
-    date: 'August 29, 2024',
+    date: 'January 9, 2026',
     spanClass: styles.bentoSpanWide,
   },
   {
     id: 'candidate-mark',
     name: 'Mark Christian Santos',
+    initials: 'MS',
     role: 'Full Stack Software Craftsman',
-    avatar:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80',
     quote:
       'The culture of trust, competitive compensation, and ongoing professional development at OPG has elevated my software engineering career beyond all expectations.',
-    date: 'August 29, 2024',
+    date: 'February 12, 2026',
     spanClass: styles.bentoSpanNarrow,
   },
 ]
@@ -102,19 +97,13 @@ export function HomeCandidateTestimonialsSection() {
           viewport={{ once: true, margin: '-40px' }}
           whileInView={{ opacity: 1, y: 0 }}
         >
-          <div className={styles.eyebrowBadge}>
-            <span aria-hidden="true" className={styles.eyebrowDot} />
-            <span>Candidate Stories</span>
-          </div>
+          <p className={styles.eyebrowLabel}>Candidate Stories</p>
 
           <h2
             className={styles.headline}
             id="home-candidate-testimonials-heading"
           >
-            What Our{' '}
-            <span className={styles.headlineHighlight}>
-              Candidates Are Saying
-            </span>
+            What Our Candidates Are Saying
           </h2>
 
           <p className={styles.subtitle}>
@@ -140,14 +129,10 @@ export function HomeCandidateTestimonialsSection() {
             >
               {/* Author Row */}
               <div className={styles.cardAuthorRow}>
-                <div className={styles.avatarWrap}>
-                  <Image
-                    alt={item.name}
-                    className={styles.avatarImg}
-                    height={38}
-                    src={item.avatar}
-                    width={38}
-                  />
+                <div className={styles.avatarWrap} aria-hidden="true">
+                  <span className={styles.avatarInitials}>
+                    {item.initials}
+                  </span>
                 </div>
                 <div className={styles.authorMeta}>
                   <h3 className={styles.authorName}>{item.name}</h3>

@@ -6,6 +6,7 @@ import { AuthPanel } from '@/components/admin/auth-panel'
 import { AccountAvatar } from '@/components/ui/account-avatar'
 import { getVisitorSession } from '@/lib/auth/visitor-session'
 
+import { AccountProfileForm } from './account-profile-form'
 import { visitorSignOutAction } from './actions'
 
 export const metadata: Metadata = {
@@ -40,8 +41,8 @@ export default async function VisitorAccountPage() {
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #f2b705, #f29f04)',
-            color: '#0d0d0d',
+            background: '#2b2720',
+            color: '#fff7e4',
             fontWeight: 800,
             fontSize: '0.95rem',
             flexShrink: 0,
@@ -65,6 +66,11 @@ export default async function VisitorAccountPage() {
           </p>
         </div>
       </div>
+      <AccountProfileForm
+        avatarUrl={session.avatarUrl}
+        displayName={session.displayName}
+        email={session.email}
+      />
       <div className="public-account-actions">
         <Link className="button-link button-link--primary" href="/contact">
           Contact us

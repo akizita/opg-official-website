@@ -12,6 +12,7 @@ import {
   PHILIPPINES_HQ,
 } from './offshore-map'
 import { Masonry } from './masonry'
+import { DEFAULT_OPG_LIGHT_LOGO_URL, TextLoop } from './text-loop'
 import {
   CANDIDATE_TESTIMONIALS,
   HomeCandidateTestimonialsSection,
@@ -104,10 +105,15 @@ describe('UI Base Components contracts', () => {
       expect(card.id).toBeTruthy()
       expect(card.name).toBeTruthy()
       expect(card.role).toBeTruthy()
-      expect(card.avatar).toBeTruthy()
+      expect(card.initials).toBeTruthy()
       expect(card.quote).toBeTruthy()
       expect(card.date).toBeTruthy()
       expect(card.spanClass).toBeTruthy()
     })
+  })
+
+  it('exports TextLoop with the OPG light logo separator URL', () => {
+    expect(typeof TextLoop).toBe('function')
+    expect(DEFAULT_OPG_LIGHT_LOGO_URL).toContain('opg-light-logo-1789740328075.png')
   })
 })

@@ -7,7 +7,7 @@ export const CLIENT_PAGE_DEFAULTS = {
   editorialTitle:
     'OPG’s Evolution: From Internal Engine to Global Talent Partner',
   editorialLead:
-    'Built From the Inside Out: How Outsourced Pro Global Became an Embedded Talent Partner',
+    'Built From the Inside Out: How Outsourced Pro Global evolved its internal talent engine into an embedded cross-border partner—delivering dedicated engineering, operations, and governance pods for high-growth teams worldwide.',
 } as const
 
 export function extractClientPageContent(

@@ -13,9 +13,9 @@ import { VisitorSignInForm } from './sign-in-form'
 import styles from './sign-in.module.css'
 
 export const metadata: Metadata = {
-  title: 'Sign in | Outsource Pro Global',
+  title: 'Sign in | Outsourced Pro Global',
   description:
-    'Secure digital access to Outsource Pro Global talent operations and enterprise services.',
+    'Secure digital access to Outsourced Pro Global talent operations and enterprise services.',
   robots: { index: false, follow: false },
 }
 
@@ -45,7 +45,7 @@ export default async function VisitorSignInPage({
             {/* Left Column: Inset Dark Hero Card with ASCII Globe & Official Logo */}
             <AuthHeroPanel
               badgeText="1,000+ Verified Global Talents"
-              description="Outsource Pro Global connects world-class cross-border talent pods with leading organizations. Unified governance, verified compliance, and continuous scale."
+              description="Outsourced Pro Global connects world-class cross-border talent pods with leading organizations. Unified governance, verified compliance, and continuous scale."
               headline="Your global talent operations, always accessible"
             />
 
@@ -107,7 +107,7 @@ export default async function VisitorSignInPage({
 
           {/* Centered Copyright below card */}
           <div className={styles.pageCopyright}>
-            <span>&copy; 2026 Outsource Pro Global. All rights reserved.</span>
+            <span>&copy; 2026 Outsourced Pro Global. All rights reserved.</span>
           </div>
         </div>
       </main>

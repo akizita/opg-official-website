@@ -170,7 +170,7 @@ const clientTestimonials: readonly ClientTestimonialItem[] = [
     rating: 5,
     photoUrl: '/images/testimonial-marcus-vance.jpg',
     quote:
-      'Outsource Pro Global integrated seamlessly into our GitHub and Jira workflows within two weeks. Their QA and full-stack engineering pod didn’t just execute sprint tickets—they overhauled our automated CI/CD pipeline, reducing release regression cycles by 65%. It feels like having our own senior in-house engineers down the hall.',
+      'Outsourced Pro Global integrated seamlessly into our GitHub and Jira workflows within two weeks. Their QA and full-stack engineering pod didn’t just execute sprint tickets—they overhauled our automated CI/CD pipeline, reducing release regression cycles by 65%. It feels like having our own senior in-house engineers down the hall.',
   },
   {
     id: 'testimonial-meridian',
@@ -271,7 +271,7 @@ export async function generateMetadata(): Promise<Metadata> {
     `Clients & Strategic Partnerships | ${siteConfig.shortName}`
   const description =
     doc?.seo_description ||
-    'Discover the forward-thinking organizations that partner with Outsource Pro Global to build dedicated offshore talent pods, scale operations, and accelerate sustainable growth.'
+    'Discover the forward-thinking organizations that partner with Outsourced Pro Global to build dedicated offshore talent pods, scale operations, and accelerate sustainable growth.'
   const indexable = isSiteIndexable()
 
   return {
@@ -344,9 +344,12 @@ export default async function ClientsPage({
   const resolvedEditorialTitle = hasLegacyBlogCopy
     ? CLIENT_PAGE_DEFAULTS.editorialTitle
     : editorial.editorialTitle
-  const resolvedEditorialLead = hasLegacyBlogCopy
-    ? CLIENT_PAGE_DEFAULTS.editorialLead
-    : editorial.editorialLead
+  const resolvedEditorialLead =
+    hasLegacyBlogCopy ||
+    editorial.editorialLead ===
+      'Built From the Inside Out: How Outsourced Pro Global Became an Embedded Talent Partner'
+      ? CLIENT_PAGE_DEFAULTS.editorialLead
+      : editorial.editorialLead
   const articleIntroParagraphs = copy.articleIntro
     .split(/\r?\n+/)
     .map((line) => line.trim())
@@ -476,12 +479,11 @@ export default async function ClientsPage({
   return (
     <div className="clients-page">
       <PageVisualRuntime page="clients" config={getPageVisualConfig(doc?.content)} />
-      {/* 1. Enhanced Modern Hero Section with Interactive 3D Dotted Network Globe & Featured Partner Cards Dock */}
+      {/* 1. Enhanced Modern Hero Section with Interactive 3D Dotted Network Globe */}
       <ClientsGlobeHero
         title={doc?.title || CLIENT_PAGE_DEFAULTS.title}
         summary={doc?.summary || CLIENT_PAGE_DEFAULTS.summary}
         copy={copy}
-        clients={dbClients}
       />
 
       {/* 2. Unified Showcase Band: Blog Playbooks + Client Testimonials + Partner Directory */}

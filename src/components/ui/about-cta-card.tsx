@@ -5,45 +5,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { ButtonLink } from '@/components/ui/button-link'
 
 function renderCtaTitle(title: string) {
-  const accentPhrase = 'Exceptional Offshore Talent Makes'
-  if (title.includes(accentPhrase)) {
-    const [prefix] = title.split(accentPhrase)
-    return (
-      <>
-        {prefix}
-        <span className="about-cta-card__title-accent">
-          {accentPhrase}
-        </span>
-      </>
-    )
-  }
-
-  const altPhrase = 'Offshore Talent Makes'
-  if (title.includes(altPhrase)) {
-    const [prefix] = title.split(altPhrase)
-    return (
-      <>
-        {prefix}
-        <span className="about-cta-card__title-accent">
-          {altPhrase}
-        </span>
-      </>
-    )
-  }
-
-  const words = title.trim().split(/\s+/)
-  if (words.length > 3) {
-    const splitIdx = Math.max(2, Math.floor(words.length / 2))
-    const firstPart = words.slice(0, splitIdx).join(' ')
-    const secondPart = words.slice(splitIdx).join(' ')
-    return (
-      <>
-        {firstPart}{' '}
-        <span className="about-cta-card__title-accent">{secondPart}</span>
-      </>
-    )
-  }
-
   return title
 }
 
