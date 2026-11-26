@@ -205,4 +205,177 @@ describe('GET /auth/callback', () => {
     )
     expect(getAdminSession).not.toHaveBeenCalled()
   })
+
+  it('hydrates missing avatar_url from Google OIDC userinfo when provider_token is present', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          name: 'Aki Zita',
+          picture: 'https://lh3.googleusercontent.com/a/workspace-photo',
+        }),
+        { status: 200 },
+      ),
+    )
+
+    const exchangeCodeForSession = vi.fn().mockResolvedValue({
+      data: {
+        session: {
+          provider_token: 'google-access-token-123',
+          user: { user_metadata: {} },
+        },
+      },
+      error: null,
+    })
+    const updateUser = vi.fn().mockResolvedValue({ error: null })
+    const getClaims = vi.fn().mockResolvedValue({
+      data: { claims: { sub: 'visitor-1', email: 'aki@example.com' } },
+      error: null,
+    })
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { exchangeCodeForSession, getClaims, updateUser },
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+
+    const response = await GET(
+      new NextRequest(
+        'http://localhost:3000/auth/callback?code=valid-code&next=/contact',
+      ),
+    )
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://openidconnect.googleapis.com/v1/userinfo',
+      expect.objectContaining({
+        headers: { Authorization: 'Bearer google-access-token-123' },
+      }),
+    )
+    expect(updateUser).toHaveBeenCalledWith({
+      data: {
+        avatar_url: 'https://lh3.googleusercontent.com/a/workspace-photo',
+        full_name: 'Aki Zita',
+        picture: 'https://lh3.googleusercontent.com/a/workspace-photo',
+      },
+    })
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/contact',
+    )
+
+    fetchSpy.mockRestore()
+  })
+
+  it('refreshes stored avatar_url when a signed-in Google user changes their photo', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          name: 'Aki Zita',
+          picture: 'https://lh3.googleusercontent.com/a/updated-photo',
+        }),
+        { status: 200 },
+      ),
+    )
+
+    const exchangeCodeForSession = vi.fn().mockResolvedValue({
+      data: {
+        session: {
+          provider_token: 'google-access-token-new',
+          user: {
+            user_metadata: {
+              avatar_url: 'https://lh3.googleusercontent.com/a/old-photo',
+              full_name: 'Aki Zita',
+              picture: 'https://lh3.googleusercontent.com/a/old-photo',
+            },
+          },
+        },
+      },
+      error: null,
+    })
+    const updateUser = vi.fn().mockResolvedValue({ error: null })
+    const getClaims = vi.fn().mockResolvedValue({
+      data: { claims: { sub: 'visitor-1', email: 'aki@example.com' } },
+      error: null,
+    })
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { exchangeCodeForSession, getClaims, updateUser },
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+
+    const response = await GET(
+      new NextRequest(
+        'http://localhost:3000/auth/callback?code=valid-code&next=/contact',
+      ),
+    )
+
+    expect(updateUser).toHaveBeenCalledWith({
+      data: {
+        avatar_url: 'https://lh3.googleusercontent.com/a/updated-photo',
+        picture: 'https://lh3.googleusercontent.com/a/updated-photo',
+      },
+    })
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/contact',
+    )
+
+    fetchSpy.mockRestore()
+  })
+
+  it('falls back to Google People API photos when OIDC userinfo omits picture', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ name: 'Aki Zita' }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            names: [{ displayName: 'Aki Zita' }],
+            photos: [
+              {
+                default: false,
+                url: 'https://lh3.googleusercontent.com/a/people-api-photo',
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+      )
+
+    const exchangeCodeForSession = vi.fn().mockResolvedValue({
+      data: {
+        session: {
+          provider_token: 'google-access-token-people',
+          user: {
+            email: 'aki@example.com',
+            id: 'user-1',
+            identities: [],
+            user_metadata: {},
+          },
+        },
+      },
+      error: null,
+    })
+    const updateUser = vi.fn().mockResolvedValue({ error: null })
+    const getClaims = vi.fn().mockResolvedValue({
+      data: { claims: { sub: 'visitor-1', email: 'aki@example.com' } },
+      error: null,
+    })
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { exchangeCodeForSession, getClaims, updateUser },
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+
+    const response = await GET(
+      new NextRequest(
+        'http://localhost:3000/auth/callback?code=valid-code&next=/contact',
+      ),
+    )
+
+    expect(updateUser).toHaveBeenCalledWith({
+      data: {
+        avatar_url: 'https://lh3.googleusercontent.com/a/people-api-photo',
+        full_name: 'Aki Zita',
+        picture: 'https://lh3.googleusercontent.com/a/people-api-photo',
+      },
+    })
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/contact',
+    )
+
+    fetchSpy.mockRestore()
+  })
 })

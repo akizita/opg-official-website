@@ -1,6 +1,7 @@
 import type { CareerQuestion } from '@/lib/jazzhr/types'
 
-export const MAX_RESUME_BYTES = 2 * 1024 * 1024
+export const MAX_RESUME_BYTES = 10 * 1024 * 1024
+export const PDF_INLINE_PREVIEW_MAX_BYTES = 4 * 1024 * 1024
 export const RESUME_ACCEPT = '.pdf,.doc,.docx,.odt,.rtf,.txt'
 
 const ALLOWED_RESUME_TYPES: Record<string, Set<string>> = {
@@ -25,9 +26,12 @@ export type CareerApplicationInput = {
   email: string
   firstName: string
   lastName: string
+  linkedinUrl?: string
+  location?: string
   phone: string
   privacyConsent: boolean
   resume: File
+  websiteUrl?: string
 }
 
 export type RawCareerApplicationInput = {
@@ -38,17 +42,99 @@ export type RawCareerApplicationInput = {
   firstName?: unknown
   honeypot?: unknown
   lastName?: unknown
+  linkedinUrl?: unknown
+  location?: unknown
   phone?: unknown
   privacyConsent?: unknown
   resume?: unknown
+  websiteUrl?: unknown
 }
 
 function cleanText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+export function normalizeOptionalHttpUrl(
+  rawValue: string,
+  options?: { requireLinkedInHost?: boolean },
+): { url: string; valid: boolean } {
+  const trimmed = rawValue.trim()
+  if (!trimmed) return { url: '', valid: true }
+  if (trimmed.length > 300 || /\s/.test(trimmed)) {
+    return { url: '', valid: false }
+  }
+
+  const withScheme = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : trimmed.includes('.')
+      ? `https://${trimmed}`
+      : trimmed
+
+  try {
+    const parsed = new URL(withScheme)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return { url: '', valid: false }
+    }
+    const host = parsed.hostname.toLowerCase()
+    if (!host.includes('.')) {
+      return { url: '', valid: false }
+    }
+    if (
+      options?.requireLinkedInHost &&
+      host !== 'linkedin.com' &&
+      !host.endsWith('.linkedin.com')
+    ) {
+      return { url: '', valid: false }
+    }
+    return { url: parsed.toString(), valid: true }
+  } catch {
+    return { url: '', valid: false }
+  }
+}
+
 function resumeExtension(filename: string): string {
   return filename.split('.').pop()?.toLowerCase() || ''
+}
+
+const PHONE_CHAR_PATTERN = /^\+?[0-9\s().-]+$/
+
+export function sanitizeCareerPhoneInput(raw: string): string {
+  const trimmedStart = raw.replace(/^\s+/, '')
+  const hasLeadingPlus = trimmedStart.startsWith('+')
+  const body = trimmedStart.replace(/[^\d\s().-]/g, '')
+  return hasLeadingPlus ? `+${body}` : body
+}
+
+export function validateCareerPhone(rawPhone: string): string | null {
+  const phone = rawPhone.trim()
+  if (!phone || phone.length > 40) {
+    return 'Enter a valid phone number with 7 to 15 digits.'
+  }
+  if (!PHONE_CHAR_PATTERN.test(phone)) {
+    return 'Phone number cannot contain letters or unsupported symbols.'
+  }
+  const phoneDigits = phone.replace(/\D/g, '')
+  if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+    return 'Enter a valid phone number with 7 to 15 digits.'
+  }
+  return null
+}
+
+export function validateCareerResumeFile(resume: File | null): string | null {
+  if (!resume || resume.size === 0) {
+    return 'Attach your résumé before submitting.'
+  }
+  if (resume.size > MAX_RESUME_BYTES) {
+    return 'Résumé must be 10 MB or smaller.'
+  }
+  const extension = resumeExtension(resume.name)
+  const allowedTypes = ALLOWED_RESUME_TYPES[extension]
+  const mime = resume.type.toLowerCase()
+  const genericMime = !mime || mime === 'application/octet-stream'
+  if (!allowedTypes || (!genericMime && !allowedTypes.has(mime))) {
+    return 'Use a PDF, DOC, DOCX, ODT, RTF, or plain-text résumé file.'
+  }
+  return null
 }
 
 export function validateCareerApplication(
@@ -63,6 +149,11 @@ export function validateCareerApplication(
   const lastName = cleanText(raw.lastName)
   const email = cleanText(raw.email).toLowerCase()
   const phone = cleanText(raw.phone)
+  const location = cleanText(raw.location)
+  const linkedinResult = normalizeOptionalHttpUrl(cleanText(raw.linkedinUrl), {
+    requireLinkedInHost: true,
+  })
+  const websiteResult = normalizeOptionalHttpUrl(cleanText(raw.websiteUrl))
   const coverLetter = cleanText(raw.coverLetter)
   const honeypot = cleanText(raw.honeypot)
   const elapsedSeconds = Number(raw.elapsedSeconds)
@@ -88,28 +179,30 @@ export function validateCareerApplication(
     errors.email = 'Enter a valid email address.'
   }
 
-  const phoneDigits = phone.replace(/\D/g, '')
-  if (!phone || phone.length > 40 || phoneDigits.length < 7) {
-    errors.phone = 'Enter a valid phone number with at least 7 digits.'
+  const phoneError = validateCareerPhone(phone)
+  if (phoneError) {
+    errors.phone = phoneError
+  }
+
+  if (location.length > 160) {
+    errors.location = 'Location must be 160 characters or fewer.'
+  }
+  if (!linkedinResult.valid) {
+    errors.linkedinUrl =
+      'Enter a valid LinkedIn profile URL (e.g. https://www.linkedin.com/in/your-name).'
+  }
+  if (!websiteResult.valid) {
+    errors.websiteUrl =
+      'Enter a valid website or portfolio URL (e.g. https://yourportfolio.com).'
   }
 
   if (coverLetter.length > 5000) {
     errors.coverLetter = 'Cover letter must be 5,000 characters or fewer.'
   }
 
-  if (!resume || resume.size === 0) {
-    errors.resume = 'Attach your résumé before submitting.'
-  } else if (resume.size > MAX_RESUME_BYTES) {
-    errors.resume = 'Résumé must be 2 MB or smaller.'
-  } else {
-    const extension = resumeExtension(resume.name)
-    const allowedTypes = ALLOWED_RESUME_TYPES[extension]
-    const mime = resume.type.toLowerCase()
-    const genericMime = !mime || mime === 'application/octet-stream'
-    if (!allowedTypes || (!genericMime && !allowedTypes.has(mime))) {
-      errors.resume =
-        'Use a PDF, DOC, DOCX, ODT, RTF, or plain-text résumé file.'
-    }
+  const resumeError = validateCareerResumeFile(resume)
+  if (resumeError) {
+    errors.resume = resumeError
   }
 
   const answers: Record<string, string> = {}
@@ -162,9 +255,12 @@ export function validateCareerApplication(
       email,
       firstName,
       lastName,
+      linkedinUrl: linkedinResult.url,
+      location,
       phone,
       privacyConsent,
       resume,
+      websiteUrl: websiteResult.url,
     },
     errors,
   }
@@ -180,10 +276,10 @@ export function sanitizeResumeFilename(filename: string): string {
 
 export async function hasValidResumeSignature(file: File): Promise<boolean> {
   const extension = resumeExtension(file.name)
-  const bytes = new Uint8Array(await file.slice(0, 16).arrayBuffer())
+  const bytes = new Uint8Array(await file.slice(0, 64).arrayBuffer())
   const ascii = new TextDecoder('latin1').decode(bytes)
 
-  if (extension === 'pdf') return ascii.startsWith('%PDF-')
+  if (extension === 'pdf') return ascii.includes('%PDF-')
   if (extension === 'doc') {
     return [0xd0, 0xcf, 0x11, 0xe0].every(
       (byte, index) => bytes[index] === byte,

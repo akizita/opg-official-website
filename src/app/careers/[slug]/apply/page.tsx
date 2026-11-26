@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
 
-import { getCareerJobBySlug } from '@/lib/jazzhr/client'
+import {
+  getCareerJobBySlug,
+  getCareersFeed,
+  JazzHrApiError,
+} from '@/lib/jazzhr/client'
 import { siteConfig } from '@/lib/site-config'
 
 export const dynamic = 'force-dynamic'
@@ -27,8 +31,16 @@ export async function generateMetadata({
 
 export default async function ApplyPage({ params }: ApplyPageProps) {
   const { slug } = await params
-  const job = await getCareerJobBySlug(slug)
-  if (!job) notFound()
+  const [job, feed] = await Promise.all([
+    getCareerJobBySlug(slug),
+    getCareersFeed(),
+  ])
+  if (!job) {
+    if (feed.configured && !feed.fetchedAt) {
+      throw new JazzHrApiError('Live job feed is temporarily unavailable.')
+    }
+    notFound()
+  }
 
   // The application form is integrated directly on the role details page
   permanentRedirect(`/careers/${job.slug}#apply`)

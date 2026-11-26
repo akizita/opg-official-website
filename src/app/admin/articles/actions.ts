@@ -6,9 +6,11 @@ import { requireAdminSession } from '@/lib/auth/admin-session'
 import { canEditDraft, canPublish } from '@/lib/auth/permissions'
 import {
   type Article,
+  FEATURED_ARTICLE_SETTING_KEY,
+  getFeaturedArticleSlug,
   markdownToRichTextBlocks,
 } from '@/lib/content/articles'
-import { createClient } from '@/lib/supabase/server'
+import * as supabaseServer from '@/lib/supabase/server'
 import type { ArticleActionState } from './types'
 
 function slugify(text: string): string {
@@ -22,6 +24,153 @@ function slugify(text: string): string {
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+type ServerSupabaseClient = Awaited<ReturnType<typeof supabaseServer.createClient>>
+
+function getOptionalPrivilegedClient(): ServerSupabaseClient | null {
+  try {
+    const candidate = (
+      supabaseServer as {
+        createPrivilegedClient?: () => unknown
+      }
+    ).createPrivilegedClient?.()
+    return (candidate as ServerSupabaseClient | null) ?? null
+  } catch {
+    return null
+  }
+}
+
+async function resolveAuthorId(
+  db: ServerSupabaseClient,
+  authorName: string,
+  authorIdRaw: string | null,
+): Promise<string | null> {
+  try {
+    if (authorName) {
+      const authorSlug = slugify(authorName) || 'author'
+      const authorsTable = db.from('authors')
+      if (typeof authorsTable?.select !== 'function') {
+        return null
+      }
+
+      const { data: existingBySlug } = await authorsTable
+        .select('id, full_name')
+        .eq('slug', authorSlug)
+        .maybeSingle()
+
+      if (existingBySlug?.id) {
+        if (
+          existingBySlug.full_name !== authorName &&
+          typeof authorsTable.update === 'function'
+        ) {
+          await authorsTable
+            .update({ full_name: authorName, is_active: true })
+            .eq('id', existingBySlug.id)
+        }
+        return existingBySlug.id
+      }
+
+      if (typeof authorsTable.insert === 'function') {
+        const { data: createdAuthor, error: insertError } = await authorsTable
+          .insert({
+            slug: authorSlug,
+            full_name: authorName,
+            is_active: true,
+          })
+          .select('id')
+          .single()
+
+        if (!insertError && createdAuthor?.id) {
+          return createdAuthor.id
+        }
+      }
+
+      const { data: retriedAuthor } = await authorsTable
+        .select('id')
+        .eq('slug', authorSlug)
+        .maybeSingle()
+
+      return retriedAuthor?.id ?? null
+    }
+
+    if (authorIdRaw && UUID_REGEX.test(authorIdRaw)) {
+      const authorsTable = db.from('authors')
+      if (typeof authorsTable?.select !== 'function') {
+        return null
+      }
+      const { data: verified } = await authorsTable
+        .select('id')
+        .eq('id', authorIdRaw)
+        .maybeSingle()
+
+      return verified?.id ?? null
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+async function resolveCategoryId(
+  db: ServerSupabaseClient,
+  categoryId: number | null,
+  categorySlugRaw: string | null,
+  categoryNameRaw: string | null,
+): Promise<number | null> {
+  if (!categoryId || !Number.isInteger(categoryId) || categoryId <= 0) {
+    return null
+  }
+
+  try {
+    const categoriesTable = db.from('article_categories')
+    if (typeof categoriesTable?.select !== 'function') {
+      return categoryId
+    }
+
+    const { data: existingById } = await categoriesTable
+      .select('id')
+      .eq('id', categoryId)
+      .maybeSingle()
+
+    if (existingById?.id) {
+      return existingById.id
+    }
+
+    if (!categoryNameRaw) {
+      return categoryId
+    }
+
+    const catSlug = slugify(categorySlugRaw || categoryNameRaw)
+    if (!catSlug) return null
+
+    const { data: existingBySlug } = await categoriesTable
+      .select('id')
+      .eq('slug', catSlug)
+      .maybeSingle()
+
+    if (existingBySlug?.id) {
+      return existingBySlug.id
+    }
+
+    if (typeof categoriesTable.insert === 'function') {
+      const { data: createdCategory } = await categoriesTable
+        .insert({
+          slug: catSlug,
+          name: categoryNameRaw,
+          is_active: true,
+        })
+        .select('id')
+        .single()
+
+      return createdCategory?.id ?? null
+    }
+  } catch {
+    return categoryId
+  }
+
+  return null
+}
 
 export async function saveArticleAction(
   _prevState: ArticleActionState,
@@ -39,6 +188,8 @@ export async function saveArticleAction(
   const rawId = (formData.get('id') as string | null)?.trim() || ''
   const title = (formData.get('title') as string | null)?.trim() || ''
   let slug = (formData.get('slug') as string | null)?.trim().toLowerCase() || ''
+  const previousSlug =
+    (formData.get('previous_slug') as string | null)?.trim().toLowerCase() || ''
   const excerpt = (formData.get('excerpt') as string | null)?.trim() || ''
   const markdownContent =
     (formData.get('markdownContent') as string | null)?.trim() || ''
@@ -47,10 +198,19 @@ export async function saveArticleAction(
   const status = (
     (formData.get('status') as string | null)?.trim() || 'draft'
   ) as Article['status']
+  const isFeatured =
+    formData.get('is_featured') === 'true' ||
+    formData.get('is_featured') === 'on'
+  const authorName =
+    (formData.get('author_name') as string | null)?.trim() || ''
   const authorIdRaw =
     (formData.get('author_id') as string | null)?.trim() || null
   const categoryIdRaw =
     (formData.get('category_id') as string | null)?.trim() || null
+  const categorySlugRaw =
+    (formData.get('category_slug') as string | null)?.trim() || null
+  const categoryNameRaw =
+    (formData.get('category_name') as string | null)?.trim() || null
   const seoTitle =
     (formData.get('seo_title') as string | null)?.trim() || null
   const seoDescription =
@@ -97,11 +257,11 @@ export async function saveArticleAction(
     .filter(Boolean).length
   const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 200))
 
-  const authorId =
-    authorIdRaw && UUID_REGEX.test(authorIdRaw) ? authorIdRaw : null
   const categoryId = categoryIdRaw ? Number.parseInt(categoryIdRaw, 10) : null
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer.createClient()
+  const privilegedClient = getOptionalPrivilegedClient()
+  const authorId = await resolveAuthorId(supabase, authorName, authorIdRaw)
 
   const isExistingUuid = UUID_REGEX.test(rawId)
   let targetArticleId = isExistingUuid ? rawId : null
@@ -181,7 +341,13 @@ export async function saveArticleAction(
   }
 
   // Handle Category Mapping
-  if (targetArticleId && Number.isInteger(categoryId) && categoryId! > 0) {
+  const resolvedCategoryId = await resolveCategoryId(
+    supabase,
+    categoryId,
+    categorySlugRaw,
+    categoryNameRaw,
+  )
+  if (targetArticleId && resolvedCategoryId) {
     await supabase
       .from('article_category_mappings')
       .delete()
@@ -189,8 +355,71 @@ export async function saveArticleAction(
 
     await supabase.from('article_category_mappings').insert({
       article_id: targetArticleId,
-      category_id: categoryId!,
+      category_id: resolvedCategoryId,
     })
+  }
+
+  // Handle Featured Article selection in site_settings (use session first; only fallback if privileged client works)
+  const currentFeaturedSlug = await getFeaturedArticleSlug(supabase)
+  if (isFeatured) {
+    if (currentFeaturedSlug !== slug) {
+      const settingPayload = {
+        setting_key: FEATURED_ARTICLE_SETTING_KEY,
+        setting_value: slug,
+        description: 'Slug of the featured story highlighted on /articles',
+        updated_at: nowIso,
+        updated_by: profile.id,
+      }
+      let { error: featuredError } = await supabase
+        .from('site_settings')
+        .upsert(settingPayload, { onConflict: 'setting_key' })
+
+      if (featuredError && privilegedClient) {
+        const retry = await privilegedClient
+          .from('site_settings')
+          .upsert(settingPayload, { onConflict: 'setting_key' })
+        if (!retry.error) {
+          featuredError = null
+        }
+      }
+
+      if (featuredError) {
+        return {
+          status: 'error',
+          articleId: targetArticleId || undefined,
+          slug,
+          message: `Article saved, but could not update featured setting: ${featuredError.message}`,
+        }
+      }
+    }
+  } else if (
+    currentFeaturedSlug &&
+    (currentFeaturedSlug === slug ||
+      (previousSlug && currentFeaturedSlug === previousSlug))
+  ) {
+    let { error: unfeatureError } = await supabase
+      .from('site_settings')
+      .delete()
+      .eq('setting_key', FEATURED_ARTICLE_SETTING_KEY)
+
+    if (unfeatureError && privilegedClient) {
+      const retry = await privilegedClient
+        .from('site_settings')
+        .delete()
+        .eq('setting_key', FEATURED_ARTICLE_SETTING_KEY)
+      if (!retry.error) {
+        unfeatureError = null
+      }
+    }
+
+    if (unfeatureError) {
+      return {
+        status: 'error',
+        articleId: targetArticleId || undefined,
+        slug,
+        message: `Article saved, but could not clear featured setting: ${unfeatureError.message}`,
+      }
+    }
   }
 
   // Ensure an engagement row exists for telemetry
@@ -208,6 +437,9 @@ export async function saveArticleAction(
   revalidatePath('/admin')
   revalidatePath('/articles')
   revalidatePath(`/articles/${slug}`)
+  if (previousSlug && previousSlug !== slug) {
+    revalidatePath(`/articles/${previousSlug}`)
+  }
 
   return {
     status: 'success',
@@ -215,8 +447,12 @@ export async function saveArticleAction(
     slug,
     message:
       status === 'published'
-        ? 'Article published successfully and live on the website!'
-        : 'Article saved successfully.',
+        ? isFeatured
+          ? 'Article published live and set as the Featured story!'
+          : 'Article published successfully and live on the website!'
+        : isFeatured
+          ? 'Article saved and marked as the Featured story.'
+          : 'Article saved successfully.',
   }
 }
 
@@ -228,13 +464,15 @@ export async function deleteArticleAction(formData: FormData) {
   }
 
   const articleId = (formData.get('articleId') as string | null)?.trim() || ''
-  const slug = (formData.get('slug') as string | null)?.trim() || ''
+  const slug =
+    (formData.get('slug') as string | null)?.trim().toLowerCase() || ''
 
   if (!articleId && !slug) {
     throw new Error('Article identifier is required.')
   }
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer.createClient()
+  const privilegedClient = getOptionalPrivilegedClient()
 
   if (UUID_REGEX.test(articleId)) {
     const { error } = await supabase
@@ -247,7 +485,26 @@ export async function deleteArticleAction(formData: FormData) {
     }
   } else if (slug) {
     // Delete by slug if ID is non-UUID
-    await supabase.from('articles').delete().eq('slug', slug)
+    const { error } = await supabase.from('articles').delete().eq('slug', slug)
+    if (error) {
+      throw new Error(`Failed to delete article: ${error.message}`)
+    }
+  }
+
+  if (slug) {
+    const currentFeaturedSlug = await getFeaturedArticleSlug(supabase)
+    if (currentFeaturedSlug === slug) {
+      const { error } = await supabase
+        .from('site_settings')
+        .delete()
+        .eq('setting_key', FEATURED_ARTICLE_SETTING_KEY)
+      if (error && privilegedClient) {
+        await privilegedClient
+          .from('site_settings')
+          .delete()
+          .eq('setting_key', FEATURED_ARTICLE_SETTING_KEY)
+      }
+    }
   }
 
   revalidatePath('/admin/articles')
@@ -273,7 +530,7 @@ export async function updateArticleStatusAction(
     throw new Error('Unauthorized to modify article status.')
   }
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer.createClient()
   const nowIso = new Date().toISOString()
 
   const payload: Record<string, unknown> = {

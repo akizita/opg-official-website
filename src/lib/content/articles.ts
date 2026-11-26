@@ -189,7 +189,7 @@ export async function getPublishedArticles(options?: {
       .from('article_categories')
       .select('id')
       .eq('slug', options.categorySlug)
-      .single()
+      .maybeSingle()
 
     if (cat) {
       const { data: mappings } = await supabase
@@ -212,7 +212,7 @@ export async function getPublishedArticles(options?: {
       .from('article_tags')
       .select('id')
       .eq('slug', options.tagSlug)
-      .single()
+      .maybeSingle()
 
     if (tag) {
       const { data: mappings } = await supabase
@@ -451,6 +451,7 @@ export type AdminArticleItem = {
   title: string
   excerpt: string
   status: Article['status']
+  is_featured?: boolean
   published_at: string | null
   reading_time_minutes: number
   cover_image_url: string | null
@@ -471,6 +472,39 @@ export type AdminArticleDetail = AdminArticleItem & {
   seo_description: string | null
 }
 
+export const FEATURED_ARTICLE_SETTING_KEY = 'featured_article_slug'
+
+/** Reads the currently configured featured article slug from site_settings, if set. */
+export async function getFeaturedArticleSlug(
+  client?: SupabaseClient,
+): Promise<string | null> {
+  try {
+    const supabase = client ?? (await createClient())
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('setting_value')
+      .eq('setting_key', FEATURED_ARTICLE_SETTING_KEY)
+      .maybeSingle()
+
+    if (error || !data) return null
+
+    const raw = data.setting_value as unknown
+    if (typeof raw === 'string') {
+      const normalized = raw.trim().toLowerCase()
+      return normalized || null
+    }
+    if (raw && typeof raw === 'object' && 'slug' in raw) {
+      const slugValue = (raw as { slug?: unknown }).slug
+      if (typeof slugValue === 'string' && slugValue.trim()) {
+        return slugValue.trim().toLowerCase()
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 import {
   markdownToRichTextBlocks,
   richTextBlocksToMarkdown,
@@ -483,7 +517,7 @@ export async function getAdminArticles(
 ): Promise<AdminArticleItem[]> {
   const supabase = client ?? (await createClient())
 
-  const [articlesRes, engagementRes] = await Promise.all([
+  const [articlesRes, engagementRes, featuredSlug] = await Promise.all([
     supabase
       .from('articles')
       .select(
@@ -509,6 +543,7 @@ export async function getAdminArticles(
     supabase
       .from('article_engagement')
       .select('article_slug, view_count, like_count'),
+    getFeaturedArticleSlug(supabase),
   ])
 
   const engagementMap = new Map<string, { views: number; likes: number }>()
@@ -536,6 +571,7 @@ export async function getAdminArticles(
         title: row.title as string,
         excerpt: (row.excerpt as string) || '',
         status: (row.status as Article['status']) || 'draft',
+        is_featured: Boolean(featuredSlug && slug === featuredSlug),
         published_at: row.published_at as string | null,
         reading_time_minutes: Number(row.reading_time_minutes || 3),
         cover_image_url: row.cover_image_url as string | null,
@@ -567,6 +603,7 @@ export async function getAdminArticles(
         title: f.title,
         excerpt: f.excerpt,
         status: f.status,
+        is_featured: Boolean(featuredSlug && f.slug === featuredSlug),
         published_at: f.published_at,
         reading_time_minutes: f.reading_time_minutes,
         cover_image_url: f.cover_image_url,
@@ -613,7 +650,10 @@ export async function getAdminArticleByIdOrSlug(
     query = query.eq('slug', idOrSlug)
   }
 
-  const { data: row } = await query.maybeSingle()
+  const [{ data: row }, featuredSlug] = await Promise.all([
+    query.maybeSingle(),
+    getFeaturedArticleSlug(supabase),
+  ])
 
   if (row) {
     const { data: eng } = await supabase
@@ -636,6 +676,7 @@ export async function getAdminArticleByIdOrSlug(
       content,
       markdownContent: richTextBlocksToMarkdown(content),
       status: row.status as Article['status'],
+      is_featured: Boolean(featuredSlug && row.slug === featuredSlug),
       published_at: row.published_at,
       reading_time_minutes: Number(row.reading_time_minutes || 3),
       cover_image_url: row.cover_image_url,
@@ -671,6 +712,7 @@ export async function getAdminArticleByIdOrSlug(
       content: featured.content,
       markdownContent: richTextBlocksToMarkdown(featured.content),
       status: featured.status,
+      is_featured: Boolean(featuredSlug && featured.slug === featuredSlug),
       published_at: featured.published_at,
       reading_time_minutes: featured.reading_time_minutes,
       cover_image_url: featured.cover_image_url,

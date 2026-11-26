@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   useEffect,
@@ -27,6 +26,8 @@ import {
   OpgIconMore,
   OpgIconSearch,
 } from '@/components/icons/opg-icons'
+import { UserAvatar } from '@/components/ui/user-avatar'
+import { deriveAvatarInitials } from '@/lib/auth/avatar-utils'
 
 export type ReviewStatus = 'all' | 'pending' | 'approved' | 'rejected'
 
@@ -46,6 +47,7 @@ export type CandidateSubmission = {
   reviewed_at: string | null
   reviewed_at_label: string
   profile_photo_url: string | null
+  gravatar_url?: string | null
 }
 
 export type ReviewFilter = {
@@ -73,16 +75,7 @@ function useIsClientMounted() {
 
 function CandidateAvatar({ item }: { item: CandidateSubmission }) {
   const isMounted = useIsClientMounted()
-  const [hasError, setHasError] = useState(false)
-  const nameParts = item.author_name.trim().split(/\s+/).filter(Boolean)
-  const initials = (
-    nameParts.length > 1
-      ? nameParts.map((part) => part[0])
-      : (nameParts[0] ?? '?').slice(0, 2).split('')
-  )
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  const initials = deriveAvatarInitials(item.author_name, item.email)
 
   const hue =
     (Array.from(item.author_name).reduce(
@@ -92,36 +85,17 @@ function CandidateAvatar({ item }: { item: CandidateSubmission }) {
       50) +
     18
 
-  // Priority: 1) Uploaded photo, 2) Personal account profile photo from Gravatar (on client), 3) Initials
-  const avatarUrl = useMemo(() => {
-    if (item.profile_photo_url) return item.profile_photo_url
-    if (isMounted && item.email && item.email.includes('@')) {
-      const cleanEmail = item.email.trim().toLowerCase()
-      // Strictly query personal account profile (Gravatar) and avoid domain/company logo fallbacks (Clearbit)
-      return `https://unavatar.io/gravatar/${encodeURIComponent(cleanEmail)}?fallback=false`
-    }
-    return null
-  }, [item.profile_photo_url, isMounted, item.email])
-
   return (
-    <span
+    <UserAvatar
       className="candidate-review-avatar"
-      aria-hidden="true"
+      email={isMounted ? item.email : null}
+      fallbackSrc={item.gravatar_url}
+      initials={initials}
+      name={item.author_name}
+      size={48}
+      src={item.profile_photo_url}
       style={{ '--avatar-hue': hue } as CSSProperties}
-    >
-      {avatarUrl && !hasError ? (
-        <Image
-          alt=""
-          height={48}
-          src={avatarUrl}
-          unoptimized
-          width={48}
-          onError={() => setHasError(true)}
-        />
-      ) : (
-        <span>{initials}</span>
-      )}
-    </span>
+    />
   )
 }
 

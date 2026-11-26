@@ -11,7 +11,10 @@ import {
 } from '@/components/icons/opg-icons'
 import type { AdminProfile } from '@/lib/auth/admin-session'
 import { canViewContent, canViewInquiries } from '@/lib/auth/permissions'
-import { resolveAuthAvatarsByEmail } from '@/lib/auth/user-avatars'
+import {
+  buildGravatarUrl,
+  resolveAuthAvatarsByEmail,
+} from '@/lib/auth/user-avatars'
 import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
 import { featuredArticles } from '@/lib/content/featured-articles'
 import { createClient, createPrivilegedClient } from '@/lib/supabase/server'
@@ -959,6 +962,7 @@ export async function AdminAnalyticsDashboard({
                       className="admin-review-card__avatar"
                       displayName={inquiry.full_name}
                       email={inquiry.email}
+                      gravatarUrl={buildGravatarUrl(inquiry.email)}
                       imgClassName="admin-review-card__avatar-img"
                       initials={inquiry.full_name.slice(0, 1).toUpperCase()}
                       size={36}
@@ -1033,6 +1037,11 @@ export async function AdminAnalyticsDashboard({
                       className="admin-review-card__avatar admin-review-card__avatar--gold"
                       displayName={testimonial.author_name}
                       email={testimonial.email}
+                      gravatarUrl={
+                        testimonial.email
+                          ? buildGravatarUrl(testimonial.email)
+                          : null
+                      }
                       imgClassName="admin-review-card__avatar-img"
                       initials={testimonial.author_name
                         .slice(0, 1)

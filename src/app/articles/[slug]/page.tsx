@@ -5,6 +5,11 @@ import { notFound } from 'next/navigation'
 
 import { ArticleEngagement } from '@/components/ui/article-engagement'
 import { RichText } from '@/components/ui/rich-text'
+import {
+  formatSafeArticleDate,
+  resolvePublicMetadataImageUrl,
+  resolveSafeArticleImage,
+} from '@/lib/content/article-image'
 import { getArticleBySlug } from '@/lib/content/articles'
 import { featuredArticles } from '@/lib/content/featured-articles'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
@@ -50,6 +55,8 @@ export async function generateMetadata({
 
   const description = article.seo_description || article.excerpt
 
+  const metadataImage = resolvePublicMetadataImageUrl(article.cover_image_url)
+
   return {
     title,
     description,
@@ -69,9 +76,7 @@ export async function generateMetadata({
       authors: article.author?.full_name
         ? [article.author.full_name]
         : undefined,
-      images: article.cover_image_url
-        ? [{ url: article.cover_image_url }]
-        : undefined,
+      images: metadataImage ? [{ url: metadataImage }] : undefined,
     },
   }
 }
@@ -112,19 +117,17 @@ export default async function ArticleDetailPage({
       name: siteConfig.name,
       url: siteUrl.toString(),
     },
-    image: article.cover_image_url || undefined,
+    image: resolvePublicMetadataImageUrl(article.cover_image_url),
     isBasedOn: article.source_url || undefined,
   }
 
   const authorName = article.author?.full_name || siteConfig.name
   const authorRole = article.author?.role_title || 'Editorial Team'
-  const publishedLabel = article.published_at
-    ? new Date(article.published_at).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : 'Publication date pending'
+  const formattedDate = formatSafeArticleDate(article.published_at, 'long')
+  const publishedLabel = formattedDate || 'Publication date pending'
+  const coverImage = article.cover_image_url
+    ? resolveSafeArticleImage(article.cover_image_url)
+    : null
 
   const supabase = createStaticClient()
   const { data: engagementData } = await supabase
@@ -170,17 +173,15 @@ export default async function ArticleDetailPage({
           <p className="article-detail__lead">{article.excerpt}</p>
         </header>
 
-        {article.cover_image_url ? (
+        {coverImage ? (
           <figure className="article-detail__cover">
             <Image
               alt=""
               fill
               priority
               sizes="(max-width: 75rem) 100vw, 72rem"
-              src={article.cover_image_url}
-              unoptimized={article.cover_image_url.startsWith(
-                'https://media.licdn.com',
-              )}
+              src={coverImage.src}
+              unoptimized={coverImage.unoptimized}
             />
           </figure>
         ) : null}

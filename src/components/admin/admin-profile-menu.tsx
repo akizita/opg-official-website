@@ -1,11 +1,9 @@
 'use client'
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
   useTransition,
@@ -19,55 +17,35 @@ import {
   OpgIconSignOut,
   OpgIconUpload,
 } from '@/components/icons/opg-icons'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import type { AdminProfile } from '@/lib/auth/admin-session'
-import { buildAvatarCandidates } from '@/lib/auth/avatar-utils'
 
 function AdminAccountAvatar({
   avatarUrl,
   className,
+  displayName,
   email,
   initials,
   size,
 }: {
   avatarUrl?: string | null
   className: string
+  displayName: string
   email: string
   initials: string
   size: number
 }) {
-  const candidates = useMemo(
-    () => buildAvatarCandidates({ avatarUrl, email }),
-    [avatarUrl, email],
-  )
-
-  const candidateKey = candidates.join('|')
-  const [prevKey, setPrevKey] = useState(candidateKey)
-  const [attemptIndex, setAttemptIndex] = useState(0)
-
-  if (prevKey !== candidateKey) {
-    setPrevKey(candidateKey)
-    setAttemptIndex(0)
-  }
-
-  const activeSrc = candidates[attemptIndex] ?? null
-
   return (
-    <span aria-hidden="true" className={className}>
-      {activeSrc ? (
-        <Image
-          alt=""
-          className="admin-shell__avatar-img"
-          height={size}
-          onError={() => setAttemptIndex((prev) => prev + 1)}
-          referrerPolicy="no-referrer"
-          src={activeSrc}
-          unoptimized
-          width={size}
-        />
-      ) : (
-        initials || 'OPG'
-      )}
-    </span>
+    <UserAvatar
+      className={className}
+      email={email}
+      imgClassName="admin-shell__avatar-img"
+      initials={initials || 'OPG'}
+      initialsClassName="admin-shell__avatar-initials"
+      name={displayName}
+      size={size}
+      src={avatarUrl}
+    />
   )
 }
 
@@ -168,6 +146,7 @@ export function AdminProfileMenu({ profile }: { profile: AdminProfile }) {
         <AdminAccountAvatar
           avatarUrl={resolvedAvatarUrl}
           className="admin-shell__avatar"
+          displayName={profile.displayName}
           email={profile.email}
           initials={initials}
           size={38}
@@ -227,6 +206,7 @@ export function AdminProfileMenu({ profile }: { profile: AdminProfile }) {
                 <AdminAccountAvatar
                   avatarUrl={resolvedAvatarUrl}
                   className="admin-profile-menu__popover-avatar"
+                  displayName={profile.displayName}
                   email={profile.email}
                   initials={initials}
                   size={40}

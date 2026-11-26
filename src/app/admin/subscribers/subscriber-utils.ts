@@ -14,6 +14,7 @@ export type SubscriberDateFilter =
 export type SubscriberItem = NewsletterSubscription & {
   confirmation_sent_at?: string | null
   avatar_url?: string | null
+  gravatar_url?: string | null
   display_name?: string | null
 }
 

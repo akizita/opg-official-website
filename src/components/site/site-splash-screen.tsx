@@ -272,6 +272,10 @@ export function SiteSplashScreen() {
 
     document.documentElement.style.overflow = ''
 
+    if (!window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    }
+
     const video = videoRef.current
     if (video) {
       video.pause()
@@ -348,6 +352,10 @@ export function SiteSplashScreen() {
       window.sessionStorage.setItem(SPLASH_SEEN_KEY, '1')
     } catch {
       // Ignore storage access errors in restricted contexts
+    }
+
+    if (!window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     }
 
     const previousOverflow = document.documentElement.style.overflow

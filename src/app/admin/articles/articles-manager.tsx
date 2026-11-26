@@ -16,6 +16,7 @@ import {
   OpgIconVisits,
 } from '@/components/icons/opg-icons'
 import { canEditDraft } from '@/lib/auth/permissions'
+import { resolveSafeArticleImage } from '@/lib/content/article-image'
 import type { AdminArticleItem } from '@/lib/content/articles'
 
 import styles from './articles.module.css'
@@ -259,16 +260,21 @@ export function ArticlesManager({
                         <div className={styles.articleCell}>
                           <div className={styles.tableThumbnail}>
                             {article.cover_image_url ? (
-                              <Image
-                                alt=""
-                                aria-hidden="true"
-                                fill
-                                sizes="56px"
-                                src={article.cover_image_url}
-                                unoptimized={article.cover_image_url.startsWith(
-                                  'https://media.licdn.com',
-                                )}
-                              />
+                              (() => {
+                                const img = resolveSafeArticleImage(
+                                  article.cover_image_url,
+                                )
+                                return (
+                                  <Image
+                                    alt=""
+                                    aria-hidden="true"
+                                    fill
+                                    sizes="56px"
+                                    src={img.src}
+                                    unoptimized={img.unoptimized}
+                                  />
+                                )
+                              })()
                             ) : (
                               <div className={styles.thumbnailPlaceholder}>
                                 <OpgIconArticles size={18} />
@@ -283,9 +289,23 @@ export function ArticlesManager({
                             >
                               {article.title}
                             </Link>
-                            <span className={styles.tableArticleSlug}>
-                              /{article.slug}
-                            </span>
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.45rem',
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              <span className={styles.tableArticleSlug}>
+                                /{article.slug}
+                              </span>
+                              {article.is_featured && (
+                                <span className={styles.featuredInlineBadge}>
+                                  Featured
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>

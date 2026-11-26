@@ -9,7 +9,10 @@ import {
   canManageSubscribers,
   canViewSubscribers,
 } from '@/lib/auth/permissions'
-import { resolveAuthProfilesByEmail } from '@/lib/auth/user-avatars'
+import {
+  buildGravatarUrl,
+  resolveAuthProfilesByEmail,
+} from '@/lib/auth/user-avatars'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -64,6 +67,8 @@ export default async function AdminSubscribersPage({
     return {
       ...sub,
       avatar_url: matched?.avatarUrl ?? null,
+      gravatar_url:
+        matched?.gravatarUrl ?? buildGravatarUrl(sub.email_normalized),
       display_name: matched?.displayName ?? null,
     }
   })

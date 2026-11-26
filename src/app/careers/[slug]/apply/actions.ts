@@ -97,11 +97,14 @@ export async function submitCareerApplicationAction(
       firstName: textField(formData, 'firstName'),
       honeypot: textField(formData, 'website'),
       lastName: textField(formData, 'lastName'),
+      linkedinUrl: textField(formData, 'linkedinUrl'),
+      location: textField(formData, 'location'),
       phone: textField(formData, 'phone'),
       privacyConsent:
         formData.get('privacyConsent') === 'on' ||
         formData.get('privacyConsent') === 'true',
       resume: formData.get('resume'),
+      websiteUrl: textField(formData, 'websiteUrl'),
     },
     questions,
   )
@@ -210,6 +213,7 @@ export async function submitCareerApplicationAction(
     logger.error('JazzHR application submission failed', {
       error,
       jobId: job.id,
+      message: error instanceof Error ? error.message : String(error),
       status: error instanceof JazzHrApiError ? error.status : null,
     })
     return {

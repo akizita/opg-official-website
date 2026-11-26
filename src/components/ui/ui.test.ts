@@ -1,3 +1,5 @@
+import { createElement } from 'react'
+import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
 import { AboutCtaCard } from './about-cta-card'
@@ -13,10 +15,8 @@ import {
 } from './offshore-map'
 import { Masonry } from './masonry'
 import { DEFAULT_OPG_LIGHT_LOGO_URL, TextLoop } from './text-loop'
-import {
-  CANDIDATE_TESTIMONIALS,
-  HomeCandidateTestimonialsSection,
-} from '@/components/home/home-candidate-testimonials-section'
+import { HomeCandidateTestimonialsSection } from '@/components/home/home-candidate-testimonials-section'
+import { HomeInitialScrollGuard } from '@/components/home/home-initial-scroll-guard'
 import { TEAM_MEMBERS_11 } from '@/components/home/home-team-masonry-section'
 import type { RichTextBlock } from './rich-text'
 import type { ContentStatus } from './status-badge'
@@ -98,18 +98,45 @@ describe('UI Base Components contracts', () => {
     })
   })
 
-  it('exports HomeCandidateTestimonialsSection and validates 4 Bento Grid cards', () => {
+  it('renders HomeCandidateTestimonialsSection from live testimonial items with Read full story toggle for long quotes', () => {
     expect(typeof HomeCandidateTestimonialsSection).toBe('function')
-    expect(CANDIDATE_TESTIMONIALS).toHaveLength(4)
-    CANDIDATE_TESTIMONIALS.forEach((card) => {
-      expect(card.id).toBeTruthy()
-      expect(card.name).toBeTruthy()
-      expect(card.role).toBeTruthy()
-      expect(card.initials).toBeTruthy()
-      expect(card.quote).toBeTruthy()
-      expect(card.date).toBeTruthy()
-      expect(card.spanClass).toBeTruthy()
-    })
+
+    const html = renderToString(
+      createElement(HomeCandidateTestimonialsSection, {
+        testimonials: [
+          {
+            id: 'real-1',
+            author_name: 'Aaron Calusa',
+            relationship: 'past',
+            role_title: 'Senior Video Editor',
+            rating: 5,
+            quote:
+              "I'm truly grateful for the opportunity OPG has given me. Working from home allows me to spend more time with my wife and kids while doing the job I love, collaborating with a supportive client team, and enjoying competitive benefits.",
+            published_at: '2026-11-25T00:00:00.000Z',
+          },
+          {
+            id: 'real-2',
+            author_name: 'Gelo Milabo',
+            relationship: 'past',
+            role_title: 'Paid Media and Marketing Data Analyst',
+            rating: 5,
+            quote: 'Short and sweet candidate experience.',
+            published_at: '2026-11-24T00:00:00.000Z',
+          },
+        ],
+      }),
+    )
+
+    expect(html).toContain('Aaron Calusa')
+    expect(html).toContain('Senior Video Editor')
+    expect(html).toContain('Gelo Milabo')
+    expect(html).toContain('Read full story')
+    expect(html).toContain('View More')
+  })
+
+  it('exports HomeInitialScrollGuard cleanly', () => {
+    expect(typeof HomeInitialScrollGuard).toBe('function')
+    expect(renderToString(createElement(HomeInitialScrollGuard))).toBe('')
   })
 
   it('exports TextLoop with the OPG light logo separator URL', () => {

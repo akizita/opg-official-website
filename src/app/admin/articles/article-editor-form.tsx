@@ -29,11 +29,11 @@ import {
   OpgIconUpload,
   OpgIconVisits,
 } from '@/components/icons/opg-icons'
-import { SubmitButton } from '@/components/ui/submit-button'
 import {
   editorHtmlToMarkdown,
   markdownToEditorHtml,
 } from '@/lib/content/article-editor-conversion'
+import { resolveSafeArticleImage } from '@/lib/content/article-image'
 import type {
   AdminArticleDetail,
   ArticleCategory,
@@ -309,17 +309,19 @@ function CoverImageModal({
                 Preview
               </span>
               <div className={styles.modalPreviewBanner}>
-                <Image
-                  alt="Cover preview"
-                  className={styles.modalPreviewImg}
-                  fill
-                  sizes="500px"
-                  src={effectivePreview}
-                  unoptimized={
-                    effectivePreview.startsWith('https://media.licdn.com') ||
-                    effectivePreview.startsWith('data:')
-                  }
-                />
+                {(() => {
+                  const previewImg = resolveSafeArticleImage(effectivePreview)
+                  return (
+                    <Image
+                      alt="Cover preview"
+                      className={styles.modalPreviewImg}
+                      fill
+                      sizes="500px"
+                      src={previewImg.src}
+                      unoptimized={previewImg.unoptimized}
+                    />
+                  )
+                })()}
               </div>
             </div>
           )}
@@ -441,7 +443,7 @@ export function ArticleEditorForm({
 }) {
   const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
-  const [state, formAction] = useActionState(
+  const [state, formAction, isPending] = useActionState(
     saveArticleAction,
     initialArticleActionState,
   )
@@ -464,8 +466,11 @@ export function ArticleEditorForm({
   const [selectedStatus, setSelectedStatus] = useState<string>(
     article?.status || 'draft',
   )
-  const [selectedAuthorId, setSelectedAuthorId] = useState<string>(
-    article?.author_id || authors[0]?.id || '',
+  const [isFeatured, setIsFeatured] = useState<boolean>(
+    Boolean(article?.is_featured),
+  )
+  const [authorName, setAuthorName] = useState<string>(
+    article?.author_name || 'Outsourced Pro Global',
   )
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(
     article?.category_id || categories[0]?.id || 1,
@@ -503,10 +508,11 @@ export function ArticleEditorForm({
 
   // Track Unsaved Changes (Dirty State)
   const [initialData] = useState(() => ({
-    authorId: article?.author_id || authors[0]?.id || '',
+    authorName: article?.author_name || 'Outsourced Pro Global',
     categoryId: article?.category_id || categories[0]?.id || 1,
     coverImageUrl: article?.cover_image_url || '',
     excerpt: article?.excerpt || '',
+    isFeatured: Boolean(article?.is_featured),
     markdownContent: article?.markdownContent || '',
     slug: article?.slug || '',
     status: article?.status || 'draft',
@@ -521,7 +527,8 @@ export function ArticleEditorForm({
       markdownContent !== initialData.markdownContent ||
       coverImageUrl !== initialData.coverImageUrl ||
       selectedStatus !== initialData.status ||
-      selectedAuthorId !== initialData.authorId ||
+      isFeatured !== initialData.isFeatured ||
+      authorName !== initialData.authorName ||
       selectedCategoryId !== initialData.categoryId
     )
   }, [
@@ -531,7 +538,8 @@ export function ArticleEditorForm({
     markdownContent,
     coverImageUrl,
     selectedStatus,
-    selectedAuthorId,
+    isFeatured,
+    authorName,
     selectedCategoryId,
     initialData,
   ])
@@ -655,7 +663,8 @@ export function ArticleEditorForm({
     setMarkdownContent(initialData.markdownContent)
     setCoverImageUrl(initialData.coverImageUrl)
     setSelectedStatus(initialData.status)
-    setSelectedAuthorId(initialData.authorId)
+    setIsFeatured(initialData.isFeatured)
+    setAuthorName(initialData.authorName)
     setSelectedCategoryId(initialData.categoryId)
     if (editorRef.current) {
       editorRef.current.innerHTML = markdownToEditorHtml(
@@ -665,14 +674,25 @@ export function ArticleEditorForm({
     setIsDiscardDialogOpen(false)
   }, [initialData])
 
-  // Fast trigger for Draft or Publish
-  const triggerSaveWithStatus = (targetStatus: 'draft' | 'published') => {
+  // Synchronously set status input before requestSubmit so FormData never submits stale state
+  const triggerSaveWithStatus = (
+    targetStatus: 'draft' | 'in_review' | 'published' | 'archived',
+  ) => {
     setAlertDismissed(false)
     setSelectedStatus(targetStatus)
-    setTimeout(() => {
-      formRef.current?.requestSubmit()
-    }, 40)
+    const statusInput = formRef.current?.elements.namedItem(
+      'status',
+    ) as HTMLInputElement | null
+    if (statusInput) {
+      statusInput.value = targetStatus
+    }
+    formRef.current?.requestSubmit()
   }
+
+  const selectedCategory = useMemo(
+    () => categories.find((cat) => cat.id === selectedCategoryId) || null,
+    [categories, selectedCategoryId],
+  )
 
   // Derived operation alert (pure derived state, zero cascading renders)
   const operationAlert = useMemo(() => {
@@ -752,9 +772,20 @@ export function ArticleEditorForm({
 
       {/* Main Editor Form */}
       <form action={formAction} className={styles.editorLayout} ref={formRef}>
-        <input name="id" type="hidden" value={article?.id || ''} />
+        <input name="id" type="hidden" value={state.articleId || article?.id || ''} />
+        <input name="previous_slug" type="hidden" value={article?.slug || ''} />
         <input name="cover_image_url" type="hidden" value={coverImageUrl} />
         <input name="markdownContent" type="hidden" value={markdownContent} />
+        <input
+          name="category_slug"
+          type="hidden"
+          value={selectedCategory?.slug || ''}
+        />
+        <input
+          name="category_name"
+          type="hidden"
+          value={selectedCategory?.name || ''}
+        />
 
         {/* Left Column: Full Cover Banner, Title/Excerpt Fields & WYSIWYG Content */}
         <div className={styles.editorMain}>
@@ -763,17 +794,19 @@ export function ArticleEditorForm({
             <div className={styles.compactCoverArea}>
               {coverImageUrl ? (
                 <div className={styles.compactCoverBanner}>
-                  <Image
-                    alt="Cover preview"
-                    className={styles.compactCoverImg}
-                    fill
-                    sizes="(max-width: 1200px) 100vw, 840px"
-                    src={coverImageUrl}
-                    unoptimized={
-                      coverImageUrl.startsWith('https://media.licdn.com') ||
-                      coverImageUrl.startsWith('data:')
-                    }
-                  />
+                  {(() => {
+                    const safeCover = resolveSafeArticleImage(coverImageUrl)
+                    return (
+                      <Image
+                        alt="Cover preview"
+                        className={styles.compactCoverImg}
+                        fill
+                        sizes="(max-width: 1200px) 100vw, 840px"
+                        src={safeCover.src}
+                        unoptimized={safeCover.unoptimized}
+                      />
+                    )
+                  })()}
                   <div className={styles.compactCoverOverlay}>
                     <button
                       className={styles.coverActionPill}
@@ -1199,23 +1232,42 @@ export function ArticleEditorForm({
 
             {/* Clear Primary & Secondary Actions */}
             <div className={styles.publishingActionGrid}>
-              <SubmitButton
+              <button
                 className={styles.primaryPublishBtn}
-                pendingLabel="Publishing Story…"
+                disabled={isPending}
+                onClick={() => triggerSaveWithStatus('published')}
+                type="button"
               >
-                {selectedStatus === 'published'
-                  ? 'Update & Re-publish'
-                  : 'Publish Story'}
-              </SubmitButton>
+                {isPending && selectedStatus === 'published'
+                  ? 'Publishing Story…'
+                  : selectedStatus === 'published'
+                    ? 'Update & Re-publish'
+                    : 'Publish Story'}
+              </button>
 
               <button
                 className={styles.secondaryDraftBtn}
-                onClick={() => triggerSaveWithStatus('draft')}
+                disabled={isPending}
+                onClick={() =>
+                  triggerSaveWithStatus(
+                    selectedStatus === 'in_review'
+                      ? 'in_review'
+                      : selectedStatus === 'archived'
+                        ? 'archived'
+                        : 'draft',
+                  )
+                }
                 type="button"
               >
-                {selectedStatus === 'published'
-                  ? 'Unpublish to Draft'
-                  : 'Save as Draft'}
+                {isPending && selectedStatus !== 'published'
+                  ? 'Saving…'
+                  : selectedStatus === 'in_review'
+                    ? 'Save as In Review'
+                    : selectedStatus === 'archived'
+                      ? 'Save as Archived'
+                      : selectedStatus === 'published'
+                        ? 'Unpublish to Draft'
+                        : 'Save as Draft'}
               </button>
             </div>
 
@@ -1251,6 +1303,35 @@ export function ArticleEditorForm({
               />
             </div>
 
+            {/* Featured Article Selection */}
+            <div className={styles.featuredToggleRow}>
+              <div className={styles.featuredToggleCopy}>
+                <span className={styles.featuredToggleTitle}>
+                  Featured Article
+                </span>
+                <span className={styles.featuredToggleHint}>
+                  {selectedStatus === 'published'
+                    ? 'Pin as main spotlight story on /articles'
+                    : 'Spotlight on /articles once published'}
+                </span>
+              </div>
+              <button
+                aria-checked={isFeatured}
+                aria-label="Toggle featured article"
+                className={`${styles.featuredSwitch} ${isFeatured ? styles.featuredSwitchActive : ''}`}
+                onClick={() => setIsFeatured((prev) => !prev)}
+                role="switch"
+                type="button"
+              >
+                <span className={styles.featuredSwitchThumb} />
+              </button>
+              <input
+                name="is_featured"
+                type="hidden"
+                value={isFeatured ? 'true' : 'false'}
+              />
+            </div>
+
             {/* Delete This Article */}
             {isEditing && (
               <div className={styles.deleteInlineWrap}>
@@ -1283,18 +1364,27 @@ export function ArticleEditorForm({
               />
             </div>
 
-            <div>
-              <FormPillDropdown
-                label="Author"
-                name="author_id"
-                onChange={(val) => setSelectedAuthorId(val)}
-                options={authors.map((author) => ({
-                  value: author.id,
-                  label: author.full_name,
-                  hint: author.role_title || undefined,
-                }))}
-                value={selectedAuthorId}
+            <div className={styles.field}>
+              <label className={styles.fieldLabel} htmlFor="article-author-input">
+                Author
+              </label>
+              <input
+                className={styles.input}
+                id="article-author-input"
+                list="article-author-suggestions"
+                name="author_name"
+                onChange={(e) => setAuthorName(e.target.value)}
+                placeholder="e.g. Outsourced Pro Global"
+                type="text"
+                value={authorName}
               />
+              {authors.length > 0 && (
+                <datalist id="article-author-suggestions">
+                  {authors.map((author) => (
+                    <option key={author.id} value={author.full_name} />
+                  ))}
+                </datalist>
+              )}
             </div>
           </div>
 

@@ -6,7 +6,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import { OpgIconSend } from '@/components/icons/opg-icons'
 
@@ -37,6 +37,38 @@ const SUPPRESSED_PREFIXES = [
   '/forgot-password',
   '/reset-password',
 ]
+
+const FAQ_HINT_DISMISSED_KEY = 'opg_faq_hint_dismissed'
+const hintDismissListeners = new Set<() => void>()
+
+function subscribeHintDismissed(listener: () => void) {
+  hintDismissListeners.add(listener)
+  return () => {
+    hintDismissListeners.delete(listener)
+  }
+}
+
+function getHintDismissedSnapshot(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return window.sessionStorage.getItem(FAQ_HINT_DISMISSED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function getHintDismissedServerSnapshot(): boolean {
+  return false
+}
+
+function dismissFaqHint() {
+  try {
+    window.sessionStorage.setItem(FAQ_HINT_DISMISSED_KEY, '1')
+  } catch {
+    // Ignore storage errors in restricted environments
+  }
+  hintDismissListeners.forEach((listener) => listener())
+}
 
 function isSuppressedPath(pathname: string | null): boolean {
   if (!pathname) return false
@@ -161,6 +193,11 @@ function OpgBotAvatar({ className }: { className: string }) {
 export function SiteFaqWidget() {
   const pathname = usePathname()
   const shouldReduceMotion = Boolean(useReducedMotion())
+  const hintDismissed = useSyncExternalStore(
+    subscribeHintDismissed,
+    getHintDismissedSnapshot,
+    getHintDismissedServerSnapshot,
+  )
 
   const [isOpen, setIsOpen] = useState(false)
   const [greetingStage, setGreetingStage] = useState<'idle' | 'typing' | 'sent'>(
@@ -673,15 +710,14 @@ export function SiteFaqWidget() {
         }`}
       >
         <AnimatePresence>
-          {!isOpen && (
-            <motion.button
+          {!isOpen && !hintDismissed && (
+            <motion.div
               animate={{ opacity: 1, scale: 1, x: 0 }}
-              aria-label="If you need to ask something, click here to open FAQ Assistant"
               className={styles.launcherHint}
               exit={
                 shouldReduceMotion
                   ? { opacity: 0 }
-                  : { opacity: 0, scale: 0.95, x: 10 }
+                  : { opacity: 0, scale: 0.94, x: 10 }
               }
               initial={
                 shouldReduceMotion
@@ -689,18 +725,36 @@ export function SiteFaqWidget() {
                   : { opacity: 0, scale: 0.95, x: 12 }
               }
               key="faq-floating-hint"
-              onClick={handleToggleOpen}
               transition={{
                 duration: shouldReduceMotion ? 0.01 : 0.24,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              type="button"
-              whileHover={shouldReduceMotion ? undefined : { scale: 1.02, y: -1 }}
-              whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+              whileHover={shouldReduceMotion ? undefined : { scale: 1.015, y: -1 }}
             >
-              <span aria-hidden="true" className={styles.launcherHintDot} />
-              <span>If you need to ask something, click here</span>
-            </motion.button>
+              <button
+                aria-label="If you need to ask something, click here to open FAQ Assistant"
+                className={styles.launcherHintTrigger}
+                onClick={handleToggleOpen}
+                type="button"
+              >
+                <span aria-hidden="true" className={styles.launcherHintDot} />
+                <span>If you need to ask something, click here</span>
+              </button>
+              <button
+                aria-label="Hide FAQ prompt"
+                className={styles.launcherHintClose}
+                onClick={dismissFaqHint}
+                title="Hide prompt"
+                type="button"
+              >
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Cancel01Icon}
+                  size={12}
+                  strokeWidth={2.4}
+                />
+              </button>
+            </motion.div>
           )}
         </AnimatePresence>
 

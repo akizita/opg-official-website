@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { uploadProfileAvatarFile } from '@/lib/auth/avatar-upload'
+import { backfillSubmissionAvatar } from '@/lib/auth/submission-avatar-sync'
 import { getVisitorSession } from '@/lib/auth/visitor-session'
 import { createClient } from '@/lib/supabase/server'
 
@@ -33,12 +34,15 @@ export async function updateVisitorProfileAction(
     full_name: fullName || null,
   }
 
+  let uploadedAvatarUrl: string | null = null
   if (avatarFile instanceof File && avatarFile.size > 0) {
     const uploadResult = await uploadProfileAvatarFile(avatarFile, session.id)
     if (!uploadResult.ok) {
       return { status: 'error', message: uploadResult.error }
     }
+    uploadedAvatarUrl = uploadResult.avatarUrl
     nextMetadata.avatar_url = uploadResult.avatarUrl
+    nextMetadata.picture = uploadResult.avatarUrl
   }
 
   const supabase = await createClient()
@@ -48,6 +52,10 @@ export async function updateVisitorProfileAction(
       status: 'error',
       message: 'Could not update your profile right now. Please try again.',
     }
+  }
+
+  if (uploadedAvatarUrl) {
+    await backfillSubmissionAvatar(session.email, uploadedAvatarUrl)
   }
 
   revalidatePath('/')

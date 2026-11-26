@@ -1,6 +1,8 @@
 import { createHash } from 'crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import { sanitizeAvatarUrl } from '@/lib/auth/avatar-utils'
+import { broadcastAdminInquiriesChanged } from '@/lib/content/admin-inquiries'
 import { createPrivilegedClient } from '@/lib/supabase/server'
 
 export type InquiryIntent = 'client' | 'talent'
@@ -9,6 +11,7 @@ export type ContactInquiry = {
   id: string
   full_name: string
   email: string
+  avatar_url?: string | null
   subject: string
   message: string
   status: 'new' | 'read' | 'replied' | 'archived' | 'spam_suspected'
@@ -244,6 +247,7 @@ export function checkRateLimits(
 export async function submitContactInquiry(
   input: InquirySubmissionInput,
   options?: {
+    avatarUrl?: string | null
     clientIp?: string
     client?: SupabaseClient
   },
@@ -288,20 +292,38 @@ export async function submitContactInquiry(
     }
   }
   const ipHash = hashValue(clientIp)
+  const serverAvatarUrl = sanitizeAvatarUrl(options?.avatarUrl)
+  const baseRow = {
+    full_name: validation.data.fullName,
+    email: validation.data.email,
+    subject: `${subjectPrefix(validation.data.intent ?? 'client')}${validation.data.subject}`,
+    message: validation.data.message,
+    status: 'new',
+    ip_hash: ipHash,
+  }
 
-  // Insert into contact_inquiries
-  const { data: inquiry, error: inquiryError } = await supabase
-    .from('contact_inquiries')
-    .insert({
-      full_name: validation.data.fullName,
-      email: validation.data.email,
-      subject: `${subjectPrefix(validation.data.intent ?? 'client')}${validation.data.subject}`,
-      message: validation.data.message,
-      status: 'new',
-      ip_hash: ipHash,
-    })
-    .select('id')
-    .single()
+  // Insert into contact_inquiries (gracefully omits avatar_url on legacy schemas)
+  const initialInsert = serverAvatarUrl
+    ? await supabase
+        .from('contact_inquiries')
+        .insert({ ...baseRow, avatar_url: serverAvatarUrl })
+        .select('id')
+        .single()
+    : await supabase
+        .from('contact_inquiries')
+        .insert(baseRow)
+        .select('id')
+        .single()
+
+  let { data: inquiry, error: inquiryError } = initialInsert
+
+  if (inquiryError?.code === '42703' && serverAvatarUrl) {
+    ;({ data: inquiry, error: inquiryError } = await supabase
+      .from('contact_inquiries')
+      .insert(baseRow)
+      .select('id')
+      .single())
+  }
 
   if (inquiryError || !inquiry) {
     console.error('Could not save contact inquiry:', inquiryError?.message)
@@ -314,22 +336,27 @@ export async function submitContactInquiry(
   }
 
   const referenceId = `OPG-${inquiry.id.slice(0, 8).toUpperCase()}`
+  const idempotencyKey = `inquiry-${inquiry.id}`
+  void broadcastAdminInquiriesChanged()
+  const intent = validation.data.intent ?? 'client'
+  const notificationRecipient =
+    process.env.CONTACT_NOTIFICATION_EMAIL?.trim() ||
+    (intent === 'talent'
+      ? 'recruitment@opglobal.com.hk'
+      : 'inquiries@opglobal.com.hk')
 
-  // Queue Notification Outbox entry
+  // Queue Notification Outbox entry for audit trail
   try {
     const { error: notificationError } = await supabase
       .from('notification_outbox')
       .insert({
-        idempotency_key: `inquiry-${inquiry.id}`,
-        recipient:
-          validation.data.intent === 'talent'
-            ? 'recruitment@opglobal.com.hk'
-            : 'inquiries@opglobal.com.hk',
+        idempotency_key: idempotencyKey,
+        recipient: notificationRecipient,
         template: 'new_inquiry',
         payload: {
           inquiryId: inquiry.id,
           referenceId,
-          intent: validation.data.intent,
+          intent,
           fullName: validation.data.fullName,
           subject: validation.data.subject,
         },

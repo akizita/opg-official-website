@@ -1,3 +1,5 @@
+import { createHash } from 'crypto'
+
 import {
   extractUserAvatarUrl,
   extractUserDisplayName,
@@ -13,6 +15,20 @@ export {
 export type ResolvedAuthProfile = {
   avatarUrl: string | null
   displayName: string | null
+  gravatarUrl: string | null
+}
+
+/**
+ * Builds a deterministic SHA-256 Gravatar URL that returns HTTP 404 when no
+ * custom Gravatar exists for the email address.
+ */
+export function buildGravatarUrl(
+  email: string | null | undefined,
+): string | null {
+  const cleanEmail = (email ?? '').trim().toLowerCase()
+  if (!cleanEmail || !cleanEmail.includes('@')) return null
+  const hash = createHash('sha256').update(cleanEmail).digest('hex')
+  return `https://www.gravatar.com/avatar/${hash}?s=96&d=404`
 }
 
 /**
@@ -30,12 +46,21 @@ export async function resolveAuthProfilesByEmail(
   )
   if (targets.size === 0) return result
 
+  for (const targetEmail of targets) {
+    result.set(targetEmail, {
+      avatarUrl: null,
+      displayName: null,
+      gravatarUrl: buildGravatarUrl(targetEmail),
+    })
+  }
+
   const privilegedClient = createPrivilegedClient()
   if (!privilegedClient) return result
 
   try {
     const MAX_PAGES = 5
-    for (let page = 1; page <= MAX_PAGES && result.size < targets.size; page++) {
+    let matchedCount = 0
+    for (let page = 1; page <= MAX_PAGES && matchedCount < targets.size; page++) {
       const { data, error } = await privilegedClient.auth.admin.listUsers({
         page,
         perPage: 200,
@@ -48,8 +73,14 @@ export async function resolveAuthProfilesByEmail(
 
         const avatarUrl = extractUserAvatarUrl(undefined, authUser)
         const displayName = extractUserDisplayName(undefined, authUser)
+        const existing = result.get(userEmail)
         if (avatarUrl || displayName) {
-          result.set(userEmail, { avatarUrl, displayName })
+          result.set(userEmail, {
+            avatarUrl,
+            displayName,
+            gravatarUrl: existing?.gravatarUrl ?? buildGravatarUrl(userEmail),
+          })
+          matchedCount += 1
         }
       }
 

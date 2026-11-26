@@ -8,11 +8,13 @@ import { DotField } from '@/components/ui/dot-field'
 import { HomeCareersCarousel } from '@/components/home/home-careers-carousel'
 import { HomeCandidateTestimonialsSection } from '@/components/home/home-candidate-testimonials-section'
 import { HomeContactCtaSection } from '@/components/home/home-contact-cta-section'
+import { HomeInitialScrollGuard } from '@/components/home/home-initial-scroll-guard'
 import { HomeTeamMasonrySection } from '@/components/home/home-team-masonry-section'
 import { HomeTestimonialsSection } from '@/components/home/home-testimonials-section'
 import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { SpotlightCard } from '@/components/ui/spotlight-card'
 import type { PageDocument } from '@/lib/content/page-documents'
+import { getHomeCandidateTestimonials } from '@/lib/content/home-candidate-testimonials'
 import { getPageCopy, HOME_COPY_SECTIONS } from '@/lib/content/page-copy'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
 import { getVisiblePageDocument } from '@/lib/content/visible-page-document'
@@ -85,13 +87,14 @@ export default async function HomePage({
   const { opgPreview } = await searchParams
   const supabase = await createClient()
 
-  const [homeDoc, careersFeed] = await Promise.all([
+  const [homeDoc, careersFeed, candidateTestimonials] = await Promise.all([
     getVisiblePageDocument(supabase, 'home', opgPreview === '1'),
     getCareersFeed().catch(() => ({
       configured: false,
       fetchedAt: null,
       jobs: [],
     })),
+    getHomeCandidateTestimonials(4).catch(() => []),
   ])
 
   const heroTitle =
@@ -103,6 +106,7 @@ export default async function HomePage({
 
   return (
     <div className="home-snap-flow">
+      <HomeInitialScrollGuard />
       <PageVisualRuntime page="home" config={getPageVisualConfig(homeDoc?.content)} />
       {/* Hero + Highlight Cards Viewport Frame */}
       <div className="home-hero-band">
@@ -336,8 +340,8 @@ export default async function HomePage({
       {/* Testimonials Section (Cascading Inspo Design right after Careers) */}
       <HomeTestimonialsSection />
 
-      {/* Candidate Testimonials Section (Bento Grid Inspo Design with Golden Aurora & Glassmorphism) */}
-      <HomeCandidateTestimonialsSection />
+      {/* Candidate Testimonials Section (Live stories synced with /testimonials) */}
+      <HomeCandidateTestimonialsSection testimonials={candidateTestimonials} />
 
       {/* Strategic Contact Us CTA Section (Matching Inspo with DotField and Sweeping Golden Torus Arcs) */}
       <HomeContactCtaSection

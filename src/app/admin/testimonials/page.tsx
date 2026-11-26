@@ -14,7 +14,11 @@ import { CandidateTestimonialsHeader } from '@/app/admin/testimonials/candidate-
 import { TestimonialsTabNavigation } from '@/app/admin/testimonials/testimonials-tab-navigation'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import { canArchive, canPublish, canViewContent } from '@/lib/auth/permissions'
-import { resolveAuthAvatarsByEmail } from '@/lib/auth/user-avatars'
+import { sanitizeAvatarUrl } from '@/lib/auth/avatar-utils'
+import {
+  buildGravatarUrl,
+  resolveAuthAvatarsByEmail,
+} from '@/lib/auth/user-avatars'
 import { getAllTestimonials, getVisibleClients } from '@/lib/content/clients'
 import { createClient, createPrivilegedClient } from '@/lib/supabase/server'
 import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
@@ -33,6 +37,7 @@ type SubmissionRecord = Omit<
   | 'submitted_at_label'
   | 'reviewed_at_label'
 > & {
+  avatar_url?: string | null
   profile_photo_path?: string | null
   profile_photo_data?: string | null
 }
@@ -135,15 +140,19 @@ export default async function AdminTestimonialsPage({
   let submissions: CandidateSubmission[] = []
   let listError = countError
   if (!countError && activeTab === 'candidate') {
-    async function loadSubmissions(photoMode: 'inline' | 'storage' | 'legacy') {
+    async function loadSubmissions(
+      photoMode: 'avatar-inline' | 'inline' | 'storage' | 'legacy',
+    ) {
       const columns =
         'id, author_name, email, relationship, role_title, rating, quote, publication_consent, status, submitted_at, reviewed_at'
       const photoColumns =
-        photoMode === 'inline'
-          ? ', profile_photo_path, profile_photo_data'
-          : photoMode === 'storage'
-            ? ', profile_photo_path'
-            : ''
+        photoMode === 'avatar-inline'
+          ? ', avatar_url, profile_photo_path, profile_photo_data'
+          : photoMode === 'inline'
+            ? ', profile_photo_path, profile_photo_data'
+            : photoMode === 'storage'
+              ? ', profile_photo_path'
+              : ''
       let query = supabase
         .from('candidate_testimonials')
         .select(`${columns}${photoColumns}`)
@@ -153,7 +162,8 @@ export default async function AdminTestimonialsPage({
       return query
     }
 
-    let result = await loadSubmissions('inline')
+    let result = await loadSubmissions('avatar-inline')
+    if (result.error?.code === '42703') result = await loadSubmissions('inline')
     if (result.error?.code === '42703')
       result = await loadSubmissions('storage')
     if (result.error?.code === '42703') result = await loadSubmissions('legacy')
@@ -183,6 +193,7 @@ export default async function AdminTestimonialsPage({
 
     submissions = records.map((record) => {
       const {
+        avatar_url: storedAvatarUrl,
         profile_photo_path: path,
         profile_photo_data: data,
         ...item
@@ -201,8 +212,10 @@ export default async function AdminTestimonialsPage({
         profile_photo_url:
           (path ? signedUrls.get(path) : null) ??
           (data ? `data:image/webp;base64,${data}` : null) ??
+          sanitizeAvatarUrl(storedAvatarUrl) ??
           authAvatars.get(item.email.trim().toLowerCase()) ??
           null,
+        gravatar_url: buildGravatarUrl(item.email),
       }
     })
   }

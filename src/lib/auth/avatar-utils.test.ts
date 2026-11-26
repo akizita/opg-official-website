@@ -53,7 +53,7 @@ describe('avatar-utils', () => {
     ).toBe('Jane Doe')
   })
 
-  it('builds deduplicated ordered avatar candidates including unavatar email lookups', () => {
+  it('builds deduplicated ordered avatar candidates without identicon fallbacks', () => {
     const candidates = buildAvatarCandidates({
       avatarUrl: 'https://cdn.example/custom.png',
       email: 'Recruitment@OPGlobal.com.hk',
@@ -63,9 +63,6 @@ describe('avatar-utils', () => {
     expect(candidates).toEqual([
       'https://cdn.example/custom.png',
       'https://www.gravatar.com/avatar/abc?s=96&d=404',
-      'https://unavatar.io/recruitment%40opglobal.com.hk?fallback=false',
-      'https://unavatar.io/google/recruitment%40opglobal.com.hk?fallback=false',
-      'https://unavatar.io/gravatar/recruitment%40opglobal.com.hk?fallback=false',
     ])
   })
 })

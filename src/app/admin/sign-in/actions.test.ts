@@ -44,6 +44,7 @@ describe('administrator sign-in', () => {
       provider: 'google',
       options: {
         redirectTo: 'http://localhost:3000/auth/callback?next=%2Fadmin',
+        scopes: 'openid email profile',
         queryParams: { prompt: 'select_account' },
       },
     })

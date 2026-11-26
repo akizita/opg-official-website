@@ -191,4 +191,38 @@ describe('multi-account JazzHR client integration', () => {
     const calledUrl = new URL(String(fetchSpy.mock.calls[0]?.[0]))
     expect(calledUrl.searchParams.get('apikey')).toBe('onshore-key')
   })
+
+  it('retries transient JazzHR failures and resolves board codes case-insensitively', async () => {
+    process.env.JAZZHR_API_KEY = 'retry-offshore-key'
+
+    let calls = 0
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+      calls += 1
+      if (calls === 1) {
+        return new Response('Temporary upstream failure', { status: 503 })
+      }
+      return new Response(
+        JSON.stringify([
+          {
+            board_code: 'OeMDx1W3Rq',
+            country_id: 'Philippines',
+            id: 'job_20260907022928_XRWT2ITFDCQWCS8H',
+            original_open_date: '2026-09-07',
+            status: 'Open',
+            title: 'Paid Media and Marketing Data Analyst - PH',
+          },
+        ]),
+        { status: 200 },
+      )
+    })
+
+    const resolved = await getCareerJobBySlug(
+      'oemdx1w3rq-paid-media-and-marketing-data-analyst-ph',
+    )
+    expect(calls).toBe(2)
+    expect(resolved?.boardCode).toBe('OeMDx1W3Rq')
+    expect(resolved?.slug).toBe(
+      'OeMDx1W3Rq-paid-media-and-marketing-data-analyst-ph',
+    )
+  })
 })

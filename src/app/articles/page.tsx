@@ -6,7 +6,15 @@ import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Pagination } from '@/components/ui/pagination'
 import type { Article } from '@/lib/content/articles'
-import { getPublishedArticles } from '@/lib/content/articles'
+import {
+  formatSafeArticleDate,
+  getSafeDateTimestamp,
+  resolveSafeArticleImage,
+} from '@/lib/content/article-image'
+import {
+  getFeaturedArticleSlug,
+  getPublishedArticles,
+} from '@/lib/content/articles'
 import { featuredArticles } from '@/lib/content/featured-articles'
 import { ARTICLES_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
 import type { PageDocument } from '@/lib/content/page-documents'
@@ -28,12 +36,7 @@ type ArticlesPageProps = {
 }
 
 function formatArticleDate(value: string | null) {
-  if (!value) return ''
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(value))
+  return formatSafeArticleDate(value, 'short')
 }
 
 function ArticleImage({
@@ -45,7 +48,7 @@ function ArticleImage({
   sizes: string
   priority?: boolean
 }) {
-  const src = article.cover_image_url || '/images/clients-blog-secondary.jpg'
+  const { src, unoptimized } = resolveSafeArticleImage(article.cover_image_url)
 
   return (
     <Image
@@ -54,7 +57,7 @@ function ArticleImage({
       priority={priority}
       sizes={sizes}
       src={src}
-      unoptimized={src.startsWith('https://media.licdn.com')}
+      unoptimized={unoptimized}
     />
   )
 }
@@ -140,10 +143,11 @@ export default async function ArticlesPage({
   const categorySlug = params.category || undefined
 
   const supabase = await createClient()
-  const [doc, databaseData, engagementRes] = await Promise.all([
+  const [doc, databaseData, engagementRes, featuredSlug] = await Promise.all([
     getVisiblePageDocument(supabase, 'articles', params.opgPreview === '1'),
     getPublishedArticles({ page: 1, pageSize: 50, categorySlug }),
     supabase.from('article_engagement').select('article_slug, view_count, like_count'),
+    getFeaturedArticleSlug(supabase),
   ])
   const copy = getPageCopy(doc?.content, ARTICLES_COPY_SECTIONS)
 
@@ -168,7 +172,7 @@ export default async function ArticlesPage({
     if (!articleMap.has(article.slug)) articleMap.set(article.slug, article)
   }
 
-  const allArticles = [...articleMap.values()]
+  const sortedArticles = [...articleMap.values()]
     .map((article) => {
       const live = engagementMap.get(article.slug)
       if (!live) return article
@@ -180,9 +184,15 @@ export default async function ArticlesPage({
     })
     .sort(
       (a, b) =>
-        new Date(b.published_at || b.created_at).getTime() -
-        new Date(a.published_at || a.created_at).getTime(),
+        getSafeDateTimestamp(b.published_at || b.created_at) -
+        getSafeDateTimestamp(a.published_at || a.created_at),
     )
+  const allArticles = featuredSlug
+    ? [
+        ...sortedArticles.filter((article) => article.slug === featuredSlug),
+        ...sortedArticles.filter((article) => article.slug !== featuredSlug),
+      ]
+    : sortedArticles
   const total = allArticles.length
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const from = (currentPage - 1) * PAGE_SIZE

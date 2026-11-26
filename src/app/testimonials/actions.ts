@@ -2,6 +2,7 @@
 
 import { headers } from 'next/headers'
 
+import { getVisitorSession } from '@/lib/auth/visitor-session'
 import {
   type CandidateTestimonialResult,
   submitCandidateTestimonial,
@@ -10,7 +11,10 @@ import {
 export async function submitCandidateTestimonialAction(
   formData: FormData,
 ): Promise<CandidateTestimonialResult> {
-  const headerList = await headers()
+  const [headerList, visitorSession] = await Promise.all([
+    headers(),
+    getVisitorSession().catch(() => null),
+  ])
   const clientIp =
     headerList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     headerList.get('x-real-ip') ||
@@ -30,5 +34,6 @@ export async function submitCandidateTestimonialAction(
       turnstileToken: formData.get('cf-turnstile-response'),
     },
     clientIp,
+    { avatarUrl: visitorSession?.avatarUrl ?? null },
   )
 }

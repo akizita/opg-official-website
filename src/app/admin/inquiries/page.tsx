@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { InquiriesInbox, type InquiryItem } from '@/app/admin/inquiries/inquiries-inbox'
+import { InquiriesInbox } from '@/app/admin/inquiries/inquiries-inbox'
 import './inquiries.css'
 import { requireAdminSession } from '@/lib/auth/admin-session'
 import { canManageInquiries, canViewInquiries } from '@/lib/auth/permissions'
-import { resolveAuthAvatarsByEmail } from '@/lib/auth/user-avatars'
+import { loadAdminInquiries } from '@/lib/content/admin-inquiries'
 import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Contacts Inbox | OPG Admin',
@@ -43,21 +45,8 @@ export default async function AdminInquiriesPage({
   const activeStatus = status || 'all'
 
   const supabase = await createClient()
-  const { data: inquiries, error: inquiriesError } = await supabase
-    .from('contact_inquiries')
-    .select(
-      'id, full_name, email, subject, message, status, submitted_at, retention_expires_at, ip_hash',
-    )
-    .order('submitted_at', { ascending: false })
-
-  const rawInquiries = (inquiries as InquiryItem[]) || []
-  const authAvatars = await resolveAuthAvatarsByEmail(
-    rawInquiries.map((item) => item.email),
-  )
-  const inquiryList = rawInquiries.map((item) => ({
-    ...item,
-    avatar_url: authAvatars.get(item.email.trim().toLowerCase()) ?? null,
-  }))
+  const { error: inquiriesError, inquiries: inquiryList } =
+    await loadAdminInquiries(supabase)
   const canManage = canManageInquiries(profile.roleKey)
 
   return (

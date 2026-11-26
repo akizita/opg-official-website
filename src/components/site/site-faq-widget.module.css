@@ -45,17 +45,15 @@
     0 4px 12px -4px rgba(212, 138, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   color: #1c1917;
-  cursor: pointer;
   display: inline-flex;
   font-size: 0.78rem;
   font-weight: 600;
-  gap: 0.45rem;
+  gap: 0.35rem;
   letter-spacing: -0.01em;
   line-height: 1.25;
-  max-width: min(19rem, calc(100vw - 6.75rem));
-  padding: 0.52rem 0.92rem;
+  max-width: min(21rem, calc(100vw - 6.75rem));
+  padding: 0.28rem 0.36rem 0.28rem 0.85rem;
   pointer-events: auto;
-  text-align: left;
   transition:
     border-color 180ms ease,
     box-shadow 180ms ease,
@@ -70,9 +68,49 @@
     0 6px 16px -4px rgba(212, 138, 0, 0.26);
 }
 
-.launcherHint:focus-visible {
+.launcherHintTrigger {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 0.45rem;
+  padding: 0.22rem 0.15rem 0.22rem 0;
+  text-align: left;
+}
+
+.launcherHintTrigger:focus-visible,
+.launcherHintClose:focus-visible {
+  border-radius: 9999px;
   outline: 2px solid #f29f04;
-  outline-offset: 3px;
+  outline-offset: 2px;
+}
+
+.launcherHintClose {
+  align-items: center;
+  background: rgba(28, 25, 23, 0.05);
+  border: none;
+  border-radius: 9999px;
+  color: #786f61;
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 1.45rem;
+  justify-content: center;
+  padding: 0;
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+  width: 1.45rem;
+}
+
+.launcherHintClose:hover {
+  background: rgba(212, 138, 0, 0.18);
+  color: #1c1917;
+  transform: scale(1.06);
 }
 
 .launcherHintDot {
@@ -598,7 +636,7 @@
   .launcherHint {
     font-size: 0.72rem;
     max-width: calc(100vw - 5.9rem);
-    padding: 0.44rem 0.75rem;
+    padding: 0.24rem 0.32rem 0.24rem 0.72rem;
   }
 
   .launcherBtn {

@@ -59,6 +59,7 @@ export async function reviewCandidateTestimonialAction(
   revalidatePath('/admin/testimonials')
   revalidatePath('/admin')
   revalidatePath('/testimonials')
+  revalidatePath('/')
   return { success: true }
 }
 
@@ -96,6 +97,7 @@ export async function deleteCandidateTestimonialAction(
   revalidatePath('/admin/testimonials')
   revalidatePath('/admin')
   revalidatePath('/testimonials')
+  revalidatePath('/')
   return { success: true }
 }
 
@@ -139,6 +141,7 @@ export async function deleteCandidateTestimonialsAction(
     revalidatePath('/admin/testimonials')
     revalidatePath('/admin')
     revalidatePath('/testimonials')
+    revalidatePath('/')
   }
   return deletedIds.length === ids.length
     ? { deletedIds }
@@ -250,6 +253,7 @@ export async function createCandidateTestimonialAction(
   revalidatePath('/admin/testimonials')
   revalidatePath('/admin')
   revalidatePath('/testimonials')
+  revalidatePath('/')
 
   return { success: true, id: (data as { id: string } | null)?.id }
 }

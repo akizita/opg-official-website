@@ -6,8 +6,8 @@
   gap: 1.75rem;
   width: 100%;
   max-width: 88rem;
-  margin: 0;
-  padding: 2.75rem 3.5rem 5rem 2rem;
+  margin: 0 auto;
+  padding: 2.75rem clamp(1.25rem, 3vw, 2.5rem) 5rem;
   box-sizing: border-box;
 }
 
@@ -781,8 +781,8 @@
   gap: 1.75rem;
   width: 100%;
   max-width: 88rem;
-  margin: 0;
-  padding: 2.75rem 3.5rem 5rem 2rem;
+  margin: 0 auto;
+  padding: 2.75rem clamp(1.25rem, 3vw, 2.5rem) 5rem;
   box-sizing: border-box;
 }
 
@@ -2040,6 +2040,89 @@
   background: #ffffff;
   color: #000000;
   border-color: #000000;
+}
+
+.featuredToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.72rem 0.85rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.featuredToggleCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.featuredToggleTitle {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.featuredToggleHint {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.featuredSwitch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 2.85rem;
+  height: 1.65rem;
+  padding: 0.16rem;
+  border: none;
+  border-radius: 9999px;
+  background: rgba(120, 120, 128, 0.28);
+  cursor: pointer;
+  transition: background-color 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.featuredSwitch:focus-visible {
+  outline: 2px solid #f29f04;
+  outline-offset: 2px;
+}
+
+.featuredSwitchActive {
+  background: #f29f04;
+}
+
+.featuredSwitchThumb {
+  width: 1.33rem;
+  height: 1.33rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+  transform: translateX(0);
+  transition: transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.featuredSwitchActive .featuredSwitchThumb {
+  transform: translateX(1.2rem);
+}
+
+.featuredInlineBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.52rem;
+  border-radius: 9999px;
+  background: rgba(242, 159, 4, 0.14);
+  border: 1px solid rgba(242, 159, 4, 0.38);
+  color: #9a5b00;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* Integrated Cover Media */

@@ -2,82 +2,172 @@
 
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+
+import { UserAvatar } from '@/components/ui/user-avatar'
+import type { HomeCandidateTestimonial } from '@/lib/content/home-candidate-testimonials'
 
 import styles from './home-candidate-testimonials-section.module.css'
 
-export interface CandidateTestimonial {
-  id: string
-  name: string
-  initials: string
-  role: string
-  quote: string
-  date: string
-  spanClass: string
+const EXPANDABLE_QUOTE_THRESHOLD = 210
+
+const publishedDateFormat = new Intl.DateTimeFormat('en-US', {
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'UTC',
+  year: 'numeric',
+})
+
+function formatPublishedDate(iso: string): string {
+  const parsed = new Date(iso)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return publishedDateFormat.format(parsed)
 }
 
-export const CANDIDATE_TESTIMONIALS: CandidateTestimonial[] = [
-  {
-    id: 'candidate-aira',
-    name: 'Aira Villacorta',
-    initials: 'AV',
-    role: 'Senior React Engineer',
-    quote:
-      'OPG matched me with an exceptional fintech team in Sydney. The interview and onboarding was transparent, fast, and respectful of my time from day one.',
-    date: 'October 14, 2025',
-    spanClass: styles.bentoSpanNarrow,
-  },
-  {
-    id: 'candidate-john',
-    name: 'John Clayton Bautista',
-    initials: 'JB',
-    role: 'Cloud Infrastructure Architect',
-    quote:
-      'Before joining OPG, managing international remote opportunities often meant unclear expectations. With OPG, enterprise equipment and career growth are handled with world-class precision.',
-    date: 'November 18, 2025',
-    spanClass: styles.bentoSpanWide,
-  },
-  {
-    id: 'candidate-kristine',
-    name: 'Kristine Del Rosario',
-    initials: 'KD',
-    role: 'Quantitative & Financial Analyst',
-    quote:
-      "OPG's talent team truly listened to my long-term career aspirations. Within two weeks, I was placed with an Australian wealth management firm where my expertise is celebrated every day.",
-    date: 'January 9, 2026',
-    spanClass: styles.bentoSpanWide,
-  },
-  {
-    id: 'candidate-mark',
-    name: 'Mark Christian Santos',
-    initials: 'MS',
-    role: 'Full Stack Software Craftsman',
-    quote:
-      'The culture of trust, competitive compensation, and ongoing professional development at OPG has elevated my software engineering career beyond all expectations.',
-    date: 'February 12, 2026',
-    spanClass: styles.bentoSpanNarrow,
-  },
-]
-
-function StarRating() {
+function StarRating({ rating }: { rating: number }) {
+  const safeRating = Math.max(1, Math.min(5, Math.round(rating)))
   return (
-    <div aria-label="5 out of 5 stars" className={styles.starRatingRow}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <svg
-          aria-hidden="true"
-          className={styles.starIcon}
-          fill="currentColor"
-          key={i}
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
+    <div
+      aria-label={`${safeRating} out of 5 stars`}
+      className={styles.starRatingRow}
+    >
+      {Array.from({ length: 5 }).map((_, index) => {
+        const filled = index < safeRating
+        return (
+          <svg
+            aria-hidden="true"
+            className={`${styles.starIcon} ${
+              filled ? styles.starIconFilled : styles.starIconMuted
+            }`}
+            fill="currentColor"
+            key={index}
+            viewBox="0 0 20 20"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        )
+      })}
     </div>
   )
 }
 
-export function HomeCandidateTestimonialsSection() {
-  const prefersReducedMotion = useReducedMotion()
+function CandidateTestimonialCard({
+  index,
+  isFeaturedWide,
+  item,
+  prefersReducedMotion,
+}: {
+  index: number
+  isFeaturedWide: boolean
+  item: HomeCandidateTestimonial
+  prefersReducedMotion: boolean
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [overflowsClamp, setOverflowsClamp] = useState(
+    item.quote.trim().length > EXPANDABLE_QUOTE_THRESHOLD,
+  )
+  const quoteRef = useRef<HTMLQuoteElement>(null)
+
+  useEffect(() => {
+    const el = quoteRef.current
+    if (!el || expanded) return
+
+    const measure = () => {
+      setOverflowsClamp(
+        el.scrollHeight - el.clientHeight > 2 ||
+          item.quote.trim().length > EXPANDABLE_QUOTE_THRESHOLD,
+      )
+    }
+
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [expanded, item.quote])
+
+  const roleLabel =
+    item.role_title?.trim() ||
+    (item.relationship === 'past' ? 'Past candidate' : 'Prospective candidate')
+  const publishedLabel = formatPublishedDate(item.published_at)
+
+  return (
+    <motion.article
+      className={`${styles.bentoCard} ${isFeaturedWide ? styles.bentoSpanFull : ''}`}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+      transition={{
+        duration: 0.4,
+        delay: prefersReducedMotion ? 0 : index * 0.08,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      viewport={{ once: true, margin: '-30px' }}
+      whileInView={{ opacity: 1, y: 0 }}
+    >
+      {/* Top Quote Mark + Rating */}
+      <div className={styles.cardHeader}>
+        <span aria-hidden="true" className={styles.quoteMark}>
+          “
+        </span>
+        {item.rating !== null && <StarRating rating={item.rating} />}
+      </div>
+
+      {/* Structured Quote Body with Clean 4-Line Preview & Inline Expand */}
+      <div className={styles.quoteSection}>
+        <blockquote
+          className={`${styles.quoteText} ${
+            expanded ? '' : styles.quoteTextClamped
+          }`}
+          ref={quoteRef}
+        >
+          {item.quote}
+        </blockquote>
+        {overflowsClamp && (
+          <button
+            aria-expanded={expanded}
+            className={styles.readMoreBtn}
+            onClick={() => setExpanded((prev) => !prev)}
+            type="button"
+          >
+            <span>{expanded ? 'Show less' : 'Read full story'}</span>
+          </button>
+        )}
+      </div>
+
+      {/* Author Identity & Date Footer */}
+      <div className={styles.cardFooter}>
+        <div className={styles.cardAuthorIdentity}>
+          <UserAvatar
+            className={styles.avatarWrap}
+            fallbackSrc={item.gravatarUrl}
+            initialsClassName={styles.avatarInitials}
+            name={item.author_name}
+            size={40}
+            src={item.avatarUrl}
+          />
+          <div className={styles.authorDetails}>
+            <h3 className={styles.authorName}>{item.author_name}</h3>
+            <p className={styles.roleTag}>{roleLabel}</p>
+          </div>
+        </div>
+        {publishedLabel && (
+          <span className={styles.placementDate}>{publishedLabel}</span>
+        )}
+      </div>
+    </motion.article>
+  )
+}
+
+export function HomeCandidateTestimonialsSection({
+  testimonials = [],
+}: {
+  testimonials?: HomeCandidateTestimonial[]
+}) {
+  const prefersReducedMotion = Boolean(useReducedMotion())
+  const visibleStories = testimonials.slice(0, 4)
+  const layoutMode =
+    visibleStories.length === 1
+      ? 'single'
+      : visibleStories.length === 3
+        ? 'featured-three'
+        : 'paired'
 
   return (
     <section
@@ -89,7 +179,7 @@ export function HomeCandidateTestimonialsSection() {
       <div aria-hidden="true" className={styles.auroraGlow2} />
 
       <div className={styles.container}>
-        {/* Header Row (Guaranteed Single-Line Headline) */}
+        {/* Header Row */}
         <motion.div
           className={styles.headerRow}
           initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
@@ -107,50 +197,32 @@ export function HomeCandidateTestimonialsSection() {
           </h2>
 
           <p className={styles.subtitle}>
-            Discover how top-tier engineers, finance analysts, and cross-border
-            specialists accelerate their careers with world-class teams.
+            Read verified perspectives from professionals who connected and
+            grew their careers with Outsourced Pro Global.
           </p>
         </motion.div>
 
-        {/* Compact Bento Grid */}
-        <div className={styles.bentoGrid}>
-          {CANDIDATE_TESTIMONIALS.map((item, index) => (
-            <motion.div
-              className={`${styles.bentoCard} ${item.spanClass}`}
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
-              key={item.id}
-              transition={{
-                duration: 0.4,
-                delay: prefersReducedMotion ? 0 : index * 0.08,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              viewport={{ once: true, margin: '-30px' }}
-              whileInView={{ opacity: 1, y: 0 }}
-            >
-              {/* Author Row */}
-              <div className={styles.cardAuthorRow}>
-                <div className={styles.avatarWrap} aria-hidden="true">
-                  <span className={styles.avatarInitials}>
-                    {item.initials}
-                  </span>
-                </div>
-                <div className={styles.authorMeta}>
-                  <h3 className={styles.authorName}>{item.name}</h3>
-                  <StarRating />
-                </div>
-              </div>
-
-              {/* Quote */}
-              <p className={styles.quoteText}>{item.quote}</p>
-
-              {/* Footer */}
-              <div className={styles.cardFooter}>
-                <span className={styles.placementDate}>{item.date}</span>
-                <span className={styles.roleTag}>{item.role}</span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {/* Refined Bento Grid Synced with /testimonials */}
+        {visibleStories.length > 0 ? (
+          <div className={styles.bentoGrid} data-layout={layoutMode}>
+            {visibleStories.map((item, index) => (
+              <CandidateTestimonialCard
+                index={index}
+                isFeaturedWide={visibleStories.length === 3 && index === 0}
+                item={item}
+                key={item.id}
+                prefersReducedMotion={prefersReducedMotion}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyState}>
+            <p>
+              Candidate stories from our community appear here once reviewed and
+              published.
+            </p>
+          </div>
+        )}
 
         {/* Centered Yellow Glass Effect 'View More' Button */}
         <motion.div
@@ -161,7 +233,9 @@ export function HomeCandidateTestimonialsSection() {
           whileInView={{ opacity: 1, y: 0 }}
         >
           <Link className={styles.viewMoreGlassBtn} href="/testimonials">
-            <span>View More</span>
+            <span>
+              {visibleStories.length > 0 ? 'View More' : 'Share Your Story'}
+            </span>
             <svg
               aria-hidden="true"
               className={styles.viewMoreIcon}

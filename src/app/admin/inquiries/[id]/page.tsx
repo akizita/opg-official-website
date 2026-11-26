@@ -5,10 +5,18 @@ import { notFound } from 'next/navigation'
 import { InquiryStatusControl } from '@/app/admin/inquiries/[id]/inquiry-status-control'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/ui/status-badge'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { requireAdminSession } from '@/lib/auth/admin-session'
-import { canViewInquiries } from '@/lib/auth/permissions'
+import { sanitizeAvatarUrl } from '@/lib/auth/avatar-utils'
+import { canManageInquiries, canViewInquiries } from '@/lib/auth/permissions'
+import {
+  buildGravatarUrl,
+  resolveAuthAvatarsByEmail,
+} from '@/lib/auth/user-avatars'
 import type { ContactInquiry } from '@/lib/content/inquiries'
 import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Contact Detail | OPG Admin',
@@ -53,6 +61,28 @@ export default async function AdminInquiryDetailPage({
   if (!inquiry) {
     notFound()
   }
+
+  const canManage = canManageInquiries(profile.roleKey)
+  let effectiveStatus = inquiry.status
+  if (effectiveStatus === 'new' && canManage) {
+    const { error: readUpdateError } = await supabase
+      .from('contact_inquiries')
+      .update({ status: 'read' })
+      .eq('id', inquiry.id)
+      .eq('status', 'new')
+    if (!readUpdateError) {
+      effectiveStatus = 'read'
+    }
+  }
+
+  const [authAvatars] = await Promise.all([
+    resolveAuthAvatarsByEmail([inquiry.email]),
+  ])
+  const senderAvatarUrl =
+    sanitizeAvatarUrl(inquiry.avatar_url) ??
+    authAvatars.get(inquiry.email.trim().toLowerCase()) ??
+    null
+  const senderGravatarUrl = buildGravatarUrl(inquiry.email)
 
   const refId = `OPG-${inquiry.id.slice(0, 8).toUpperCase()}`
   const submittedDate = new Date(inquiry.submitted_at).toLocaleDateString(
@@ -120,7 +150,23 @@ export default async function AdminInquiryDetailPage({
                 >
                   Sender Name
                 </strong>
-                <p>{inquiry.full_name}</p>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.65rem',
+                    marginTop: '0.35rem',
+                  }}
+                >
+                  <UserAvatar
+                    email={inquiry.email}
+                    fallbackSrc={senderGravatarUrl}
+                    name={inquiry.full_name}
+                    size={34}
+                    src={senderAvatarUrl}
+                  />
+                  <p style={{ margin: 0 }}>{inquiry.full_name}</p>
+                </div>
               </div>
               <div>
                 <strong
@@ -147,11 +193,11 @@ export default async function AdminInquiryDetailPage({
                 <div style={{ marginTop: '0.25rem' }}>
                   <StatusBadge
                     status={
-                      inquiry.status === 'new'
+                      effectiveStatus === 'new'
                         ? 'draft'
-                        : inquiry.status === 'read'
+                        : effectiveStatus === 'read'
                           ? 'in_review'
-                          : inquiry.status === 'replied'
+                          : effectiveStatus === 'replied'
                             ? 'published'
                             : 'archived'
                     }
@@ -202,9 +248,9 @@ export default async function AdminInquiryDetailPage({
 
             <InquiryStatusControl
               currentStatus={
-                inquiry.status === 'spam_suspected'
+                effectiveStatus === 'spam_suspected'
                   ? 'archived'
-                  : inquiry.status
+                  : effectiveStatus
               }
               inquiryId={inquiry.id}
             />

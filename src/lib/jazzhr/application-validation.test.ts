@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest'
 import {
   hasValidResumeSignature,
   MAX_RESUME_BYTES,
+  PDF_INLINE_PREVIEW_MAX_BYTES,
+  sanitizeCareerPhoneInput,
   sanitizeResumeFilename,
   validateCareerApplication,
+  validateCareerPhone,
 } from '@/lib/jazzhr/application-validation'
 import type { CareerQuestion } from '@/lib/jazzhr/types'
 
@@ -82,8 +85,19 @@ describe('career application validation', () => {
     })
   })
 
-  it('enforces the résumé size limit', () => {
-    const result = validateCareerApplication(
+  it('enforces the 10 MB résumé size limit and accepts files up to 10 MB', () => {
+    const atLimit = validateCareerApplication(
+      {
+        ...validInput(),
+        resume: new File([new Uint8Array(MAX_RESUME_BYTES)], 'resume.pdf', {
+          type: 'application/pdf',
+        }),
+      },
+      questions,
+    )
+    expect(atLimit.errors.resume).toBeUndefined()
+
+    const overLimit = validateCareerApplication(
       {
         ...validInput(),
         resume: new File([new Uint8Array(MAX_RESUME_BYTES + 1)], 'resume.pdf', {
@@ -93,7 +107,59 @@ describe('career application validation', () => {
       questions,
     )
 
-    expect(result.errors.resume).toContain('2 MB')
+    expect(overLimit.errors.resume).toContain('10 MB')
+    expect(PDF_INLINE_PREVIEW_MAX_BYTES).toBe(4 * 1024 * 1024)
+    expect(PDF_INLINE_PREVIEW_MAX_BYTES).toBeLessThanOrEqual(MAX_RESUME_BYTES)
+  })
+
+  it('rejects letters and invalid symbols in phone numbers and sanitizes input', () => {
+    expect(validateCareerPhone('abc1234567')).toContain('letters')
+    expect(validateCareerPhone('0917-CALL-OPG')).toContain('letters')
+    expect(validateCareerPhone('63+9175550100')).not.toBeNull()
+    expect(validateCareerPhone('123456')).toContain('7 to 15')
+    expect(validateCareerPhone('1'.repeat(16))).toContain('7 to 15')
+    expect(validateCareerPhone('+63 (917) 555-0100')).toBeNull()
+
+    expect(sanitizeCareerPhoneInput('+63abc917-555!0100')).toBe('+63917-5550100')
+    expect(sanitizeCareerPhoneInput('abc+63917')).toBe('63917')
+
+    const result = validateCareerApplication(
+      {
+        ...validInput(),
+        phone: '+63 917 abc 0100',
+      },
+      questions,
+    )
+    expect(result.errors.phone).toBeDefined()
+  })
+
+  it('normalizes optional LinkedIn, website, and location fields while rejecting invalid URLs', () => {
+    const valid = validateCareerApplication(
+      {
+        ...validInput(),
+        linkedinUrl: 'linkedin.com/in/aki-zita',
+        location: '  Makati City, Philippines  ',
+        websiteUrl: 'akizita.dev',
+      },
+      questions,
+    )
+
+    expect(valid.errors).toEqual({})
+    expect(valid.data?.linkedinUrl).toBe('https://linkedin.com/in/aki-zita')
+    expect(valid.data?.location).toBe('Makati City, Philippines')
+    expect(valid.data?.websiteUrl).toBe('https://akizita.dev/')
+
+    const invalid = validateCareerApplication(
+      {
+        ...validInput(),
+        linkedinUrl: 'https://github.com/not-linkedin',
+        websiteUrl: 'not a url',
+      },
+      questions,
+    )
+
+    expect(invalid.errors.linkedinUrl).toContain('LinkedIn')
+    expect(invalid.errors.websiteUrl).toContain('website')
   })
 
   it('checks common résumé signatures and sanitizes filenames', async () => {

@@ -540,6 +540,39 @@
 
 .applyColumn {
   position: relative;
+  scroll-margin-top: calc(var(--header-overlap) + 1rem);
+}
+
+@media (min-width: 64.01rem) {
+  .descriptionColumn {
+    position: sticky;
+    top: calc(var(--header-overlap) + 1rem);
+  }
+
+  .descriptionCard {
+    max-height: calc(100dvh - var(--header-overlap) - 2.25rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: rgba(217, 119, 6, 0.35) transparent;
+    scrollbar-width: thin;
+  }
+
+  .descriptionCard::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .descriptionCard::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .descriptionCard::-webkit-scrollbar-thumb {
+    background: rgba(217, 119, 6, 0.3);
+    border-radius: 9999px;
+  }
+
+  .descriptionCard::-webkit-scrollbar-thumb:hover {
+    background: rgba(217, 119, 6, 0.5);
+  }
 }
 
 .applyHeader {

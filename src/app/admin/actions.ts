@@ -90,6 +90,7 @@ export async function uploadAdminAvatarAction(
         user_metadata: {
           ...existingMetadata,
           avatar_url: avatarUrl,
+          picture: avatarUrl,
         },
       })
 
@@ -98,7 +99,13 @@ export async function uploadAdminAvatarAction(
     }
 
     const supabase = await createClient()
-    await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } }).catch(() => {})
+    await supabase
+      .auth.updateUser({ data: { avatar_url: avatarUrl, picture: avatarUrl } })
+      .catch(() => {})
+    const { backfillSubmissionAvatar } = await import(
+      '@/lib/auth/submission-avatar-sync'
+    )
+    await backfillSubmissionAvatar(profile.email, avatarUrl)
 
     revalidatePath('/admin', 'layout')
     return { ok: true, avatarUrl }

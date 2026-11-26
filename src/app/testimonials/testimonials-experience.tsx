@@ -2,10 +2,19 @@
 
 import Link from 'next/link'
 import Script from 'next/script'
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from 'react'
 import { createPortal } from 'react-dom'
 
 import { submitCandidateTestimonialAction } from '@/app/testimonials/actions'
+import { distributeTestimonialsBento } from '@/app/testimonials/bento-layout'
 import Aurora from '@/components/ui/aurora'
 import { CandidateTestimonialsLive } from '@/components/ui/candidate-testimonials-live'
 import PeekRating from '@/components/ui/peek-rating'
@@ -24,6 +33,28 @@ const relationshipOptions = [
   { value: 'prospective', label: 'Prospective candidate' },
   { value: 'past', label: 'Past candidate' },
 ] as const
+
+function subscribeViewportColumns(onChange: () => void) {
+  const mobileQuery = window.matchMedia('(max-width: 39.99rem)')
+  const tabletQuery = window.matchMedia('(max-width: 64rem)')
+  mobileQuery.addEventListener('change', onChange)
+  tabletQuery.addEventListener('change', onChange)
+  return () => {
+    mobileQuery.removeEventListener('change', onChange)
+    tabletQuery.removeEventListener('change', onChange)
+  }
+}
+
+function getViewportColumnsSnapshot(): 1 | 2 | 3 {
+  if (typeof window === 'undefined') return 3
+  if (window.matchMedia('(max-width: 39.99rem)').matches) return 1
+  if (window.matchMedia('(max-width: 64rem)').matches) return 2
+  return 3
+}
+
+function getViewportColumnsServerSnapshot(): 1 | 2 | 3 {
+  return 3
+}
 
 export function CandidateTestimonialsExperience({
   testimonials,
@@ -56,6 +87,11 @@ export function CandidateTestimonialsExperience({
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({})
   const [turnstileReady, setTurnstileReady] = useState(false)
   const [pending, startTransition] = useTransition()
+  const viewportColumns = useSyncExternalStore(
+    subscribeViewportColumns,
+    getViewportColumnsSnapshot,
+    getViewportColumnsServerSnapshot,
+  )
   const openedAt = useRef<number | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -91,6 +127,15 @@ export function CandidateTestimonialsExperience({
       placement,
     })
   }, [])
+
+  const effectiveColumns = Math.max(
+    1,
+    Math.min(viewportColumns, Math.max(1, testimonials.length)),
+  )
+  const bentoColumns = useMemo(
+    () => distributeTestimonialsBento(testimonials, effectiveColumns),
+    [testimonials, effectiveColumns],
+  )
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -882,50 +927,65 @@ export function CandidateTestimonialsExperience({
             {testimonials.length ? (
               <div
                 className="candidate-testimonials-grid"
-                data-layout={testimonials.length > 2 ? 'bento' : 'compact'}
+                data-columns={effectiveColumns}
+                data-layout={
+                  testimonials.length === 1
+                    ? 'single'
+                    : testimonials.length === 2
+                      ? 'compact'
+                      : 'bento'
+                }
               >
-                {testimonials.map((item, index) => (
-                  <article
-                    className="candidate-testimonials-card"
-                    key={item.id}
-                    style={
-                      {
-                        '--testimonial-index': Math.min(index, 8),
-                      } as React.CSSProperties
-                    }
+                {bentoColumns.map((column, colIndex) => (
+                  <div
+                    className="candidate-testimonials-column"
+                    key={`bento-col-${colIndex}`}
                   >
-                    <div className="candidate-testimonials-card__top">
-                      <span
-                        aria-hidden="true"
-                        className="candidate-testimonials-card__mark"
+                    {column.map(({ index, isFeatured, item }) => (
+                      <article
+                        className="candidate-testimonials-card"
+                        data-featured={isFeatured ? 'true' : undefined}
+                        key={item.id}
+                        style={
+                          {
+                            '--testimonial-index': Math.min(index, 8),
+                          } as React.CSSProperties
+                        }
                       >
-                        “
-                      </span>
-                      {item.rating !== null && (
-                        <PeekRating
-                          ariaLabel={`${item.rating} out of 5 stars`}
-                          className="candidate-testimonials-card__rating"
-                          readOnly
-                          showLabel={false}
-                          showTip={false}
-                          size={16}
-                          value={item.rating}
-                        />
-                      )}
-                    </div>
-                    <blockquote>{item.quote}</blockquote>
-                    <div className="candidate-testimonials-card__author">
-                      <div>
-                        <strong>{item.author_name}</strong>
-                        <p>
-                          {item.role_title ||
-                            (item.relationship === 'past'
-                              ? 'Past candidate'
-                              : 'Prospective candidate')}
-                        </p>
-                      </div>
-                    </div>
-                  </article>
+                        <div className="candidate-testimonials-card__top">
+                          <span
+                            aria-hidden="true"
+                            className="candidate-testimonials-card__mark"
+                          >
+                            “
+                          </span>
+                          {item.rating !== null && (
+                            <PeekRating
+                              ariaLabel={`${item.rating} out of 5 stars`}
+                              className="candidate-testimonials-card__rating"
+                              readOnly
+                              showLabel={false}
+                              showTip={false}
+                              size={16}
+                              value={item.rating}
+                            />
+                          )}
+                        </div>
+                        <blockquote>{item.quote}</blockquote>
+                        <div className="candidate-testimonials-card__author">
+                          <div>
+                            <strong>{item.author_name}</strong>
+                            <p>
+                              {item.role_title ||
+                                (item.relationship === 'past'
+                                  ? 'Past candidate'
+                                  : 'Prospective candidate')}
+                            </p>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
                 ))}
               </div>
             ) : (

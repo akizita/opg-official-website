@@ -11,7 +11,12 @@ import { notFound, permanentRedirect } from 'next/navigation'
 
 import { CareerApplicationForm } from '@/app/careers/[slug]/apply/application-form'
 import { JobDescription } from '@/app/careers/[slug]/job-description'
-import { getCareerJobBySlug, getCareerQuestions } from '@/lib/jazzhr/client'
+import {
+  getCareerJobBySlug,
+  getCareerQuestions,
+  getCareersFeed,
+  JazzHrApiError,
+} from '@/lib/jazzhr/client'
 import { formatCareerCompensation } from '@/lib/jazzhr/normalize'
 import type { CareerEmploymentType } from '@/lib/jazzhr/types'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
@@ -50,10 +55,6 @@ function formatDate(value: string): string {
   }).format(new Date(value))
 }
 
-export function generateStaticParams() {
-  return []
-}
-
 export async function generateMetadata({
   params,
 }: JobDetailPageProps): Promise<Metadata> {
@@ -86,8 +87,16 @@ export async function generateMetadata({
 
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { slug } = await params
-  const job = await getCareerJobBySlug(slug)
-  if (!job) notFound()
+  const [job, feed] = await Promise.all([
+    getCareerJobBySlug(slug),
+    getCareersFeed(),
+  ])
+  if (!job) {
+    if (feed.configured && !feed.fetchedAt) {
+      throw new JazzHrApiError('Live job feed is temporarily unavailable.')
+    }
+    notFound()
+  }
   if (job.slug !== slug) permanentRedirect(`/careers/${job.slug}`)
 
   const questions = await getCareerQuestions(job)

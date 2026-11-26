@@ -80,6 +80,7 @@
 .searchIcon {
   position: absolute;
   left: 0.95rem;
+  z-index: 2;
   width: 1.1rem;
   height: 1.1rem;
   color: #8c7353;

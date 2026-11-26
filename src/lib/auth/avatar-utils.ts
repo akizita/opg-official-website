@@ -16,13 +16,45 @@ const AVATAR_KEYS = [
 
 const NAME_KEYS = ['full_name', 'name', 'display_name'] as const
 
+const SAFE_DATA_IMAGE_PATTERN =
+  /^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i
+
 export function sanitizeAvatarUrl(value: unknown): string | null {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
   if (!trimmed) return null
   if (/^https?:\/\//i.test(trimmed)) return trimmed
   if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed
+  if (SAFE_DATA_IMAGE_PATTERN.test(trimmed)) return trimmed
   return null
+}
+
+export function deriveAvatarInitials(
+  displayName?: string | null,
+  email?: string | null,
+): string {
+  const cleanName = (displayName ?? '').trim()
+  if (cleanName) {
+    const parts = cleanName.split(/\s+/).filter(Boolean)
+    if (parts.length > 1) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+    }
+    return parts[0].slice(0, 2).toUpperCase()
+  }
+
+  const cleanEmail = (email ?? '').trim()
+  if (cleanEmail) {
+    const localParts = cleanEmail
+      .split('@')[0]
+      .split(/[._+-]+/)
+      .filter(Boolean)
+    if (localParts.length > 1) {
+      return `${localParts[0][0]}${localParts[localParts.length - 1][0]}`.toUpperCase()
+    }
+    return (localParts[0] || '?').slice(0, 2).toUpperCase()
+  }
+
+  return '?'
 }
 
 function readMetadataValue(
@@ -95,13 +127,12 @@ export function extractUserDisplayName(
 }
 
 /**
- * Builds an ordered, deduplicated list of candidate avatar URLs for a user:
- * explicit Supabase/OAuth metadata URL, optional Gravatar SHA-256 URL, and
- * universal email avatar lookups (Unavatar universal, Google, Gravatar).
+ * Builds an ordered, deduplicated list of validated candidate avatar URLs
+ * (`avatarUrl` first, followed by an optional explicit `gravatarUrl` fallback),
+ * falling back cleanly to initials when empty or on load error.
  */
 export function buildAvatarCandidates({
   avatarUrl,
-  email,
   gravatarUrl,
 }: {
   avatarUrl?: string | null
@@ -117,14 +148,6 @@ export function buildAvatarCandidates({
 
   pushUnique(sanitizeAvatarUrl(avatarUrl))
   pushUnique(sanitizeAvatarUrl(gravatarUrl))
-
-  const cleanEmail = (email ?? '').trim().toLowerCase()
-  if (cleanEmail && cleanEmail.includes('@')) {
-    const encoded = encodeURIComponent(cleanEmail)
-    pushUnique(`https://unavatar.io/${encoded}?fallback=false`)
-    pushUnique(`https://unavatar.io/google/${encoded}?fallback=false`)
-    pushUnique(`https://unavatar.io/gravatar/${encoded}?fallback=false`)
-  }
 
   return candidates
 }

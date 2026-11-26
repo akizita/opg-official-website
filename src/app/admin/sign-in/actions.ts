@@ -21,6 +21,7 @@ export async function signInWithGoogleAction(): Promise<void> {
     provider: 'google',
     options: {
       redirectTo: callback.toString(),
+      scopes: 'openid email profile',
       queryParams: {
         prompt: 'select_account',
       },

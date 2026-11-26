@@ -310,4 +310,103 @@ describe('inquiry submission database transaction', () => {
       errorLog.mockRestore()
     }
   })
+
+  it('does not send automatic admin notification emails on contact submission even when Resend env vars are set', async () => {
+    const fetchMock = vi.fn()
+    vi.stubEnv('RESEND_API_KEY', 're_test_12345')
+    vi.stubEnv('CONTACT_FROM_EMAIL', 'onboarding@resend.dev')
+    vi.stubEnv('CONTACT_NOTIFICATION_EMAIL', 'recruitment@opglobal.com.hk')
+    vi.stubGlobal('fetch', fetchMock)
+
+    const mockClient = {
+      from: vi.fn((table: string) =>
+        table === 'contact_inquiries'
+          ? {
+              insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
+                    data: { id: 'inq-99887766-uuid' },
+                    error: null,
+                  }),
+                }),
+              }),
+            }
+          : { insert: vi.fn().mockResolvedValue({ error: null }) },
+      ),
+    }
+
+    try {
+      const result = await submitContactInquiry(
+        {
+          fullName: 'Aki Zita',
+          email: 'aki@example.com',
+          subject: 'No notification email check',
+          message:
+            'Testing that contact submission stores to inbox without dispatching an email.',
+          intent: 'client',
+          privacyConsent: true,
+          elapsedSeconds: 5,
+        },
+        { clientIp: '198.51.100.6', client: mockClient as never },
+      )
+
+      expect(result).toEqual({ success: true, referenceId: 'OPG-INQ-9988' })
+      expect(fetchMock).not.toHaveBeenCalled()
+    } finally {
+      vi.unstubAllEnvs()
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('persists avatar_url from server session and falls back gracefully on legacy schemas', async () => {
+    const insertCalls: Record<string, unknown>[] = []
+    const single = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: null,
+        error: { code: '42703', message: 'column "avatar_url" does not exist' },
+      })
+      .mockResolvedValueOnce({
+        data: { id: 'inq-avatar-uuid' },
+        error: null,
+      })
+
+    const mockClient = {
+      from: vi.fn((table: string) =>
+        table === 'contact_inquiries'
+          ? {
+              insert: vi.fn((row: Record<string, unknown>) => {
+                insertCalls.push(row)
+                return { select: vi.fn().mockReturnValue({ single }) }
+              }),
+            }
+          : { insert: vi.fn().mockResolvedValue({ error: null }) },
+      ),
+    }
+
+    const result = await submitContactInquiry(
+      {
+        fullName: 'Aki Zita',
+        email: 'aki-avatar@example.com',
+        subject: 'Avatar storage check',
+        message:
+          'Confirming server avatarUrl is persisted and degrades safely on older tables.',
+        privacyConsent: true,
+        elapsedSeconds: 5,
+      },
+      {
+        avatarUrl: 'https://lh3.googleusercontent.com/a/saved-photo',
+        clientIp: '198.51.100.7',
+        client: mockClient as never,
+      },
+    )
+
+    expect(result).toEqual({ success: true, referenceId: 'OPG-INQ-AVAT' })
+    expect(insertCalls[0]).toEqual(
+      expect.objectContaining({
+        avatar_url: 'https://lh3.googleusercontent.com/a/saved-photo',
+      }),
+    )
+    expect(insertCalls[1]).not.toHaveProperty('avatar_url')
+  })
 })

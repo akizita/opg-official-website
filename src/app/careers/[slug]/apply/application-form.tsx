@@ -1,16 +1,35 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import Link from 'next/link'
 import Script from 'next/script'
 import { useEffect, useRef, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 
 import { submitCareerApplicationAction } from '@/app/careers/[slug]/apply/actions'
 import {
+  OpgIconCheck,
+  OpgIconClose,
+  OpgIconCopy,
+} from '@/components/icons/opg-icons'
+import {
   MAX_RESUME_BYTES,
+  PDF_INLINE_PREVIEW_MAX_BYTES,
   RESUME_ACCEPT,
+  sanitizeCareerPhoneInput,
+  validateCareerPhone,
+  validateCareerResumeFile,
 } from '@/lib/jazzhr/application-validation'
 import type { CareerQuestion } from '@/lib/jazzhr/types'
+
+import modalStyles from './application-success-modal.module.css'
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+}
 
 type TurnstileWindow = Window & {
   turnstile?: {
@@ -287,11 +306,28 @@ export function CareerApplicationForm({
   questions: CareerQuestion[]
 }) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()
+  const shouldReduceMotion = Boolean(useReducedMotion())
   const [turnstileReady, setTurnstileReady] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [result, setResult] = useState<ApplicationResult | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [phoneValue, setPhoneValue] = useState('')
+  const [formResetKey, setFormResetKey] = useState(0)
+  const [successModalOpen, setSuccessModalOpen] = useState(false)
+  const [submittedReferenceId, setSubmittedReferenceId] = useState<
+    string | null
+  >(null)
+  const [copiedRef, setCopiedRef] = useState(false)
+  const [resumeSummary, setResumeSummary] = useState<{
+    isPdf: boolean
+    name: string
+    sizeBytes: number
+    sizeLabel: string
+  } | null>(null)
   const alertRef = useRef<HTMLDivElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
+  const modalCloseRef = useRef<HTMLButtonElement>(null)
+  const resumeInputRef = useRef<HTMLInputElement>(null)
   const mountTimeRef = useRef<number | null>(null)
   const submittingRef = useRef(false)
   const turnstileIdRef = useRef<string | null>(null)
@@ -301,7 +337,7 @@ export function CareerApplicationForm({
   }, [])
 
   useEffect(() => {
-    if (!siteKey || !turnstileReady || result?.success) return
+    if (!siteKey || !turnstileReady) return
     const container = formRef.current?.querySelector<HTMLElement>(
       '#career-application-turnstile',
     )
@@ -319,19 +355,147 @@ export function CareerApplicationForm({
         turnstileIdRef.current = null
       }
     }
-  }, [result?.success, siteKey, turnstileReady])
+  }, [siteKey, turnstileReady])
 
   useEffect(() => {
-    if (result?.errors?.form) alertRef.current?.focus()
-  }, [result])
+    if (fieldErrors.form) alertRef.current?.focus()
+  }, [fieldErrors])
+
+  useEffect(() => {
+    if (!successModalOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const focusTimer = window.setTimeout(() => modalCloseRef.current?.focus(), 40)
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setSuccessModalOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [successModalOpen])
+
+  async function handleCopyReference() {
+    if (!submittedReferenceId || typeof navigator === 'undefined') return
+    try {
+      await navigator.clipboard?.writeText(submittedReferenceId)
+      setCopiedRef(true)
+      window.setTimeout(() => setCopiedRef(false), 2200)
+    } catch {
+      // Clipboard API unavailable
+    }
+  }
+
+  function handlePhoneChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const raw = event.target.value
+    const sanitized = sanitizeCareerPhoneInput(raw)
+    setPhoneValue(sanitized)
+
+    if (raw !== sanitized) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        phone:
+          'Phone number cannot contain letters or unsupported symbols.',
+      }))
+      return
+    }
+
+    const phoneError = validateCareerPhone(sanitized)
+    setFieldErrors((prev) => {
+      if (!prev.phone) return prev
+      if (!phoneError) {
+        const next = { ...prev }
+        delete next.phone
+        return next
+      }
+      return prev
+    })
+  }
+
+  function handlePhoneBlur() {
+    if (!phoneValue.trim()) return
+    const phoneError = validateCareerPhone(phoneValue)
+    setFieldErrors((prev) => {
+      if (!phoneError) {
+        const next = { ...prev }
+        delete next.phone
+        return next
+      }
+      return { ...prev, phone: phoneError }
+    })
+  }
+
+  function handleResumeChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null
+    if (!file) {
+      setResumeSummary(null)
+      setFieldErrors((prev) => {
+        if (!prev.resume) return prev
+        const next = { ...prev }
+        delete next.resume
+        return next
+      })
+      return
+    }
+
+    const resumeError = validateCareerResumeFile(file)
+    if (resumeError) {
+      setResumeSummary(null)
+      setFieldErrors((prev) => ({ ...prev, resume: resumeError }))
+      return
+    }
+
+    const isPdf =
+      file.name.toLowerCase().endsWith('.pdf') ||
+      file.type.toLowerCase() === 'application/pdf'
+
+    setResumeSummary({
+      isPdf,
+      name: file.name,
+      sizeBytes: file.size,
+      sizeLabel: formatFileSize(file.size),
+    })
+    setFieldErrors((prev) => {
+      if (!prev.resume) return prev
+      const next = { ...prev }
+      delete next.resume
+      return next
+    })
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submittingRef.current) return
+
+    const phoneError = validateCareerPhone(phoneValue)
+    const selectedFile = resumeInputRef.current?.files?.[0] ?? null
+    const resumeError = validateCareerResumeFile(selectedFile)
+
+    if (phoneError || resumeError) {
+      const nextErrors: Record<string, string> = {}
+      if (phoneError) nextErrors.phone = phoneError
+      if (resumeError) nextErrors.resume = resumeError
+      setFieldErrors(nextErrors)
+      const firstInvalidId = phoneError
+        ? 'application-phone'
+        : 'application-resume'
+      document.getElementById(firstInvalidId)?.focus()
+      return
+    }
+
     submittingRef.current = true
     setResult(null)
+    setFieldErrors({})
 
     const formData = new FormData(event.currentTarget)
+    formData.set('phone', phoneValue)
     formData.set(
       'elapsedSeconds',
       String(
@@ -345,16 +509,29 @@ export function CareerApplicationForm({
       try {
         const response = await submitCareerApplicationAction(jobSlug, formData)
         setResult(response)
-        if (!response.success && turnstileIdRef.current) {
+        setFieldErrors(response.errors ?? {})
+        if (response.success) {
+          formRef.current?.reset()
+          setPhoneValue('')
+          setResumeSummary(null)
+          setFormResetKey((prev) => prev + 1)
+          mountTimeRef.current = Date.now()
+          setSubmittedReferenceId(response.referenceId ?? null)
+          setCopiedRef(false)
+          setSuccessModalOpen(true)
+        }
+        if (turnstileIdRef.current) {
           ;(window as TurnstileWindow).turnstile?.reset(turnstileIdRef.current)
         }
       } catch {
+        const fallbackErrors = {
+          form: 'A network error interrupted the submission. Please try again.',
+        }
         setResult({
-          errors: {
-            form: 'A network error interrupted the submission. Please try again.',
-          },
+          errors: fallbackErrors,
           success: false,
         })
+        setFieldErrors(fallbackErrors)
         if (turnstileIdRef.current) {
           ;(window as TurnstileWindow).turnstile?.reset(turnstileIdRef.current)
         }
@@ -364,42 +541,17 @@ export function CareerApplicationForm({
     })
   }
 
-  if (result?.success) {
-    return (
-      <section
-        aria-live="polite"
-        className="career-application__success"
-        role="status"
-      >
-        <span>Application received</span>
-        <h2>Thank you for applying.</h2>
-        <p>
-          Your application for <strong>{jobTitle}</strong> was submitted to our
-          recruitment team.
-        </p>
-        {result.referenceId ? (
-          <p>
-            Reference: <strong>{result.referenceId}</strong>
-          </p>
-        ) : null}
-        <p>Keep this reference for any follow-up with recruitment.</p>
-        <Link className="button-link button-link--primary" href="/careers">
-          View other open roles
-        </Link>
-      </section>
-    )
-  }
-
-  const errors = result?.errors || {}
+  const errors = fieldErrors
 
   return (
-    <form
-      aria-label={`Application for ${jobTitle}`}
-      className="career-application__form"
-      encType="multipart/form-data"
-      onSubmit={handleSubmit}
-      ref={formRef}
-    >
+    <>
+      <form
+        aria-label={`Application for ${jobTitle}`}
+        className="career-application__form"
+        encType="multipart/form-data"
+        onSubmit={handleSubmit}
+        ref={formRef}
+      >
       {siteKey ? (
         <Script
           onReady={() => setTurnstileReady(true)}
@@ -511,13 +663,87 @@ export function CareerApplicationForm({
               autoComplete="tel"
               disabled={isPending}
               id="application-phone"
+              inputMode="tel"
               maxLength={40}
               name="phone"
+              onBlur={handlePhoneBlur}
+              onChange={handlePhoneChange}
               placeholder="e.g. +63 912 345 6789"
               required
               type="tel"
+              value={phoneValue}
             />
             <FieldError error={errors.phone} id="application-phone-error" />
+          </div>
+          <div className="career-application__field">
+            <label htmlFor="application-location">
+              Location / City
+              <span className="career-application__optional"> Optional</span>
+            </label>
+            <input
+              aria-describedby={
+                errors.location ? 'application-location-error' : undefined
+              }
+              aria-invalid={Boolean(errors.location)}
+              autoComplete="address-level2"
+              disabled={isPending}
+              id="application-location"
+              maxLength={160}
+              name="location"
+              placeholder="e.g. Makati City, Philippines"
+              type="text"
+            />
+            <FieldError error={errors.location} id="application-location-error" />
+          </div>
+          <div className="career-application__field">
+            <label htmlFor="application-linkedin-url">
+              LinkedIn Profile URL
+              <span className="career-application__optional"> Optional</span>
+            </label>
+            <input
+              aria-describedby={
+                errors.linkedinUrl
+                  ? 'application-linkedin-url-error'
+                  : undefined
+              }
+              aria-invalid={Boolean(errors.linkedinUrl)}
+              autoComplete="url"
+              disabled={isPending}
+              id="application-linkedin-url"
+              inputMode="url"
+              maxLength={300}
+              name="linkedinUrl"
+              placeholder="e.g. https://www.linkedin.com/in/your-name"
+              type="text"
+            />
+            <FieldError
+              error={errors.linkedinUrl}
+              id="application-linkedin-url-error"
+            />
+          </div>
+          <div className="career-application__field career-application__field--full">
+            <label htmlFor="application-website-url">
+              Portfolio / Website URL
+              <span className="career-application__optional"> Optional</span>
+            </label>
+            <input
+              aria-describedby={
+                errors.websiteUrl ? 'application-website-url-error' : undefined
+              }
+              aria-invalid={Boolean(errors.websiteUrl)}
+              autoComplete="url"
+              disabled={isPending}
+              id="application-website-url"
+              inputMode="url"
+              maxLength={300}
+              name="websiteUrl"
+              placeholder="e.g. https://yourportfolio.com"
+              type="text"
+            />
+            <FieldError
+              error={errors.websiteUrl}
+              id="application-website-url-error"
+            />
           </div>
         </div>
       </fieldset>
@@ -535,13 +761,37 @@ export function CareerApplicationForm({
             disabled={isPending}
             id="application-resume"
             name="resume"
+            onChange={handleResumeChange}
+            ref={resumeInputRef}
             required
             type="file"
           />
           <small id="application-resume-hint">
-            PDF, DOC, DOCX, ODT, RTF, or TXT. Maximum{' '}
-            {MAX_RESUME_BYTES / 1024 / 1024} MB.
+            PDF, DOC, DOCX, ODT, RTF, or TXT. Recommended: PDF under{' '}
+            {PDF_INLINE_PREVIEW_MAX_BYTES / 1024 / 1024} MB for full visual
+            preview (max {MAX_RESUME_BYTES / 1024 / 1024} MB).
           </small>
+          {resumeSummary && !errors.resume ? (
+            <p
+              aria-live="polite"
+              className={`career-application__resume-notice ${
+                resumeSummary.sizeBytes > PDF_INLINE_PREVIEW_MAX_BYTES
+                  ? 'career-application__resume-notice--warning'
+                  : resumeSummary.isPdf
+                    ? 'career-application__resume-notice--ready'
+                    : ''
+              }`}
+            >
+              <strong>
+                {resumeSummary.name} ({resumeSummary.sizeLabel})
+              </strong>{' '}
+              {resumeSummary.sizeBytes > PDF_INLINE_PREVIEW_MAX_BYTES
+                ? `exceeds ${PDF_INLINE_PREVIEW_MAX_BYTES / 1024 / 1024} MB — your original file will still be attached under Documents, though compressing your PDF under ${PDF_INLINE_PREVIEW_MAX_BYTES / 1024 / 1024} MB enables full inline PDF rendering.`
+                : resumeSummary.isPdf
+                  ? '— ready for full PDF preview.'
+                  : '— ready to attach with your application.'}
+            </p>
+          ) : null}
           <FieldError error={errors.resume} id="application-resume-error" />
         </div>
         <div className="career-application__field">
@@ -576,7 +826,7 @@ export function CareerApplicationForm({
               <QuestionField
                 disabled={isPending}
                 error={errors[question.fieldName]}
-                key={question.fieldName}
+                key={`${question.fieldName}-${formResetKey}`}
                 question={question}
               />
             ))}
@@ -622,7 +872,7 @@ export function CareerApplicationForm({
           disabled={isPending}
           type="submit"
         >
-          {isPending ? 'Submitting application…' : 'Submit application'}
+          {isPending ? 'Submitting' : 'Submit'}
         </button>
         <p>
           Your application is sent securely to OPG&apos;s JazzHR recruitment
@@ -630,5 +880,118 @@ export function CareerApplicationForm({
         </p>
       </div>
     </form>
+
+    {typeof document !== 'undefined'
+      ? createPortal(
+          <AnimatePresence>
+            {successModalOpen ? (
+              <motion.div
+                animate={{ opacity: 1 }}
+                className={modalStyles.backdrop}
+                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
+                onClick={(event) => {
+                  if (event.target === event.currentTarget) {
+                    setSuccessModalOpen(false)
+                  }
+                }}
+                transition={{ duration: shouldReduceMotion ? 0.01 : 0.2 }}
+              >
+                <motion.div
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  aria-describedby="career-success-modal-desc"
+                  aria-labelledby="career-success-modal-title"
+                  aria-modal="true"
+                  className={modalStyles.modal}
+                  exit={
+                    shouldReduceMotion
+                      ? { opacity: 0 }
+                      : { opacity: 0, scale: 0.96, y: 10 }
+                  }
+                  initial={
+                    shouldReduceMotion
+                      ? { opacity: 0 }
+                      : { opacity: 0, scale: 0.96, y: 14 }
+                  }
+                  role="dialog"
+                  transition={{
+                    duration: shouldReduceMotion ? 0.01 : 0.24,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                >
+                  <button
+                    aria-label="Close confirmation dialog"
+                    className={modalStyles.closeBtn}
+                    onClick={() => setSuccessModalOpen(false)}
+                    ref={modalCloseRef}
+                    type="button"
+                  >
+                    <OpgIconClose size={17} />
+                  </button>
+
+                  <div aria-hidden="true" className={modalStyles.iconOrb}>
+                    <OpgIconCheck size={28} />
+                  </div>
+
+                  <p className={modalStyles.eyebrow}>Application received</p>
+
+                  <h2 className={modalStyles.title} id="career-success-modal-title">
+                    Thank you for applying.
+                  </h2>
+
+                  <p
+                    className={modalStyles.description}
+                    id="career-success-modal-desc"
+                  >
+                    Your application for <strong>{jobTitle}</strong> has been
+                    submitted to our recruitment team.
+                  </p>
+
+                  {submittedReferenceId ? (
+                    <div className={modalStyles.referenceCard}>
+                      <div className={modalStyles.referenceMeta}>
+                        <span className={modalStyles.referenceLabel}>
+                          Application Reference
+                        </span>
+                        <span className={modalStyles.referenceCode}>
+                          {submittedReferenceId}
+                        </span>
+                      </div>
+                      <button
+                        className={modalStyles.copyBtn}
+                        onClick={() => void handleCopyReference()}
+                        type="button"
+                      >
+                        <OpgIconCopy size={14} />
+                        <span>{copiedRef ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <p className={modalStyles.note}>
+                    Keep this reference for any follow-up with our talent
+                    acquisition team at recruitment@opglobal.com.hk.
+                  </p>
+
+                  <div className={modalStyles.actions}>
+                    <Link className={modalStyles.primaryAction} href="/careers">
+                      Browse open roles
+                    </Link>
+                    <button
+                      className={modalStyles.secondaryAction}
+                      onClick={() => setSuccessModalOpen(false)}
+                      type="button"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>,
+          document.body,
+        )
+      : null}
+    </>
   )
 }

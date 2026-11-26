@@ -17,6 +17,14 @@ import type {
 const JAZZHR_API_BASE_URL = 'https://api.resumatorapi.com/v1'
 const JAZZHR_PAGE_SIZE = 100
 const JAZZHR_MAX_PAGES = 25
+const JAZZHR_FETCH_TIMEOUT_MS = 10_000
+const JAZZHR_RETRY_DELAY_MS = 250
+const JAZZHR_FALLBACK_TTL_MS = 10 * 60 * 1000
+
+const fallbackFeedByAccounts = new Map<
+  string,
+  { cachedAtMs: number; feed: CareersFeed }
+>()
 
 type JazzHrAccountConfig = {
   apiKey: string
@@ -99,21 +107,23 @@ function extractRows(payload: unknown, resource: string): unknown[] {
   )
 }
 
-async function fetchJazzHrPage(
-  apiKey: string,
-  page: number,
-): Promise<unknown[]> {
-  const endpoint = new URL(
-    `${JAZZHR_API_BASE_URL}/jobs/status/open/page/${page}`,
-  )
-  endpoint.searchParams.set('apikey', apiKey)
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
+function isRetryableJazzHrStatus(status: number): boolean {
+  return status === 429 || status >= 500
+}
+
+async function fetchJazzHrPageOnce(
+  endpoint: URL,
+): Promise<unknown[]> {
   let response: Response
   try {
     response = await fetch(endpoint, {
       cache: 'no-store',
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(8_000),
+      signal: AbortSignal.timeout(JAZZHR_FETCH_TIMEOUT_MS),
     })
   } catch (error) {
     throw new JazzHrApiError(
@@ -138,6 +148,27 @@ async function fetchJazzHrPage(
   }
 
   return extractRows(payload, 'jobs')
+}
+
+async function fetchJazzHrPage(
+  apiKey: string,
+  page: number,
+): Promise<unknown[]> {
+  const endpoint = new URL(
+    `${JAZZHR_API_BASE_URL}/jobs/status/open/page/${page}`,
+  )
+  endpoint.searchParams.set('apikey', apiKey)
+
+  try {
+    return await fetchJazzHrPageOnce(endpoint)
+  } catch (error) {
+    const canRetry =
+      error instanceof JazzHrApiError &&
+      (error.status === null || isRetryableJazzHrStatus(error.status))
+    if (!canRetry) throw error
+    await delay(JAZZHR_RETRY_DELAY_MS)
+    return fetchJazzHrPageOnce(endpoint)
+  }
 }
 
 async function fetchAllJazzHrJobs(
@@ -226,6 +257,11 @@ export const getCareersFeed = cache(async (): Promise<CareersFeed> => {
     return { configured: false, fetchedAt: null, jobs: [] }
   }
 
+  const accountsCacheKey = accounts
+    .map((account) => `${account.key}:${account.apiKey}`)
+    .sort()
+    .join('|')
+
   const results = await Promise.allSettled(
     accounts.map((account) => fetchAllJazzHrJobs(account)),
   )
@@ -243,6 +279,14 @@ export const getCareersFeed = cache(async (): Promise<CareersFeed> => {
   }
 
   if (!anySucceeded) {
+    const cachedFallback = fallbackFeedByAccounts.get(accountsCacheKey)
+    if (
+      cachedFallback &&
+      Date.now() - cachedFallback.cachedAtMs <= JAZZHR_FALLBACK_TTL_MS
+    ) {
+      return cachedFallback.feed
+    }
+
     return {
       configured: true,
       fetchedAt: null,
@@ -256,24 +300,55 @@ export const getCareersFeed = cache(async (): Promise<CareersFeed> => {
     return rightDate - leftDate || left.title.localeCompare(right.title)
   })
 
-  return {
+  const feed: CareersFeed = {
     configured: true,
     fetchedAt: new Date().toISOString(),
     jobs,
   }
+
+  if (jobs.length > 0) {
+    fallbackFeedByAccounts.set(accountsCacheKey, {
+      cachedAtMs: Date.now(),
+      feed,
+    })
+  }
+
+  return feed
 })
 
 export async function getCareerJobBySlug(
   slug: string,
 ): Promise<CareerJob | null> {
+  let normalizedSlug = slug.trim()
+  try {
+    normalizedSlug = decodeURIComponent(normalizedSlug).trim()
+  } catch {
+    // Keep original trimmed slug if percent-encoding is malformed
+  }
+  if (!normalizedSlug) return null
+
   const { jobs } = await getCareersFeed()
-  const exact = jobs.find((job) => job.slug === slug)
+  const exact = jobs.find((job) => job.slug === normalizedSlug)
   if (exact) return exact
 
-  const code = slug.split('-')[0]
+  const lowerSlug = normalizedSlug.toLowerCase()
+  const caseInsensitiveExact = jobs.find(
+    (job) => job.slug.toLowerCase() === lowerSlug,
+  )
+  if (caseInsensitiveExact) return caseInsensitiveExact
+
+  const byBoardPrefix = jobs.find((job) => {
+    const lowerBoardCode = job.boardCode.toLowerCase()
+    return (
+      lowerSlug === lowerBoardCode ||
+      lowerSlug.startsWith(`${lowerBoardCode}-`)
+    )
+  })
+  if (byBoardPrefix) return byBoardPrefix
+
+  const code = lowerSlug.split('-')[0]
   return (
-    jobs.find((job) => job.boardCode.toLowerCase() === code?.toLowerCase()) ||
-    null
+    jobs.find((job) => job.boardCode.toLowerCase() === code) || null
   )
 }
 

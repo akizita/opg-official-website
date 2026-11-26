@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import { sanitizeAvatarUrl } from '@/lib/auth/avatar-utils'
 import {
   checkRateLimits,
   hashValue,
@@ -124,11 +125,20 @@ export async function getApprovedCandidateTestimonials(
   }))
 }
 
+type SubmitCandidateTestimonialOptions = {
+  avatarUrl?: string | null
+  client?: SupabaseClient
+}
+
 export async function submitCandidateTestimonial(
   raw: unknown,
   clientIp: string,
-  client: SupabaseClient = createStaticClient(),
+  clientOrOptions: SupabaseClient | SubmitCandidateTestimonialOptions = {},
 ): Promise<CandidateTestimonialResult> {
+  const options: SubmitCandidateTestimonialOptions =
+    'from' in clientOrOptions ? { client: clientOrOptions } : clientOrOptions
+  const client = options.client ?? createStaticClient()
+
   const validation = validateCandidateTestimonialInput(raw)
   if (!validation.data) return { success: false, errors: validation.errors }
 
@@ -150,18 +160,28 @@ export async function submitCandidateTestimonial(
     }
 
   const entry = validation.data
-  const { error } = await client
-    .from('candidate_testimonials')
-    .insert({
-      author_name: entry.authorName,
-      email: entry.email,
-      relationship: entry.relationship,
-      role_title: entry.roleTitle || null,
-      rating: entry.rating,
-      quote: entry.quote,
-      publication_consent: true,
-      submission_fingerprint: hashValue(`${entry.email}:${entry.quote}`),
-    })
+  const serverAvatarUrl = sanitizeAvatarUrl(options.avatarUrl)
+  const baseRow = {
+    author_name: entry.authorName,
+    email: entry.email,
+    relationship: entry.relationship,
+    role_title: entry.roleTitle || null,
+    rating: entry.rating,
+    quote: entry.quote,
+    publication_consent: true,
+    submission_fingerprint: hashValue(`${entry.email}:${entry.quote}`),
+  }
+
+  const initialInsert = serverAvatarUrl
+    ? await client
+        .from('candidate_testimonials')
+        .insert({ ...baseRow, avatar_url: serverAvatarUrl })
+    : await client.from('candidate_testimonials').insert(baseRow)
+
+  let { error } = initialInsert
+  if (error?.code === '42703' && serverAvatarUrl) {
+    ;({ error } = await client.from('candidate_testimonials').insert(baseRow))
+  }
 
   if (error?.code === 'P0001') {
     return {

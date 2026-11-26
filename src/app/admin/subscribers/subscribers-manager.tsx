@@ -775,6 +775,7 @@ export function SubscribersManager({
                             className={styles.avatarCircle}
                             displayName={displayName}
                             email={sub.email_normalized}
+                            gravatarUrl={sub.gravatar_url}
                             size={36}
                           />
                           <div className={styles.subscriberMeta}>
@@ -938,6 +939,7 @@ export function SubscribersManager({
                       activeSelectedSubscriber,
                     )}
                     email={activeSelectedSubscriber.email_normalized}
+                    gravatarUrl={activeSelectedSubscriber.gravatar_url}
                     size={46}
                   />
                   <div className={styles.subscriberMeta}>

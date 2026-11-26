@@ -7,9 +7,9 @@ const nextConfig: NextConfig = {
     cpus: 1,
     staticGenerationMaxConcurrency: 1,
     serverActions: {
-      // Allow up to 6 MB to safely accommodate 5 MB image uploads
-      // plus multipart form overhead. Default is 1 MB.
-      bodySizeLimit: '6mb',
+      // Allow up to 16 MB to safely accommodate up to 10 MB résumé uploads
+      // plus multipart form fields and cover letters. Default is 1 MB.
+      bodySizeLimit: '16mb',
     },
   },
   images: {
@@ -33,6 +33,21 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'media.licdn.com',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.gravatar.com',
+        pathname: '/avatar/**',
       },
     ],
   },

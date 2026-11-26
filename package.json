@@ -33,7 +33,8 @@
     "ogl": "^1.0.11",
     "openai": "^7.63.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "unpdf": "^1.9.1"
   },
   "devDependencies": {
     "@types/node": "22.20.2",

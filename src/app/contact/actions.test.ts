@@ -57,6 +57,50 @@ describe('submitContactAction', () => {
     )
   })
 
+  it('passes verified server-session Google avatarUrl to submitContactInquiry and ignores spoofed client input', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getClaims: vi.fn().mockResolvedValue({
+          data: {
+            claims: {
+              sub: 'visitor-1',
+              email: 'verified@example.com',
+              user_metadata: {
+                avatar_url:
+                  'https://lh3.googleusercontent.com/a/server-verified-photo',
+              },
+            },
+          },
+          error: null,
+        }),
+      },
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+    vi.mocked(submitContactInquiry).mockResolvedValue({
+      success: true,
+      referenceId: 'OPG-87654321',
+    })
+
+    const form = new FormData()
+    form.set('fullName', 'Jamie Test')
+    form.set('avatarUrl', 'https://evil.example/spoofed.png')
+    form.set('subject', 'Staffing inquiry')
+    form.set('message', 'Please contact me about a dedicated staffing team.')
+    form.set('intent', 'client')
+    form.set('privacyConsent', 'on')
+    form.set('elapsedSeconds', '12')
+
+    const result = await submitContactAction(form)
+
+    expect(result.success).toBe(true)
+    expect(submitContactInquiry).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        clientIp: '198.51.100.21',
+        avatarUrl: 'https://lh3.googleusercontent.com/a/server-verified-photo',
+      },
+    )
+  })
+
   it('rejects a direct submission without a verified session', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {

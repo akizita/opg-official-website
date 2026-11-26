@@ -2,6 +2,7 @@
 
 import { headers } from 'next/headers'
 
+import { extractUserAvatarUrl } from '@/lib/auth/avatar-utils'
 import {
   type InquiryIntent,
   type SubmissionResult,
@@ -32,6 +33,19 @@ export async function submitContactAction(
       success: false,
       errors: { form: 'Please sign in before sending an inquiry.' },
     }
+  }
+
+  let avatarUrl = extractUserAvatarUrl(
+    claimsData.claims as Record<string, unknown> | undefined,
+    null,
+  )
+
+  if (!avatarUrl && typeof supabase.auth.getUser === 'function') {
+    const userRes = await supabase.auth.getUser().catch(() => null)
+    avatarUrl = extractUserAvatarUrl(
+      claimsData.claims as Record<string, unknown> | undefined,
+      userRes?.data?.user ?? null,
+    )
   }
 
   const headerList = await headers()
@@ -72,7 +86,7 @@ export async function submitContactAction(
       elapsedSeconds,
       turnstileToken: turnstileToken || undefined,
     },
-    { clientIp },
+    avatarUrl ? { clientIp, avatarUrl } : { clientIp },
   )
 
   return result

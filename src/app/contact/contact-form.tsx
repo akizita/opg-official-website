@@ -13,6 +13,12 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import { submitContactAction } from '@/app/contact/actions'
+import modalStyles from '@/app/contact/contact-success-modal.module.css'
+import {
+  OpgIconCheck,
+  OpgIconClose,
+  OpgIconCopy,
+} from '@/components/icons/opg-icons'
 import type { InquiryIntent } from '@/lib/content/inquiries'
 import { createClient } from '@/lib/supabase/client'
 
@@ -23,6 +29,7 @@ type TurnstileWindow = Window & {
       options: { sitekey: string; size: 'flexible' },
     ) => string
     remove: (widgetId: string) => void
+    reset?: (widgetId: string) => void
   }
 }
 
@@ -61,6 +68,11 @@ export function ContactForm({
     () => draft?.message?.length || 0,
   )
   const [showSignInModal, setShowSignInModal] = useState(false)
+  const [successModalOpen, setSuccessModalOpen] = useState(false)
+  const [submittedReferenceId, setSubmittedReferenceId] = useState<
+    string | null
+  >(null)
+  const [copiedReference, setCopiedReference] = useState(false)
   const [currentUserEmail, setCurrentUserEmail] = useState<string>(
     () => signedInEmail?.trim().toLowerCase() || '',
   )
@@ -74,6 +86,10 @@ export function ContactForm({
   const mountTimeRef = useRef<number | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const successDialogRef = useRef<HTMLDialogElement>(null)
+  const successCardRef = useRef<HTMLDivElement>(null)
+  const outsidePressRef = useRef(false)
+  const turnstileWidgetIdRef = useRef<string | null>(null)
   const submittingRef = useRef(false)
 
   const saveDraftToStorage = useCallback(() => {
@@ -174,7 +190,20 @@ export function ContactForm({
   }, [dropdownOpen])
 
   useEffect(() => {
-    if (!siteKey || !turnstileReady || result?.success) return
+    const dialog = successDialogRef.current
+    if (!dialog) return
+
+    if (successModalOpen) {
+      if (!dialog.open) {
+        dialog.showModal()
+      }
+    } else if (dialog.open) {
+      dialog.close()
+    }
+  }, [successModalOpen])
+
+  useEffect(() => {
+    if (!siteKey || !turnstileReady) return
     const container =
       formRef.current?.querySelector<HTMLElement>('#contact-turnstile')
     const turnstile = (window as TurnstileWindow).turnstile
@@ -183,8 +212,29 @@ export function ContactForm({
       sitekey: siteKey,
       size: 'flexible',
     })
-    return () => turnstile.remove(widgetId)
-  }, [siteKey, turnstileReady, result?.success])
+    turnstileWidgetIdRef.current = widgetId
+    return () => {
+      turnstileWidgetIdRef.current = null
+      turnstile.remove(widgetId)
+    }
+  }, [siteKey, turnstileReady])
+
+  async function handleCopyReference() {
+    if (!submittedReferenceId) return
+    try {
+      await navigator.clipboard.writeText(submittedReferenceId)
+      setCopiedReference(true)
+      window.setTimeout(() => setCopiedReference(false), 2000)
+    } catch {
+      // Clipboard access unavailable
+    }
+  }
+
+  function handleCloseSuccessModal() {
+    setSuccessModalOpen(false)
+    setResult(null)
+    mountTimeRef.current = Date.now()
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -218,11 +268,20 @@ export function ContactForm({
           formRef.current.reset()
           setIntent('client')
           setMessageLength(0)
+          mountTimeRef.current = Date.now()
+          setSubmittedReferenceId(res.referenceId ?? null)
+          setCopiedReference(false)
+          setSuccessModalOpen(true)
           try {
             sessionStorage.removeItem(DRAFT_KEY)
           } catch {
             // ignore
           }
+        }
+        if (turnstileWidgetIdRef.current) {
+          ;(window as TurnstileWindow).turnstile?.reset?.(
+            turnstileWidgetIdRef.current,
+          )
         }
       } catch {
         setResult({
@@ -237,41 +296,19 @@ export function ContactForm({
     })
   }
 
+  const successEyebrow =
+    (copy.successBadge || 'Inquiry Received').replace(/^✓\s*/, '').trim() ||
+    'Inquiry Received'
+
   return (
     <div className="contact-form-container">
-      {result?.success ? (
-        <div aria-live="polite" className="contact-success-card" role="status">
-          <div className="contact-success-badge">{copy.successBadge}</div>
-          <h3>{copy.successTitle}</h3>
-          <p>
-            {copy.successBody}
-            {result.referenceId && (
-              <span className="contact-reference">
-                {copy.referenceLabel} <strong>{result.referenceId}</strong>
-              </span>
-            )}
-          </p>
-          <p className="contact-sla-note">{copy.successSla}</p>
-          <button
-            className="button button--secondary"
-            onClick={() => {
-              setResult(null)
-              mountTimeRef.current = Date.now()
-              setMessageLength(0)
-            }}
-            type="button"
-          >
-            {copy.againButton}
-          </button>
-        </div>
-      ) : (
-        <form
-          aria-label="Contact Inquiry Form"
-          className="contact-form"
-          noValidate
-          onSubmit={handleSubmit}
-          ref={formRef}
-        >
+      <form
+        aria-label="Contact Inquiry Form"
+        className="contact-form"
+        noValidate
+        onSubmit={handleSubmit}
+        ref={formRef}
+      >
           {siteKey && (
             <Script
               onReady={() => setTurnstileReady(true)}
@@ -582,20 +619,6 @@ export function ContactForm({
             </div>
           </div>
 
-          {intent === 'talent' && (
-            <aside
-              aria-label="Talent Careers Notice"
-              className="contact-talent-notice"
-            >
-              <p>
-                {copy.talentNotice}{' '}
-                <Link className="inline-link" href="/careers">
-                  {copy.careersLink}
-                </Link>
-              </p>
-            </aside>
-          )}
-
           {/* Row 3: Message Textarea */}
           <div className="form-field">
             <label htmlFor="message">
@@ -720,7 +743,131 @@ export function ContactForm({
             </button>
           </div>
         </form>
-      )}
+
+      <dialog
+        aria-describedby="contact-success-modal-desc"
+        aria-labelledby="contact-success-modal-title"
+        className={modalStyles.dialog}
+        onClose={() => {
+          if (successDialogRef.current) {
+            successDialogRef.current.returnValue = ''
+          }
+          handleCloseSuccessModal()
+        }}
+        onPointerDown={(e) => {
+          if (
+            typeof HTMLDialogElement !== 'undefined' &&
+            'closedBy' in HTMLDialogElement.prototype
+          ) {
+            return
+          }
+          const card = successCardRef.current
+          if (!card) return
+          const r = card.getBoundingClientRect()
+          outsidePressRef.current =
+            e.clientX < r.left ||
+            e.clientX > r.right ||
+            e.clientY < r.top ||
+            e.clientY > r.bottom
+        }}
+        onPointerUp={(e) => {
+          if (
+            typeof HTMLDialogElement !== 'undefined' &&
+            'closedBy' in HTMLDialogElement.prototype
+          ) {
+            return
+          }
+          const card = successCardRef.current
+          if (!card || !outsidePressRef.current) {
+            outsidePressRef.current = false
+            return
+          }
+          outsidePressRef.current = false
+          const r = card.getBoundingClientRect()
+          const releasedOutside =
+            e.clientX < r.left ||
+            e.clientX > r.right ||
+            e.clientY < r.top ||
+            e.clientY > r.bottom
+          if (releasedOutside) {
+            handleCloseSuccessModal()
+          }
+        }}
+        ref={successDialogRef}
+        {...({ closedby: 'any' } as Record<string, unknown>)}
+      >
+        <div className={modalStyles.card} ref={successCardRef}>
+          <button
+            aria-label="Close confirmation dialog"
+            className={modalStyles.closeBtn}
+            onClick={handleCloseSuccessModal}
+            type="button"
+          >
+            <OpgIconClose size={17} />
+          </button>
+
+          <div aria-hidden="true" className={modalStyles.iconOrb}>
+            <OpgIconCheck size={28} />
+          </div>
+
+          <p className={modalStyles.eyebrow}>{successEyebrow}</p>
+
+          <h1 className={modalStyles.title} id="contact-success-modal-title">
+            {copy.successTitle || 'Thank you for reaching out'}
+          </h1>
+
+          <p
+            className={modalStyles.description}
+            id="contact-success-modal-desc"
+          >
+            {copy.successBody ||
+              'Your inquiry has been received by our global operations team.'}
+          </p>
+
+          {submittedReferenceId ? (
+            <div className={modalStyles.referenceCard}>
+              <div className={modalStyles.referenceMeta}>
+                <span className={modalStyles.referenceLabel}>
+                  {(copy.referenceLabel || 'Reference ID').replace(/:\s*$/, '')}
+                </span>
+                <span className={modalStyles.referenceCode}>
+                  {submittedReferenceId}
+                </span>
+              </div>
+              <button
+                className={modalStyles.copyBtn}
+                onClick={() => void handleCopyReference()}
+                type="button"
+              >
+                <OpgIconCopy size={14} />
+                <span>{copiedReference ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+          ) : null}
+
+          <p className={modalStyles.note}>
+            {copy.successSla ||
+              'Our team reviews all incoming inquiries and will respond within 1 business day.'}
+          </p>
+
+          <div className={modalStyles.actions}>
+            <button
+              className={modalStyles.primaryAction}
+              onClick={handleCloseSuccessModal}
+              type="button"
+            >
+              {copy.againButton || 'Submit Another Inquiry'}
+            </button>
+            <button
+              className={modalStyles.secondaryAction}
+              onClick={handleCloseSuccessModal}
+              type="button"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </dialog>
 
       {/* Alert Modal encouraging sign-in when submitting as guest */}
       {showSignInModal && (
