@@ -7,13 +7,6 @@ type PlaceholderSection = {
 
 export const placeholderSections: PlaceholderSection[] = [
   {
-    slug: 'privacy',
-    title: 'Privacy Notice',
-    audience: 'Legal',
-    description:
-      'The official notice must be approved by OPG before publication.',
-  },
-  {
     slug: 'cookies',
     title: 'Cookie Notice',
     audience: 'Legal',
