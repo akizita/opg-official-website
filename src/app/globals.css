@@ -10987,6 +10987,8 @@ h3 {
 }
 
 .clients-blog-author-avatar {
+  position: relative;
+  overflow: hidden;
   width: 2.85rem;
   height: 2.85rem;
   border-radius: 0.85rem;
@@ -11001,6 +11003,13 @@ h3 {
   border: 1px solid rgba(242, 183, 5, 0.35);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
+}
+
+.clients-blog-author-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
 }
 
 .clients-blog-author-info {
@@ -11355,6 +11364,74 @@ h3 {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.clients-blog-secondary-figure {
+  margin: clamp(2rem, 3.5vw, 2.85rem) 0;
+}
+
+.clients-blog-secondary-figure .clients-blog-secondary-banner {
+  margin: 0;
+}
+
+.clients-blog-secondary-caption {
+  margin-top: 0.65rem;
+  font-size: 0.86rem;
+  color: #736a5b;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.clients-blog-bullet-list {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 1.25rem 0 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.clients-blog-bullet-list > li {
+  font-size: 1rem;
+  line-height: 1.74;
+  color: #453e32;
+}
+
+.clients-blog-bullet-list strong {
+  color: #12100d;
+  font-weight: 750;
+}
+
+.clients-blog-blockquote {
+  margin: 1.75rem 0;
+  padding: 1.15rem 1.4rem;
+  border-left: 3.5px solid #f29f04;
+  background: rgba(242, 183, 5, 0.08);
+  border-radius: 0 1rem 1rem 0;
+}
+
+.clients-blog-blockquote p {
+  margin: 0;
+  font-size: 1.06rem;
+  font-style: italic;
+  line-height: 1.7;
+  color: #2b251d;
+}
+
+.clients-blog-blockquote cite {
+  display: block;
+  margin-top: 0.55rem;
+  font-size: 0.84rem;
+  font-style: normal;
+  font-weight: 700;
+  color: #736a5b;
+}
+
+.clients-blog-divider {
+  border: none;
+  height: 1px;
+  background: rgba(215, 208, 196, 0.7);
+  margin: 2rem 0;
 }
 
 /* ------------------------------------------------------------------ */

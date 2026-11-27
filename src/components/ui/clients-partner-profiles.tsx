@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 
 import { ClientLogo, type ClientLogoType } from '@/components/ui/client-logo'
+import { resolveSafeClientLogo } from '@/lib/content/client-logo'
 
 export type PartnerProfileItem = {
   id: string
@@ -24,20 +25,48 @@ export type PartnerProfileItem = {
   logoUrl?: string
 }
 
+function getPartnerInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return 'CL'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+}
+
 function renderPartnerLogo(partner: PartnerProfileItem) {
-  if (partner.logoUrl && (partner.logoUrl.startsWith('/') || partner.logoUrl.startsWith('http') || partner.logoUrl.startsWith('data:'))) {
+  const safeLogo = resolveSafeClientLogo(partner.logoUrl)
+  if (safeLogo) {
     return (
       <Image
-        src={partner.logoUrl}
+        src={safeLogo.src}
         alt={partner.name}
         width={36}
         height={36}
         style={{ objectFit: 'contain', width: '100%', height: '100%', borderRadius: '6px' }}
-        unoptimized={partner.logoUrl.startsWith('data:')}
+        unoptimized={safeLogo.unoptimized}
       />
     )
   }
-  return <ClientLogo type={partner.logoType || 'northstar'} />
+  if (partner.logoType) {
+    return <ClientLogo type={partner.logoType} />
+  }
+  return (
+    <span
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: '100%',
+        fontSize: '0.78rem',
+        fontWeight: 800,
+        color: '#92400e',
+        background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+        borderRadius: '6px',
+      }}
+    >
+      {getPartnerInitials(partner.name)}
+    </span>
+  )
 }
 
 type ClientsPartnerProfilesProps = {
@@ -45,8 +74,10 @@ type ClientsPartnerProfilesProps = {
   copy: Record<string, string>
 }
 
-// Target progress fractions for 5 steps when clicking in the index
-const STEP_TARGET_PROGRESS = [0.06, 0.28, 0.5, 0.72, 0.92]
+function getTargetProgressForIndex(index: number, total: number): number {
+  if (total <= 1) return 0
+  return 0.06 + (index / (total - 1)) * 0.86
+}
 
 function WebsiteIcon() {
   return (
@@ -142,39 +173,43 @@ export function ClientsPartnerProfiles({
   const navItemRefs = useRef<Map<number, HTMLButtonElement>>(new Map())
 
   const total = partners.length
+  const safeActiveStep = total > 0 ? Math.min(activeStep, total - 1) : 0
 
   useEffect(() => {
-    activeStepRef.current = activeStep
-  }, [activeStep])
+    activeStepRef.current = safeActiveStep
+  }, [safeActiveStep])
 
   /* ------------------------------------------------------------------ */
   /* Scroll directly to a specific step position in the 320vh track     */
   /* ------------------------------------------------------------------ */
-  const scrollToStep = useCallback((index: number) => {
-    const isMobile = window.matchMedia('(max-width: 64rem)').matches
-    if (isMobile) {
-      setActiveStep(index)
-      return
-    }
+  const scrollToStep = useCallback(
+    (index: number) => {
+      const isMobile = window.matchMedia('(max-width: 64rem)').matches
+      if (isMobile) {
+        setActiveStep(index)
+        return
+      }
 
-    const track = trackRef.current
-    if (!track) return
+      const track = trackRef.current
+      if (!track) return
 
-    const reduced = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
+      const reduced = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+      ).matches
 
-    const rect = track.getBoundingClientRect()
-    const scrollable = track.offsetHeight - window.innerHeight
-    const targetProgress = STEP_TARGET_PROGRESS[index] ?? 0.06
-    const targetScrollTop =
-      window.scrollY + rect.top + targetProgress * scrollable
+      const rect = track.getBoundingClientRect()
+      const scrollable = track.offsetHeight - window.innerHeight
+      const targetProgress = getTargetProgressForIndex(index, total)
+      const targetScrollTop =
+        window.scrollY + rect.top + targetProgress * scrollable
 
-    window.scrollTo({
-      top: targetScrollTop,
-      behavior: reduced ? 'auto' : 'smooth',
-    })
-  }, [])
+      window.scrollTo({
+        top: targetScrollTop,
+        behavior: reduced ? 'auto' : 'smooth',
+      })
+    },
+    [total],
+  )
 
   /* ------------------------------------------------------------------ */
   /* User selection handler (clicking index tab in sidebar)            */
@@ -293,18 +328,10 @@ export function ClientsPartnerProfiles({
       const scrolled = -rect.top
       const progress = Math.max(0, Math.min(1, scrolled / scrollable))
 
-      let nextStep = 0
-      if (progress >= 0.8) {
-        nextStep = 4
-      } else if (progress >= 0.6) {
-        nextStep = 3
-      } else if (progress >= 0.4) {
-        nextStep = 2
-      } else if (progress >= 0.2) {
-        nextStep = 1
-      }
-
-      nextStep = Math.min(nextStep, total - 1)
+      const nextStep =
+        total <= 1
+          ? 0
+          : Math.min(total - 1, Math.max(0, Math.floor(progress * total)))
       setActiveStep((prev) => (prev !== nextStep ? nextStep : prev))
     }
 
@@ -336,7 +363,7 @@ export function ClientsPartnerProfiles({
     if (!window.matchMedia('(max-width: 64rem)').matches) return
 
     const nav = navRef.current
-    const activeItem = navItemRefs.current.get(activeStep)
+    const activeItem = navItemRefs.current.get(safeActiveStep)
     if (!nav || !activeItem) return
 
     nav.scrollTo({
@@ -346,7 +373,7 @@ export function ClientsPartnerProfiles({
       left:
         activeItem.offsetLeft - (nav.clientWidth - activeItem.clientWidth) / 2,
     })
-  }, [activeStep])
+  }, [safeActiveStep])
 
   if (total === 0) return null
 
@@ -393,7 +420,7 @@ export function ClientsPartnerProfiles({
                     className="client-profile-index__counter"
                     aria-live="polite"
                   >
-                    {String(activeStep + 1).padStart(2, '0')}
+                    {String(safeActiveStep + 1).padStart(2, '0')}
                     <span aria-hidden="true"> / </span>
                     {String(total).padStart(2, '0')}
                   </span>
@@ -405,7 +432,7 @@ export function ClientsPartnerProfiles({
                 >
                   <span
                     style={{
-                      transform: `scaleX(${(activeStep + 1) / total})`,
+                      transform: `scaleX(${(safeActiveStep + 1) / total})`,
                     }}
                   />
                 </div>
@@ -416,7 +443,7 @@ export function ClientsPartnerProfiles({
                   aria-label="Choose a partner"
                 >
                   {partners.map((partner, index) => {
-                    const isActive = index === activeStep
+                    const isActive = index === safeActiveStep
                     return (
                       <button
                         type="button"
@@ -466,7 +493,7 @@ export function ClientsPartnerProfiles({
                 aria-label="Partner profile details"
               >
                 {partners.map((partner, index) => {
-                  const isActive = index === activeStep
+                  const isActive = index === safeActiveStep
                   const headingId = `${partner.id}-heading`
 
                   return (
@@ -520,16 +547,18 @@ export function ClientsPartnerProfiles({
                       </dl>
 
                       <footer className="client-profile-panel__footer">
-                        <a
-                          href={partner.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="client-profile-panel__website"
-                        >
-                          <WebsiteIcon />
-                          Visit official website
-                          <span aria-hidden="true">↗</span>
-                        </a>
+                        {partner.website && partner.website !== '#' && (
+                          <a
+                            href={partner.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="client-profile-panel__website"
+                          >
+                            <WebsiteIcon />
+                            Visit official website
+                            <span aria-hidden="true">↗</span>
+                          </a>
+                        )}
 
                         <div
                           className="client-profile-panel__socials"

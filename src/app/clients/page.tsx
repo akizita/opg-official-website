@@ -6,26 +6,34 @@ import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
 import { BlogShareButtons } from '@/components/ui/blog-share-buttons'
 import { ButtonLink } from '@/components/ui/button-link'
 import type { ClientLogoType } from '@/components/ui/client-logo'
+import { ClientsBlogRealtimeSync } from '@/components/ui/clients-blog-realtime-sync'
+import { ClientsBlogRichBlock } from '@/components/ui/clients-blog-rich-blocks'
 import {
   ClientsPartnerProfiles,
   type PartnerProfileItem,
 } from '@/components/ui/clients-partner-profiles'
+import { ClientsRealtimeSync } from '@/components/ui/clients-realtime-sync'
 import { ClientsTestimonialCarousel, type CarouselTestimonialItem } from '@/components/ui/clients-testimonial-carousel'
 import { ClientsGlobeHero } from '@/components/ui/clients-globe-hero'
 import { ClientsCtaAsciiMapCorners } from '@/components/ui/clients-cta-ascii-map'
 import type { Article } from '@/lib/content/articles'
-import { getPublishedArticles } from '@/lib/content/articles'
+import {
+  getFeaturedArticleSlug,
+  getPublishedArticles,
+} from '@/lib/content/articles'
+import { resolveSafeArticleImage } from '@/lib/content/article-image'
 import { featuredArticles } from '@/lib/content/featured-articles'
+import {
+  getClientsBlogConfig,
+  type ClientsBlogConfig,
+} from '@/lib/content/clients-blog'
 import {
   getPublishedTestimonials,
   getVisibleClients,
   type Client,
   type Testimonial,
 } from '@/lib/content/clients'
-import {
-  CLIENT_PAGE_DEFAULTS,
-  extractClientPageContent,
-} from '@/lib/content/client-page'
+import { CLIENT_PAGE_DEFAULTS } from '@/lib/content/client-page'
 import type { PageDocument } from '@/lib/content/page-documents'
 import { CLIENTS_COPY_SECTIONS, getPageCopy } from '@/lib/content/page-copy'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
@@ -236,22 +244,25 @@ const clientTestimonials: readonly ClientTestimonialItem[] = [
 
 function formatArticleDate(value: string | null | undefined) {
   if (!value) return ''
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return ''
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  }).format(new Date(value))
+  }).format(parsed)
 }
 
-function ArticleListItem({ text }: { text: string }) {
-  const separator = text.indexOf(': ')
-  if (separator < 0) return <li>{text}</li>
-  return (
-    <li>
-      <strong>{text.slice(0, separator + 1)}</strong>{' '}
-      {text.slice(separator + 2)}
-    </li>
-  )
+function resolveSafeBlogImageProps(rawUrl: string | null | undefined): {
+  src: string
+  unoptimized: boolean
+} | null {
+  if (!rawUrl || !rawUrl.trim()) return null
+  const safe = resolveSafeArticleImage(rawUrl)
+  return {
+    src: safe.src,
+    unoptimized: safe.unoptimized || /\.svg(\?|#|$)/i.test(safe.src),
+  }
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -317,43 +328,7 @@ export default async function ClientsPage({
   const { opgPreview } = await searchParams
   const supabase = await createClient()
   const doc = await getVisiblePageDocument(supabase, 'clients', opgPreview === '1')
-  const editorial = extractClientPageContent(doc?.content)
-  const defaults = getPageCopy(null, CLIENTS_COPY_SECTIONS)
-  const rawCopy = getPageCopy(doc?.content, CLIENTS_COPY_SECTIONS)
-  const hasLegacyBlogCopy =
-    editorial.editorialTitle.includes('How OPG Handles Client Partnerships') ||
-    rawCopy.articleIntro.includes('In the modern digital landscape') ||
-    rawCopy.articleSection1Title.includes('The Power of OPG:')
-
-  const copy = hasLegacyBlogCopy
-    ? {
-        ...rawCopy,
-        articleReadTime: defaults.articleReadTime,
-        articleIntro: defaults.articleIntro,
-        articleSection1Title: defaults.articleSection1Title,
-        articleSection1Body: defaults.articleSection1Body,
-        articleSection1Items: defaults.articleSection1Items,
-        articleSection2Title: defaults.articleSection2Title,
-        articleSection2Body: defaults.articleSection2Body,
-        articleSection2Items: defaults.articleSection2Items,
-        articleClosingTitle: defaults.articleClosingTitle,
-        articleClosingBody: defaults.articleClosingBody,
-      }
-    : rawCopy
-
-  const resolvedEditorialTitle = hasLegacyBlogCopy
-    ? CLIENT_PAGE_DEFAULTS.editorialTitle
-    : editorial.editorialTitle
-  const resolvedEditorialLead =
-    hasLegacyBlogCopy ||
-    editorial.editorialLead ===
-      'Built From the Inside Out: How Outsourced Pro Global Became an Embedded Talent Partner'
-      ? CLIENT_PAGE_DEFAULTS.editorialLead
-      : editorial.editorialLead
-  const articleIntroParagraphs = copy.articleIntro
-    .split(/\r?\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean)
+  const copy = getPageCopy(doc?.content, CLIENTS_COPY_SECTIONS)
   const featuredTestimonials = clientTestimonials.map((testimonial, index) => {
     const key = `testimonial${index + 1}`
     return {
@@ -369,57 +344,82 @@ export default async function ClientsPage({
   })
   let dbTestimonials: Testimonial[] = []
   let publishedArticles: Article[] = []
-  let dbClients: Client[] = []
+  let dbClients: Client[] | null = null
+  let blogConfig: ClientsBlogConfig | null = null
+  let siteFeaturedSlug: string | null = null
   try {
-    const [testimonials, articlesResult, clientsResult] = await Promise.all([
+    const [
+      testimonials,
+      articlesResult,
+      clientsResult,
+      resolvedBlog,
+      resolvedFeaturedSlug,
+    ] = await Promise.all([
       getPublishedTestimonials(),
-      getPublishedArticles({ page: 1, pageSize: 10 }),
+      getPublishedArticles({ page: 1, pageSize: 30 }),
       getVisibleClients(),
+      getClientsBlogConfig(supabase),
+      getFeaturedArticleSlug(supabase),
     ])
     dbTestimonials = testimonials
     publishedArticles = articlesResult.articles
     dbClients = clientsResult
+    blogConfig = resolvedBlog
+    siteFeaturedSlug = resolvedFeaturedSlug
   } catch {
     dbTestimonials = []
     publishedArticles = []
-    dbClients = []
+    dbClients = null
+    blogConfig = await getClientsBlogConfig(supabase)
   }
 
-  const partnerProfiles: PartnerProfileItem[] = (dbClients.length > 0 ? dbClients : clientPartners).map((partnerOrClient, index) => {
-    const key = `partner${index + 1}`
-    if ('is_visible' in partnerOrClient) {
-      const c = partnerOrClient as Client
-      return {
-        id: c.id,
-        name: c.name,
-        badge: c.type_of_company || copy[`${key}Badge`] || 'Strategic Partner',
-        industry: c.hero_domain || c.type_of_company || copy[`${key}Industry`] || 'Technology & Services',
-        region: c.operational_base || copy[`${key}Region`] || 'Global Distributed Hub',
-        podCapability: c.dedicated_capability || copy[`${key}PodCapability`] || 'Dedicated Team',
-        tagline: c.tagline || copy[`${key}Tagline`] || '',
-        description: c.description || copy[`${key}Description`] || '',
-        website: c.website_url || '#',
-        social: c.linkedin_url || undefined,
-        facebook: c.facebook_url || undefined,
-        instagram: c.instagram_url || undefined,
-        x: c.x_url || undefined,
-        socialLinks: c.social_links || undefined,
-        logoUrl: c.logo_url || undefined,
-        logoType: getCompanyLogoType(c.name),
+  const partnerSource = dbClients ?? clientPartners
+  const partnerProfiles: PartnerProfileItem[] = partnerSource.map(
+    (partnerOrClient, index) => {
+      const key = `partner${index + 1}`
+      if ('is_visible' in partnerOrClient) {
+        const c = partnerOrClient as Client
+        return {
+          id: c.id,
+          name: c.name,
+          badge: c.type_of_company || copy[`${key}Badge`] || 'Strategic Partner',
+          industry:
+            c.hero_domain ||
+            c.type_of_company ||
+            copy[`${key}Industry`] ||
+            'Technology & Services',
+          region:
+            c.operational_base ||
+            copy[`${key}Region`] ||
+            'Global Distributed Hub',
+          podCapability:
+            c.dedicated_capability ||
+            copy[`${key}PodCapability`] ||
+            'Dedicated Team',
+          tagline: c.tagline || copy[`${key}Tagline`] || '',
+          description: c.description || copy[`${key}Description`] || '',
+          website: c.website_url || '',
+          social: c.linkedin_url || undefined,
+          facebook: c.facebook_url || undefined,
+          instagram: c.instagram_url || undefined,
+          x: c.x_url || undefined,
+          logoUrl: c.logo_url || undefined,
+          logoType: getCompanyLogoType(c.name),
+        }
       }
-    }
-    const p = partnerOrClient as PartnerProfileItem
-    return {
-      ...p,
-      name: copy[`${key}Name`] || p.name,
-      badge: copy[`${key}Badge`] || p.badge,
-      industry: copy[`${key}Industry`] || p.industry,
-      region: copy[`${key}Region`] || p.region,
-      podCapability: copy[`${key}PodCapability`] || p.podCapability,
-      tagline: copy[`${key}Tagline`] || p.tagline,
-      description: copy[`${key}Description`] || p.description,
-    }
-  })
+      const p = partnerOrClient as PartnerProfileItem
+      return {
+        ...p,
+        name: copy[`${key}Name`] || p.name,
+        badge: copy[`${key}Badge`] || p.badge,
+        industry: copy[`${key}Industry`] || p.industry,
+        region: copy[`${key}Region`] || p.region,
+        podCapability: copy[`${key}PodCapability`] || p.podCapability,
+        tagline: copy[`${key}Tagline`] || p.tagline,
+        description: copy[`${key}Description`] || p.description,
+      }
+    },
+  )
 
   const editorialArticles = featuredArticles
   const articleMap = new Map<string, Article>()
@@ -431,7 +431,21 @@ export default async function ClientsPage({
       new Date(b.published_at || b.created_at).getTime() -
       new Date(a.published_at || a.created_at).getTime(),
   )
-  const featuredArticle = allArticles[0]
+  const featuredArticle = blogConfig.showFeaturedArticle
+    ? blogConfig.featuredArticleMode === 'custom' &&
+      blogConfig.featuredArticleSlug
+      ? allArticles.find(
+          (article) => article.slug === blogConfig.featuredArticleSlug,
+        ) || allArticles[0]
+      : (siteFeaturedSlug &&
+          allArticles.find((article) => article.slug === siteFeaturedSlug)) ||
+        allArticles[0]
+    : undefined
+
+  const heroBlogImage = resolveSafeBlogImageProps(blogConfig.heroImageUrl)
+  const authorAvatarImage = resolveSafeBlogImageProps(blogConfig.authorAvatarUrl)
+  const firstRichBlockId =
+    blogConfig.blocks.find((block) => block.type === 'rich_text')?.id || null
 
   const fallbackMap = new Map<string, (typeof featuredTestimonials)[number]>()
   featuredTestimonials.forEach((item) => {
@@ -478,6 +492,8 @@ export default async function ClientsPage({
 
   return (
     <div className="clients-page">
+      <ClientsRealtimeSync />
+      <ClientsBlogRealtimeSync />
       <PageVisualRuntime page="clients" config={getPageVisualConfig(doc?.content)} />
       {/* 1. Enhanced Modern Hero Section with Interactive 3D Dotted Network Globe */}
       <ClientsGlobeHero
@@ -498,40 +514,46 @@ export default async function ClientsPage({
             <header className="clients-blog-header">
               <div className="clients-blog-meta">
                 <span className="clients-blog-meta__date">
-                  {copy.articleDate}
+                  {blogConfig.publishedLabel}
                 </span>
                 <span className="clients-blog-meta__sep">—</span>
                 <span className="clients-blog-meta__read-time">
-                  {copy.articleReadTime}
+                  {blogConfig.readTimeLabel}
                 </span>
               </div>
 
               <h2 id="clients-blog-heading" className="clients-blog-title">
-                {resolvedEditorialTitle}
+                {blogConfig.title}
               </h2>
 
-              <p className="clients-blog-lead">{resolvedEditorialLead}</p>
+              <p className="clients-blog-lead">{blogConfig.lead}</p>
             </header>
 
-            {/* Widescreen Hero Featured Image Showcase */}
-            <div className="clients-blog-hero-showcase">
-              <Image
-                src="/images/clients-blog-hero.jpg"
-                alt="OPG Global Pod Architecture and Distributed Operational Excellence"
-                width={1344}
-                height={756}
-                priority
-                className="clients-blog-hero-img"
-              />
-              <div
-                className="clients-blog-hero-showcase__glare"
-                aria-hidden="true"
-              />
-            </div>
+            {/* Widescreen Hero Featured Image Showcase (Optional & Removable) */}
+            {heroBlogImage && (
+              <div className="clients-blog-hero-showcase">
+                <Image
+                  src={heroBlogImage.src}
+                  alt={
+                    blogConfig.heroImageAlt ||
+                    'OPG Global Pod Architecture and Distributed Operational Excellence'
+                  }
+                  width={1344}
+                  height={756}
+                  priority
+                  className="clients-blog-hero-img"
+                  unoptimized={heroBlogImage.unoptimized}
+                />
+                <div
+                  className="clients-blog-hero-showcase__glare"
+                  aria-hidden="true"
+                />
+              </div>
+            )}
 
             {/* 2-Column Editorial Article Grid */}
             <div className="clients-blog-article-grid">
-              {/* Left Column: Author, Social Share, Mini Related Card, Quick Metrics */}
+              {/* Left Column: Author, Social Share, Mini Related Card */}
               <aside
                 className="clients-blog-sidebar"
                 aria-label="Article metadata & share"
@@ -542,47 +564,61 @@ export default async function ClientsPage({
                   </span>
                   <div className="clients-blog-author-card">
                     <div className="clients-blog-author-avatar">
-                      <span>OPG</span>
+                      {authorAvatarImage ? (
+                        <Image
+                          alt={blogConfig.authorName}
+                          className="clients-blog-author-avatar__img"
+                          fill
+                          sizes="48px"
+                          src={authorAvatarImage.src}
+                          unoptimized={authorAvatarImage.unoptimized}
+                        />
+                      ) : (
+                        <span>{blogConfig.authorMonogram || 'OPG'}</span>
+                      )}
                     </div>
                     <div className="clients-blog-author-info">
                       <span className="clients-blog-author-name">
-                        {copy.authorName}
+                        {blogConfig.authorName}
                       </span>
                       <span className="clients-blog-author-role">
-                        {copy.authorRole}
+                        {blogConfig.authorRole}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="clients-blog-sidebar__section">
-                  <span className="clients-blog-sidebar__label">
-                    SHARE THIS
-                  </span>
-                  <BlogShareButtons />
-                </div>
+                {blogConfig.showShareButtons && (
+                  <div className="clients-blog-sidebar__section">
+                    <span className="clients-blog-sidebar__label">
+                      SHARE THIS
+                    </span>
+                    <BlogShareButtons />
+                  </div>
+                )}
 
-                {/* Actual Featured Article from Articles page */}
+                {/* Featured Article from Articles page */}
                 {featuredArticle && (
                   <div className="clients-blog-sidebar-card">
                     <div className="clients-blog-sidebar-card__media">
-                      <Image
-                        src={
-                          featuredArticle.cover_image_url ||
-                          '/images/clients-blog-secondary.jpg'
-                        }
-                        alt={featuredArticle.title}
-                        fill
-                        sizes="(max-width: 64rem) 100vw, 360px"
-                        className="clients-blog-sidebar-card__img"
-                        unoptimized={Boolean(
-                          featuredArticle.cover_image_url?.startsWith(
-                            'https://media.licdn.com',
-                          ),
-                        )}
-                      />
+                      {(() => {
+                        const coverImg = resolveSafeArticleImage(
+                          featuredArticle.cover_image_url,
+                        )
+                        return (
+                          <Image
+                            src={coverImg.src}
+                            alt={featuredArticle.title}
+                            fill
+                            sizes="(max-width: 64rem) 100vw, 360px"
+                            className="clients-blog-sidebar-card__img"
+                            unoptimized={coverImg.unoptimized}
+                          />
+                        )
+                      })()}
                       <span className="clients-blog-sidebar-card__tag">
-                        Featured Article
+                        {blogConfig.featuredArticleBadgeLabel ||
+                          'Featured Article'}
                       </span>
                     </div>
                     <div className="clients-blog-sidebar-card__body">
@@ -626,7 +662,9 @@ export default async function ClientsPage({
                   href="/articles"
                   className="clients-blog-sidebar__view-more-btn"
                 >
-                  <span>View more articles</span>
+                  <span>
+                    {blogConfig.viewMoreArticlesLabel || 'View more articles'}
+                  </span>
                   <span
                     aria-hidden="true"
                     className="clients-blog-sidebar__view-more-arrow"
@@ -636,64 +674,45 @@ export default async function ClientsPage({
                 </Link>
               </aside>
 
-              {/* Right Column: Editorial Article Body */}
+              {/* Right Column: Dynamic Canva Canvas Blocks (Rich Text & Photo Banners) */}
               <div className="clients-blog-content">
-                {articleIntroParagraphs.map((paragraph, index) => (
-                  <p
-                    className={
-                      index === 0
-                        ? 'clients-blog-paragraph clients-blog-paragraph--lead'
-                        : 'clients-blog-paragraph'
-                    }
-                    key={index}
-                  >
-                    {paragraph}
-                  </p>
-                ))}
+                {blogConfig.blocks.map((block) => {
+                  if (block.type === 'rich_text') {
+                    return (
+                      <ClientsBlogRichBlock
+                        isLeadBlock={block.id === firstRichBlockId}
+                        key={block.id}
+                        markdown={block.markdown}
+                      />
+                    )
+                  }
 
-                <h3 className="clients-blog-h3">{copy.articleSection1Title}</h3>
-                <p className="clients-blog-paragraph">
-                  {copy.articleSection1Body}
-                </p>
+                  const imgProps = resolveSafeBlogImageProps(block.url)
+                  if (!imgProps) return null
 
-                <ol className="clients-blog-feature-list">
-                  {copy.articleSection1Items
-                    .split(/\r?\n/)
-                    .filter(Boolean)
-                    .map((item, index) => (
-                      <ArticleListItem key={index} text={item} />
-                    ))}
-                </ol>
-
-                {/* Secondary Featured Visual Ribbon Banner */}
-                <div className="clients-blog-secondary-banner">
-                  <Image
-                    src="/images/clients-blog-secondary.jpg"
-                    alt="OPG Fluid Collaboration and Infinite Scalability"
-                    width={960}
-                    height={480}
-                    className="clients-blog-secondary-img"
-                  />
-                </div>
-
-                <h3 className="clients-blog-h3">{copy.articleSection2Title}</h3>
-                <p className="clients-blog-paragraph">
-                  {copy.articleSection2Body}
-                </p>
-
-                <ol className="clients-blog-feature-list">
-                  {copy.articleSection2Items
-                    .split(/\r?\n/)
-                    .filter(Boolean)
-                    .map((item, index) => (
-                      <ArticleListItem key={index} text={item} />
-                    ))}
-                </ol>
-
-                <h3 className="clients-blog-h3">{copy.articleClosingTitle}</h3>
-                <p className="clients-blog-paragraph">
-                  {copy.articleClosingBody}
-                </p>
+                  return (
+                    <figure
+                      className="clients-blog-secondary-figure"
+                      key={block.id}
+                    >
+                      <div className="clients-blog-secondary-banner">
+                        <Image
+                          alt={block.alt || 'OPG Blog visual showcase'}
+                          className="clients-blog-secondary-img"
+                          height={480}
+                          src={imgProps.src}
+                          unoptimized={imgProps.unoptimized}
+                          width={960}
+                        />
+                      </div>
+                      {block.caption && (
+                        <figcaption className="clients-blog-secondary-caption">
+                          {block.caption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  )
+                })}
               </div>
             </div>
           </div>

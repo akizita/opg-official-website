@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   OpgIconArticles,
+  OpgIconBlog,
   OpgIconCalendar,
   OpgIconCheck,
   OpgIconChevron,
@@ -57,6 +58,11 @@ describe('OPG Bespoke Icon Suite', () => {
 
     const clientHtml = renderToStaticMarkup(createElement(OpgIconClients))
     expect(clientHtml).toContain('<svg')
+
+    const blogHtml = renderToStaticMarkup(createElement(OpgIconBlog))
+    expect(blogHtml).toContain('<svg')
+    expect(blogHtml).not.toEqual(artHtml)
+    expect(blogHtml).not.toEqual(clientHtml)
 
     const contHtml = renderToStaticMarkup(createElement(OpgIconContacts))
     expect(contHtml).toContain('<svg')

@@ -939,3 +939,35 @@ export function OpgIconTeam({
     </svg>
   )
 }
+
+/**
+ * OPG Clients Page Blog Studio Icon
+ * Split editorial canvas layout (media banner + sidebar + article columns).
+ */
+export function OpgIconBlog({
+  className,
+  size = 24,
+  ...props
+}: OpgIconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      height={size}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.75}
+      viewBox="0 0 24 24"
+      width={size}
+      {...props}
+    >
+      <rect height="18" rx="3" width="18" x="3" y="3" />
+      <path d="M3 9h18" />
+      <path d="M9 9v12" />
+      <path d="M13 13h5" />
+      <path d="M13 17h3.5" />
+    </svg>
+  )
+}

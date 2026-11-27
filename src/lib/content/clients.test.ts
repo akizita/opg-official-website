@@ -5,6 +5,10 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import {
+  normalizeOptionalHttpUrl,
+  resolveSafeClientLogo,
+} from '@/lib/content/client-logo'
+import {
   getAllTestimonials,
   getPublishedTestimonials,
   getVisibleClients,
@@ -112,5 +116,59 @@ describe('clients & testimonials queries', () => {
     const testimonials = await getAllTestimonials()
     expect(testimonials).toHaveLength(1)
     expect(mockOrder).toHaveBeenCalledWith('display_order', { ascending: true })
+  })
+
+  it('validates safe client logos, SVG unoptimized flags, and optional HTTP URLs', () => {
+    expect(resolveSafeClientLogo('')).toBeNull()
+    expect(resolveSafeClientLogo('javascript:alert(1)')).toBeNull()
+    expect(resolveSafeClientLogo('/images/clients/northstar.svg')).toEqual({
+      src: '/images/clients/northstar.svg',
+      unoptimized: true,
+    })
+    expect(
+      resolveSafeClientLogo(
+        'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/clients/acme.png',
+      ),
+    ).toEqual({
+      src: 'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/clients/acme.png',
+      unoptimized: false,
+    })
+    expect(
+      normalizeOptionalHttpUrl('example.com/about', 'Website URL'),
+    ).toEqual({ value: 'https://example.com/about' })
+    expect(
+      normalizeOptionalHttpUrl('ftp://invalid.example.com', 'Website URL').error,
+    ).toBeDefined()
+  })
+
+  it('sorts visible clients alphabetically and respects clients_seeded_v1 when empty', async () => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'clients') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockResolvedValue({ data: [], error: null }),
+            }),
+          }),
+        }
+      }
+      if (table === 'site_settings') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { setting_value: true },
+                error: null,
+              }),
+            }),
+          }),
+        }
+      }
+      return {}
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: mockFrom } as never)
+
+    const emptySeeded = await getVisibleClients()
+    expect(emptySeeded).toEqual([])
   })
 })

@@ -30,6 +30,7 @@ import {
   OpgIconTrash,
   OpgIconUpload,
 } from '@/components/icons/opg-icons'
+import { ClientsRealtimeSync } from '@/components/ui/clients-realtime-sync'
 import { PeekRating } from '@/components/ui/peek-rating'
 import { RubberSegment, type RubberSegmentOption } from '@/components/ui/rubber-segment'
 import type { Client, Testimonial } from '@/lib/content/clients'
@@ -307,6 +308,7 @@ export function ClientTestimonialsManager({
 
   return (
     <div className={styles.clientManagerWrapper}>
+      <ClientsRealtimeSync />
       {/* Toast Notification */}
       {toastMessage && (
         <div className={styles.toastNotification} role="status">

@@ -455,6 +455,28 @@ export const DEFAULT_CLIENT_TESTIMONIALS: Testimonial[] = [
   },
 ]
 
+export const CLIENTS_SEEDED_SETTING_KEY = 'clients_seeded_v1'
+
+function compareClientNamesAlphabetically(a: Client, b: Client): number {
+  return (a.name || '').localeCompare(b.name || '', 'en', {
+    sensitivity: 'base',
+  })
+}
+
+async function hasClientsSeededFlag(): Promise<boolean> {
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('site_settings')
+      .select('setting_value')
+      .eq('setting_key', CLIENTS_SEEDED_SETTING_KEY)
+      .maybeSingle()
+    return Boolean(data?.setting_value)
+  } catch {
+    return false
+  }
+}
+
 let seedPromise: Promise<boolean> | null = null
 
 export async function seedDefaultClientsAndTestimonials(): Promise<boolean> {
@@ -465,43 +487,52 @@ export async function seedDefaultClientsAndTestimonials(): Promise<boolean> {
       const privileged = createPrivilegedClient()
       if (!privileged) return false
 
-      // 1. Seed clients if table is empty or missing defaults
-      const { data: existingClients } = await privileged
-        .from('clients')
-        .select('id, name')
+      const { data: seededFlag } = await privileged
+        .from('site_settings')
+        .select('setting_value')
+        .eq('setting_key', CLIENTS_SEEDED_SETTING_KEY)
+        .maybeSingle()
 
-      const existingNames = new Set(
-        (existingClients || []).map((c) =>
-          String(c.name || '').toLowerCase().trim(),
-        ),
-      )
-
-      const clientsToInsert = DEFAULT_CLIENTS.filter(
-        (c) => !existingNames.has(c.name.toLowerCase().trim()),
-      ).map((c) => ({
-        id: c.id,
-        name: c.name,
-        logo_url: c.logo_url,
-        website_url: c.website_url,
-        display_permission: c.display_permission,
-        display_order: c.display_order,
-        is_visible: c.is_visible,
-        type_of_company: c.type_of_company || null,
-        hero_domain: c.hero_domain || null,
-        tagline: c.tagline || null,
-        description: c.description || null,
-        operational_base: c.operational_base || null,
-        dedicated_capability: c.dedicated_capability || null,
-        linkedin_url: c.linkedin_url || null,
-        facebook_url: c.facebook_url || null,
-        instagram_url: c.instagram_url || null,
-        x_url: c.x_url || null,
-      }))
-
-      if (clientsToInsert.length > 0) {
-        await privileged
+      // 1. Seed starter clients only if table is empty and not yet seeded once
+      if (!seededFlag?.setting_value) {
+        const { data: existingClients } = await privileged
           .from('clients')
-          .upsert(clientsToInsert, { onConflict: 'id' })
+          .select('id, name')
+
+        if (!existingClients || existingClients.length === 0) {
+          const clientsToInsert = DEFAULT_CLIENTS.map((c) => ({
+            id: c.id,
+            name: c.name,
+            logo_url: c.logo_url,
+            website_url: c.website_url,
+            display_permission: c.display_permission,
+            display_order: c.display_order,
+            is_visible: c.is_visible,
+            type_of_company: c.type_of_company || null,
+            hero_domain: c.hero_domain || null,
+            tagline: c.tagline || null,
+            description: c.description || null,
+            operational_base: c.operational_base || null,
+            dedicated_capability: c.dedicated_capability || null,
+            linkedin_url: c.linkedin_url || null,
+            facebook_url: c.facebook_url || null,
+            instagram_url: c.instagram_url || null,
+            x_url: c.x_url || null,
+          }))
+
+          await privileged
+            .from('clients')
+            .upsert(clientsToInsert, { onConflict: 'id' })
+        }
+
+        await privileged.from('site_settings').upsert(
+          {
+            setting_key: CLIENTS_SEEDED_SETTING_KEY,
+            setting_value: true,
+            description: 'Marks initial public.clients starter seeding completed',
+          },
+          { onConflict: 'setting_key' },
+        )
       }
 
       // 2. Seed testimonials if table is empty
@@ -547,14 +578,27 @@ export async function getAllClients(): Promise<Client[]> {
       .select('*')
       .order('display_order', { ascending: true })
 
-    if (error || !data || data.length === 0) {
-      void seedDefaultClientsAndTestimonials()
-      return DEFAULT_CLIENTS
+    if (error) {
+      return [...DEFAULT_CLIENTS].sort(compareClientNamesAlphabetically)
     }
 
-    return data as Client[]
+    if (!data || data.length === 0) {
+      const alreadySeeded = await hasClientsSeededFlag()
+      if (alreadySeeded) return []
+      await seedDefaultClientsAndTestimonials()
+      const { data: seededRows } = await supabase
+        .from('clients')
+        .select('*')
+        .order('display_order', { ascending: true })
+      if (seededRows && seededRows.length > 0) {
+        return (seededRows as Client[]).sort(compareClientNamesAlphabetically)
+      }
+      return [...DEFAULT_CLIENTS].sort(compareClientNamesAlphabetically)
+    }
+
+    return (data as Client[]).sort(compareClientNamesAlphabetically)
   } catch {
-    return DEFAULT_CLIENTS
+    return [...DEFAULT_CLIENTS].sort(compareClientNamesAlphabetically)
   }
 }
 
@@ -567,14 +611,24 @@ export async function getVisibleClients(): Promise<Client[]> {
       .eq('is_visible', true)
       .order('display_order', { ascending: true })
 
-    if (error || !data || data.length === 0) {
-      void seedDefaultClientsAndTestimonials()
-      return DEFAULT_CLIENTS
+    if (error) {
+      return [...DEFAULT_CLIENTS].sort(compareClientNamesAlphabetically)
     }
 
-    return data as Client[]
+    if (!data || data.length === 0) {
+      const alreadySeeded = await hasClientsSeededFlag()
+      if (alreadySeeded) return []
+      const { count } = await supabase
+        .from('clients')
+        .select('id', { count: 'exact', head: true })
+      if ((count ?? 0) > 0) return []
+      void seedDefaultClientsAndTestimonials()
+      return [...DEFAULT_CLIENTS].sort(compareClientNamesAlphabetically)
+    }
+
+    return (data as Client[]).sort(compareClientNamesAlphabetically)
   } catch {
-    return DEFAULT_CLIENTS
+    return [...DEFAULT_CLIENTS].sort(compareClientNamesAlphabetically)
   }
 }
 

@@ -16,6 +16,8 @@ import { useRef, useState } from 'react'
 
 import {
   OpgIconArticles,
+  OpgIconBlog,
+  OpgIconClients,
   OpgIconContacts,
   OpgIconDashboard,
   OpgIconSubscribers,
@@ -30,6 +32,8 @@ import {
 
 type NavigationIcon =
   | 'articles'
+  | 'blog'
+  | 'clients'
   | 'dashboard'
   | 'inquiries'
   | 'subscribers'
@@ -62,12 +66,16 @@ function NavigationGlyph({ name }: { name: NavigationIcon }) {
       return <OpgIconDashboard />
     case 'articles':
       return <OpgIconArticles />
+    case 'blog':
+      return <OpgIconBlog />
+    case 'team':
+      return <OpgIconTeam />
+    case 'clients':
+      return <OpgIconClients />
     case 'inquiries':
       return <OpgIconContacts />
     case 'subscribers':
       return <OpgIconSubscribers />
-    case 'team':
-      return <OpgIconTeam />
     case 'testimonials':
       return <OpgIconTestimonials />
     default:
@@ -186,9 +194,19 @@ export function AdminNavigation({ roleKey }: { roleKey: string }) {
     ? [
         { href: '/admin/articles', icon: 'articles', label: 'Articles' },
         {
+          href: '/admin/blog',
+          icon: 'blog',
+          label: 'Blog',
+        },
+        {
           href: '/admin/team',
           icon: 'team',
           label: 'Team',
+        },
+        {
+          href: '/admin/clients',
+          icon: 'clients',
+          label: 'Clients',
         },
         {
           href: '/admin/testimonials',
