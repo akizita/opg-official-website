@@ -3,10 +3,15 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 
 import { deleteArticleAction } from '@/app/admin/articles/actions'
 import { AdminConfirmDialog } from '@/components/admin/admin-confirm-dialog'
+import {
+  ArticlesRealtimeSync,
+  notifyArticlesChanged,
+} from '@/components/ui/articles-realtime-sync'
 import {
   OpgIconArticles,
   OpgIconLikes,
@@ -30,6 +35,7 @@ export function ArticlesManager({
   articles: AdminArticleItem[]
   roleKey: string
 }) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
   const [articleToDelete, setArticleToDelete] =
@@ -97,6 +103,7 @@ export function ArticlesManager({
 
   return (
     <div className={styles.workspace}>
+      <ArticlesRealtimeSync />
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerCopy}>
@@ -440,10 +447,13 @@ export function ArticlesManager({
         }
         formAction={async (formData) => {
           if (articleToDelete) {
+            const deletedSlug = articleToDelete.slug
             formData.set('articleId', articleToDelete.id)
-            formData.set('slug', articleToDelete.slug)
+            formData.set('slug', deletedSlug)
             await deleteArticleAction(formData)
+            notifyArticlesChanged(deletedSlug)
             setArticleToDelete(null)
+            router.refresh()
           }
         }}
         isOpen={Boolean(articleToDelete)}

@@ -285,13 +285,8 @@ export async function getArticleBySlug(
   slug: string,
   client?: SupabaseClient,
 ): Promise<Article | null> {
-  const featuredArticle = featuredArticles.find(
-    (article) => article.slug === slug,
-  )
-  if (featuredArticle) return featuredArticle
-
   const supabase = client ?? (await createClient())
-  const { data, error } = await supabase
+  const slugQuery = supabase
     .from('articles')
     .select(
       `
@@ -306,40 +301,50 @@ export async function getArticleBySlug(
     `,
     )
     .eq('slug', slug)
-    .single()
+  const { data, error } =
+    typeof (slugQuery as { maybeSingle?: unknown }).maybeSingle === 'function'
+      ? await slugQuery.maybeSingle()
+      : await slugQuery.single()
 
-  if (error || !data) return null
+  if (!error && data) {
+    if (data.status && data.status !== 'published') {
+      return null
+    }
 
-  const categoryMappings =
-    (data.category_mappings as Array<{ category: ArticleCategory }>) || []
-  const tagMappings = (data.tag_mappings as Array<{ tag: ArticleTag }>) || []
+    const categoryMappings =
+      (data.category_mappings as Array<{ category: ArticleCategory }>) || []
+    const tagMappings = (data.tag_mappings as Array<{ tag: ArticleTag }>) || []
+    const fallbackSeed = featuredArticles.find((article) => article.slug === slug)
 
-  return {
-    id: data.id,
-    slug: data.slug,
-    title: data.title,
-    author_id: data.author_id,
-    author: data.author || null,
-    categories: categoryMappings.map((cm) => cm.category).filter(Boolean),
-    tags: tagMappings.map((tm) => tm.tag).filter(Boolean),
-    excerpt: data.excerpt,
-    content: (data.content as RichTextBlock[]) || [],
-    cover_image_url: data.cover_image_url,
-    reading_time_minutes: data.reading_time_minutes || 3,
-    status: data.status,
-    seo_title: data.seo_title,
-    seo_description: data.seo_description,
-    source_url: data.source_url ?? null,
-    view_count: data.view_count ?? null,
-    like_count: data.like_count ?? null,
-    comment_count: data.comment_count ?? null,
-    created_by: data.created_by,
-    updated_by: data.updated_by,
-    published_by: data.published_by,
-    created_at: data.created_at,
-    updated_at: data.updated_at,
-    published_at: data.published_at,
+    return {
+      id: data.id,
+      slug: data.slug,
+      title: data.title,
+      author_id: data.author_id,
+      author: data.author || null,
+      categories: categoryMappings.map((cm) => cm.category).filter(Boolean),
+      tags: tagMappings.map((tm) => tm.tag).filter(Boolean),
+      excerpt: data.excerpt,
+      content: (data.content as RichTextBlock[]) || [],
+      cover_image_url: data.cover_image_url,
+      reading_time_minutes: data.reading_time_minutes || 3,
+      status: data.status,
+      seo_title: data.seo_title,
+      seo_description: data.seo_description,
+      source_url: data.source_url ?? fallbackSeed?.source_url ?? null,
+      view_count: data.view_count ?? null,
+      like_count: data.like_count ?? null,
+      comment_count: data.comment_count ?? null,
+      created_by: data.created_by,
+      updated_by: data.updated_by,
+      published_by: data.published_by,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      published_at: data.published_at,
+    }
   }
+
+  return featuredArticles.find((article) => article.slug === slug) ?? null
 }
 
 export async function getArticleCategories(

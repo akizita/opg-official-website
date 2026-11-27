@@ -46,13 +46,26 @@ async function resolveAuthorId(
   authorIdRaw: string | null,
 ): Promise<string | null> {
   try {
+    const authorsTable = db.from('authors')
+    if (typeof authorsTable?.select !== 'function') {
+      return null
+    }
+
+    // Prefer an explicit author_id UUID if that author exists in public.authors
+    if (authorIdRaw && UUID_REGEX.test(authorIdRaw)) {
+      const { data: verified } = await authorsTable
+        .select('id')
+        .eq('id', authorIdRaw)
+        .maybeSingle()
+
+      if (verified?.id) {
+        return verified.id
+      }
+    }
+
+    // Fallback: look up or create a real row by authorName (handles fallback dropdown options safely)
     if (authorName) {
       const authorSlug = slugify(authorName) || 'author'
-      const authorsTable = db.from('authors')
-      if (typeof authorsTable?.select !== 'function') {
-        return null
-      }
-
       const { data: existingBySlug } = await authorsTable
         .select('id, full_name')
         .eq('slug', authorSlug)
@@ -91,19 +104,6 @@ async function resolveAuthorId(
         .maybeSingle()
 
       return retriedAuthor?.id ?? null
-    }
-
-    if (authorIdRaw && UUID_REGEX.test(authorIdRaw)) {
-      const authorsTable = db.from('authors')
-      if (typeof authorsTable?.select !== 'function') {
-        return null
-      }
-      const { data: verified } = await authorsTable
-        .select('id')
-        .eq('id', authorIdRaw)
-        .maybeSingle()
-
-      return verified?.id ?? null
     }
   } catch {
     return null

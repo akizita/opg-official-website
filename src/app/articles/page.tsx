@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { PageVisualRuntime } from '@/components/site/page-visual-runtime'
+import { ArticlesRealtimeSync } from '@/components/ui/articles-realtime-sync'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Pagination } from '@/components/ui/pagination'
 import type { Article } from '@/lib/content/articles'
@@ -23,7 +24,7 @@ import { getVisiblePageDocument } from '@/lib/content/visible-page-document'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 import { createClient } from '@/lib/supabase/server'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 const PAGE_SIZE = 6
 
@@ -143,12 +144,16 @@ export default async function ArticlesPage({
   const categorySlug = params.category || undefined
 
   const supabase = await createClient()
-  const [doc, databaseData, engagementRes, featuredSlug] = await Promise.all([
-    getVisiblePageDocument(supabase, 'articles', params.opgPreview === '1'),
-    getPublishedArticles({ page: 1, pageSize: 50, categorySlug }),
-    supabase.from('article_engagement').select('article_slug, view_count, like_count'),
-    getFeaturedArticleSlug(supabase),
-  ])
+  const [doc, databaseData, engagementRes, featuredSlug, dbSlugStatusRes] =
+    await Promise.all([
+      getVisiblePageDocument(supabase, 'articles', params.opgPreview === '1'),
+      getPublishedArticles({ page: 1, pageSize: 50, categorySlug }),
+      supabase
+        .from('article_engagement')
+        .select('article_slug, view_count, like_count'),
+      getFeaturedArticleSlug(supabase),
+      supabase.from('articles').select('slug, status'),
+    ])
   const copy = getPageCopy(doc?.content, ARTICLES_COPY_SECTIONS)
 
   const engagementMap = new Map<string, { view_count: number; like_count: number }>()
@@ -161,14 +166,21 @@ export default async function ArticlesPage({
     }
   }
 
+  const nonPublishedDbSlugs = new Set<string>(
+    (dbSlugStatusRes.data || [])
+      .filter((row) => row.status && row.status !== 'published')
+      .map((row) => row.slug),
+  )
+
   const editorialArticles = featuredArticles.filter(
     (article) =>
-      !categorySlug ||
-      article.categories?.some((category) => category.slug === categorySlug),
+      !nonPublishedDbSlugs.has(article.slug) &&
+      (!categorySlug ||
+        article.categories?.some((category) => category.slug === categorySlug)),
   )
   const articleMap = new Map<string, Article>()
 
-  for (const article of [...editorialArticles, ...databaseData.articles]) {
+  for (const article of [...databaseData.articles, ...editorialArticles]) {
     if (!articleMap.has(article.slug)) articleMap.set(article.slug, article)
   }
 
@@ -202,6 +214,7 @@ export default async function ArticlesPage({
 
   return (
     <div className="articles-page">
+      <ArticlesRealtimeSync />
       <PageVisualRuntime page="articles" config={getPageVisualConfig(doc?.content)} />
       <div className="articles-page__glow" aria-hidden="true" />
       <div className="articles-page__container">

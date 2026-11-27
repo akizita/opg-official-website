@@ -2,6 +2,8 @@
  * High-fidelity Markdown <-> WYSIWYG HTML Converter for Article Editor
  */
 
+import { splitMarkdownBlocks } from './article-markdown'
+
 /**
  * Converts stored Markdown text into semantic HTML for the contentEditable editor.
  */
@@ -10,7 +12,7 @@ export function markdownToEditorHtml(markdown: string): string {
     return '<p><br></p>'
   }
 
-  const sections = markdown.split(/\n\n+/)
+  const sections = splitMarkdownBlocks(markdown)
   const htmlParts: string[] = []
 
   for (const raw of sections) {
@@ -31,20 +33,34 @@ export function markdownToEditorHtml(markdown: string): string {
       continue
     }
 
-    // Heading 3: ### Section
-    const h3Match = trimmed.match(/^###\s+(.+)$/)
+    // Heading 3 / Heading 4: ### or #### Section
+    const h3Match = trimmed.match(/^#{3,4}\s+(.+)$/)
     if (h3Match) {
       htmlParts.push(`<h3>${formatInline(h3Match[1].trim())}</h3>`)
       continue
     }
 
-    // Blockquote: > Quote
+    // Blockquote: > Quote (supports optional citation line)
     if (trimmed.startsWith('>')) {
-      const quoteText = trimmed
+      const quoteLines = trimmed
         .split('\n')
-        .map((l) => l.replace(/^>\s?/, ''))
-        .join('<br>')
-      htmlParts.push(`<blockquote>${formatInline(quoteText)}</blockquote>`)
+        .map((l) => l.replace(/^>\s?/, '').trim())
+        .filter(Boolean)
+
+      let citeHtml = ''
+      if (quoteLines.length > 1) {
+        const lastLine = quoteLines[quoteLines.length - 1]
+        const citeMatch = lastLine.match(/^(?:—|--)\s*(.+)$/)
+        if (citeMatch) {
+          citeHtml = `<cite>${formatInline(citeMatch[1].trim())}</cite>`
+          quoteLines.pop()
+        }
+      }
+
+      const quoteText = quoteLines.map((l) => formatInline(l)).join('<br>')
+      htmlParts.push(
+        `<blockquote><p>${quoteText}</p>${citeHtml}</blockquote>`,
+      )
       continue
     }
 
@@ -81,7 +97,7 @@ export function markdownToEditorHtml(markdown: string): string {
     htmlParts.push(`<p>${paragraphText}</p>`)
   }
 
-  return htmlParts.join('')
+  return htmlParts.length > 0 ? htmlParts.join('') : '<p><br></p>'
 }
 
 /**
@@ -89,9 +105,9 @@ export function markdownToEditorHtml(markdown: string): string {
  */
 function formatInline(text: string): string {
   let result = text
-  // Bold: **text** or __text__
+  // Bold: **text**
   result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  // Italic: *text* or _text_
+  // Italic: *text*
   result = result.replace(/(^|[^*])\*([^*]+?)\*([^*]|$)/g, '$1<em>$2</em>$3')
   // Strike: ~~text~~
   result = result.replace(/~~(.+?)~~/g, '<del>$1</del>')
@@ -113,7 +129,10 @@ export function editorHtmlToMarkdown(html: string): string {
 
   const parser = new DOMParser()
   const doc = parser.parseFromString(`<body>${html}</body>`, 'text/html')
-  return domNodeToMarkdown(doc.body).trim()
+  return domNodeToMarkdown(doc.body)
+    .replace(/\r\n?/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 /**
@@ -136,15 +155,22 @@ function domNodeToMarkdown(node: Node): string {
     const tag = el.tagName.toLowerCase()
 
     switch (tag) {
-      case 'h1':
-        md += `\n\n# ${domNodeToMarkdown(el).trim()}\n\n`
+      case 'h1': {
+        const inner = domNodeToMarkdown(el).replace(/\s+/g, ' ').trim()
+        if (inner) md += `\n\n# ${inner}\n\n`
         break
-      case 'h2':
-        md += `\n\n## ${domNodeToMarkdown(el).trim()}\n\n`
+      }
+      case 'h2': {
+        const inner = domNodeToMarkdown(el).replace(/\s+/g, ' ').trim()
+        if (inner) md += `\n\n## ${inner}\n\n`
         break
+      }
       case 'h3':
-        md += `\n\n### ${domNodeToMarkdown(el).trim()}\n\n`
+      case 'h4': {
+        const inner = domNodeToMarkdown(el).replace(/\s+/g, ' ').trim()
+        if (inner) md += `\n\n### ${inner}\n\n`
         break
+      }
       case 'p': {
         const inner = domNodeToMarkdown(el).trim()
         if (inner) {
@@ -152,45 +178,79 @@ function domNodeToMarkdown(node: Node): string {
         }
         break
       }
-      case 'blockquote':
-        md += `\n\n> ${domNodeToMarkdown(el).trim()}\n\n`
+      case 'blockquote': {
+        const citeEl = el.querySelector(':scope > cite')
+        const citeText = citeEl ? domNodeToMarkdown(citeEl).trim() : ''
+        const clone = el.cloneNode(true) as HTMLElement
+        clone.querySelectorAll(':scope > cite').forEach((c) => c.remove())
+        const quoteLines = domNodeToMarkdown(clone)
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean)
+        if (quoteLines.length > 0) {
+          const prefixed = quoteLines.map((l) => `> ${l}`).join('\n')
+          md += citeText
+            ? `\n\n${prefixed}\n> — ${citeText.replace(/^—\s*/, '')}\n\n`
+            : `\n\n${prefixed}\n\n`
+        }
         break
+      }
       case 'ul': {
         const lis = Array.from(el.querySelectorAll(':scope > li'))
-          .map((li) => `- ${domNodeToMarkdown(li).trim()}`)
+          .map((li) => `- ${domNodeToMarkdown(li).replace(/\n+/g, ' ').trim()}`)
+          .filter((line) => line !== '-')
           .join('\n')
-        md += `\n\n${lis}\n\n`
+        if (lis) md += `\n\n${lis}\n\n`
         break
       }
       case 'ol': {
         const lis = Array.from(el.querySelectorAll(':scope > li'))
-          .map((li, index) => `${index + 1}. ${domNodeToMarkdown(li).trim()}`)
+          .map(
+            (li, index) =>
+              `${index + 1}. ${domNodeToMarkdown(li).replace(/\n+/g, ' ').trim()}`,
+          )
+          .filter((line) => !/^\d+\.\s*$/.test(line))
           .join('\n')
-        md += `\n\n${lis}\n\n`
+        if (lis) md += `\n\n${lis}\n\n`
         break
       }
       case 'li':
         md += domNodeToMarkdown(el)
         break
       case 'strong':
-      case 'b':
-        md += `**${domNodeToMarkdown(el)}**`
+      case 'b': {
+        const inner = domNodeToMarkdown(el)
+        if (inner) md += `**${inner}**`
         break
+      }
       case 'em':
-      case 'i':
-        md += `*${domNodeToMarkdown(el)}*`
+      case 'i': {
+        const inner = domNodeToMarkdown(el)
+        if (inner) md += `*${inner}*`
         break
-      case 'u':
-        md += `<u>${domNodeToMarkdown(el)}</u>`
+      }
+      case 'u': {
+        const inner = domNodeToMarkdown(el)
+        if (inner) md += `<u>${inner}</u>`
         break
+      }
       case 'del':
       case 's':
-      case 'strike':
-        md += `~~${domNodeToMarkdown(el)}~~`
+      case 'strike': {
+        const inner = domNodeToMarkdown(el)
+        if (inner) md += `~~${inner}~~`
         break
-      case 'code':
-        md += `\`${domNodeToMarkdown(el)}\``
+      }
+      case 'code': {
+        const inner = domNodeToMarkdown(el)
+        if (inner) md += `\`${inner}\``
         break
+      }
+      case 'pre': {
+        const inner = domNodeToMarkdown(el).trim()
+        if (inner) md += `\n\n${inner}\n\n`
+        break
+      }
       case 'hr':
         md += '\n\n---\n\n'
         break
@@ -219,22 +279,44 @@ function domNodeToMarkdown(node: Node): string {
  */
 function cleanRegexHtmlToMarkdown(html: string): string {
   let md = html
-  md = md.replace(/<h1>(.*?)<\/h1>/gi, '\n\n# $1\n\n')
-  md = md.replace(/<h2>(.*?)<\/h2>/gi, '\n\n## $1\n\n')
-  md = md.replace(/<h3>(.*?)<\/h3>/gi, '\n\n### $1\n\n')
-  md = md.replace(/<blockquote>(.*?)<\/blockquote>/gi, '\n\n> $1\n\n')
-  md = md.replace(/<li>(.*?)<\/li>/gi, '- $1\n')
-  md = md.replace(/<ul>(.*?)<\/ul>/gi, '\n\n$1\n\n')
-  md = md.replace(/<ol>(.*?)<\/ol>/gi, '\n\n$1\n\n')
-  md = md.replace(/<p>(.*?)<\/p>/gi, '\n\n$1\n\n')
-  md = md.replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-  md = md.replace(/<b>(.*?)<\/b>/gi, '**$1**')
-  md = md.replace(/<em>(.*?)<\/em>/gi, '*$1*')
-  md = md.replace(/<i>(.*?)<\/i>/gi, '*$1*')
-  md = md.replace(/<del>(.*?)<\/del>/gi, '~~$1~~')
-  md = md.replace(/<s>(.*?)<\/s>/gi, '~~$1~~')
+  md = md.replace(/<h1>([\s\S]*?)<\/h1>/gi, '\n\n# $1\n\n')
+  md = md.replace(/<h2>([\s\S]*?)<\/h2>/gi, '\n\n## $1\n\n')
+  md = md.replace(/<h3>([\s\S]*?)<\/h3>/gi, '\n\n### $1\n\n')
+  md = md.replace(/<h4>([\s\S]*?)<\/h4>/gi, '\n\n### $1\n\n')
+  md = md.replace(/<blockquote>([\s\S]*?)<\/blockquote>/gi, (_m, inner: string) => {
+    const citeMatch = inner.match(/<cite>([\s\S]*?)<\/cite>/i)
+    const cite = citeMatch ? citeMatch[1].replace(/<[^>]+>/g, '').trim() : ''
+    const quoteBody = inner
+      .replace(/<cite>[\s\S]*?<\/cite>/gi, '')
+      .replace(/<\/p>\s*<p>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .trim()
+    if (!quoteBody) return ''
+    const lines = quoteBody
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => `> ${l}`)
+      .join('\n')
+    return cite
+      ? `\n\n${lines}\n> — ${cite.replace(/^—\s*/, '')}\n\n`
+      : `\n\n${lines}\n\n`
+  })
+  md = md.replace(/<li>([\s\S]*?)<\/li>/gi, '- $1\n')
+  md = md.replace(/<ul>([\s\S]*?)<\/ul>/gi, '\n\n$1\n\n')
+  md = md.replace(/<ol>([\s\S]*?)<\/ol>/gi, '\n\n$1\n\n')
+  md = md.replace(/<p>([\s\S]*?)<\/p>/gi, '\n\n$1\n\n')
+  md = md.replace(/<div>([\s\S]*?)<\/div>/gi, '\n\n$1\n\n')
+  md = md.replace(/<strong>([\s\S]*?)<\/strong>/gi, '**$1**')
+  md = md.replace(/<b>([\s\S]*?)<\/b>/gi, '**$1**')
+  md = md.replace(/<em>([\s\S]*?)<\/em>/gi, '*$1*')
+  md = md.replace(/<i>([\s\S]*?)<\/i>/gi, '*$1*')
+  md = md.replace(/<del>([\s\S]*?)<\/del>/gi, '~~$1~~')
+  md = md.replace(/<s>([\s\S]*?)<\/s>/gi, '~~$1~~')
+  md = md.replace(/<code>([\s\S]*?)<\/code>/gi, '`$1`')
   md = md.replace(/<br\s*\/?>/gi, '\n')
   md = md.replace(/<hr\s*\/?>/gi, '\n\n---\n\n')
-  md = md.replace(/<[^>]+>/g, '')
-  return md.replace(/\n{3,}/g, '\n\n').trim()
+  md = md.replace(/<(?!\/?u\b)[^>]+>/gi, '')
+  return md.replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
 }

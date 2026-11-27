@@ -4,6 +4,10 @@ import {
   editorHtmlToMarkdown,
   markdownToEditorHtml,
 } from './article-editor-conversion'
+import {
+  markdownToRichTextBlocks,
+  richTextBlocksToMarkdown,
+} from './article-markdown'
 
 describe('Article Editor Markdown <-> HTML Conversion', () => {
   it('converts markdown headings to semantic HTML headings', () => {
@@ -15,9 +19,11 @@ describe('Article Editor Markdown <-> HTML Conversion', () => {
   })
 
   it('converts lists and blockquotes properly', () => {
-    const md = '> Leading insight\n\n- Point one\n- Point two'
+    const md = '> Leading insight\n> — Team Lead\n\n- Point one\n- Point two'
     const html = markdownToEditorHtml(md)
-    expect(html).toContain('<blockquote>Leading insight</blockquote>')
+    expect(html).toContain(
+      '<blockquote><p>Leading insight</p><cite>Team Lead</cite></blockquote>',
+    )
     expect(html).toContain('<ul><li>Point one</li><li>Point two</li></ul>')
   })
 
@@ -31,10 +37,27 @@ describe('Article Editor Markdown <-> HTML Conversion', () => {
 
   it('converts HTML back to markdown', () => {
     const html =
-      '<h1>Main Title</h1><p>A paragraph with <strong>bold</strong> text.</p><blockquote>A quote</blockquote>'
+      '<h1>Main Title</h1><p>A paragraph with <strong>bold</strong> text.</p><blockquote><p>A quote</p><cite>Joy</cite></blockquote>'
     const md = editorHtmlToMarkdown(html)
     expect(md).toContain('# Main Title')
     expect(md).toContain('**bold**')
-    expect(md).toContain('> A quote')
+    expect(md).toContain('> A quote\n> — Joy')
+  })
+
+  it('preserves headings and quotes when form submissions normalize line endings to CRLF', () => {
+    const crlfMarkdown =
+      'Opening lead paragraph.\r\n\r\n### Section Heading\r\nSecond paragraph text.\r\n> Memorable quote\r\n> — Speaker'
+    const blocks = markdownToRichTextBlocks(crlfMarkdown)
+    expect(blocks).toEqual([
+      { type: 'paragraph', content: 'Opening lead paragraph.' },
+      { type: 'heading', level: 3, content: 'Section Heading' },
+      { type: 'paragraph', content: 'Second paragraph text.' },
+      { type: 'blockquote', content: 'Memorable quote', citation: 'Speaker' },
+    ])
+
+    const roundTripped = richTextBlocksToMarkdown(blocks)
+    expect(roundTripped).toBe(
+      'Opening lead paragraph.\n\n### Section Heading\n\nSecond paragraph text.\n\n> Memorable quote\n> — Speaker',
+    )
   })
 })

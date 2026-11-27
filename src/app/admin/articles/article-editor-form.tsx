@@ -20,6 +20,7 @@ import {
 } from '@/app/admin/articles/actions'
 import { initialArticleActionState } from '@/app/admin/articles/types'
 import { AdminConfirmDialog } from '@/components/admin/admin-confirm-dialog'
+import { notifyArticlesChanged } from '@/components/ui/articles-realtime-sync'
 import {
   OpgIconCheck,
   OpgIconChevron,
@@ -443,18 +444,52 @@ export function ArticleEditorForm({
 }) {
   const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
-  const [state, formAction, isPending] = useActionState(
-    saveArticleAction,
-    initialArticleActionState,
-  )
+  const articleAuthorId = article?.author_id ?? null
+  const articleAuthorName = article?.author_name?.trim() || ''
 
-  const isEditing = Boolean(article)
-  const isPublishedLive = article?.status === 'published'
+  const authorOptions = useMemo(() => {
+    const base = [...authors]
+    if (
+      articleAuthorName &&
+      !base.some(
+        (a) =>
+          (articleAuthorId && a.id === articleAuthorId) ||
+          a.full_name.toLowerCase() === articleAuthorName.toLowerCase(),
+      )
+    ) {
+      base.unshift({
+        id: articleAuthorId || `name:${articleAuthorName}`,
+        slug: articleAuthorName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        full_name: articleAuthorName,
+        role_title: 'Contributor',
+        bio: null,
+        avatar_url: null,
+        is_active: true,
+        created_at: new Date().toISOString(),
+      })
+    }
+    return base
+  }, [authors, articleAuthorId, articleAuthorName])
+
+  const initialMatchedAuthor = useMemo(() => {
+    if (articleAuthorId) {
+      const byId = authorOptions.find((a) => a.id === articleAuthorId)
+      if (byId) return byId
+    }
+    if (articleAuthorName) {
+      const targetName = articleAuthorName.toLowerCase()
+      const byName = authorOptions.find(
+        (a) => a.full_name.toLowerCase().trim() === targetName,
+      )
+      if (byName) return byName
+    }
+    return authorOptions[0] || null
+  }, [authorOptions, articleAuthorId, articleAuthorName])
 
   // Form State
   const [title, setTitle] = useState(article?.title || '')
   const [slug, setSlug] = useState(article?.slug || '')
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(isEditing)
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(Boolean(article))
   const [excerpt, setExcerpt] = useState(article?.excerpt || '')
   const [markdownContent, setMarkdownContent] = useState(
     article?.markdownContent || '',
@@ -469,12 +504,77 @@ export function ArticleEditorForm({
   const [isFeatured, setIsFeatured] = useState<boolean>(
     Boolean(article?.is_featured),
   )
-  const [authorName, setAuthorName] = useState<string>(
-    article?.author_name || 'Outsourced Pro Global',
+  const [selectedAuthorId, setSelectedAuthorId] = useState<string>(
+    initialMatchedAuthor?.id || '',
   )
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(
     article?.category_id || categories[0]?.id || 1,
   )
+
+  const selectedAuthor = useMemo(
+    () =>
+      authorOptions.find((a) => a.id === selectedAuthorId) ||
+      authorOptions[0] ||
+      null,
+    [authorOptions, selectedAuthorId],
+  )
+
+  const [savedBaseline, setSavedBaseline] = useState(() => ({
+    authorId: initialMatchedAuthor?.id || '',
+    categoryId: article?.category_id || categories[0]?.id || 1,
+    coverImageUrl: article?.cover_image_url || '',
+    excerpt: article?.excerpt || '',
+    isFeatured: Boolean(article?.is_featured),
+    markdownContent: article?.markdownContent || '',
+    slug: article?.slug || '',
+    status: (article?.status || 'draft') as string,
+    title: article?.title || '',
+  }))
+
+  const [state, formAction, isPending] = useActionState(
+    async (
+      prevState: typeof initialArticleActionState,
+      formData: FormData,
+    ) => {
+      const next = await saveArticleAction(prevState, formData)
+      if (next.status === 'success') {
+        const savedStatus =
+          (formData.get('status') as string | null)?.trim() || 'draft'
+        const savedFeatured =
+          formData.get('is_featured') === 'true' ||
+          formData.get('is_featured') === 'on'
+        setSavedBaseline({
+          authorId:
+            (formData.get('author_id') as string | null)?.trim() ||
+            selectedAuthorId,
+          categoryId:
+            Number.parseInt(
+              (formData.get('category_id') as string | null) || '',
+              10,
+            ) || selectedCategoryId,
+          coverImageUrl:
+            (formData.get('cover_image_url') as string | null)?.trim() || '',
+          excerpt: (formData.get('excerpt') as string | null)?.trim() || '',
+          isFeatured: savedFeatured,
+          markdownContent:
+            (formData.get('markdownContent') as string | null)?.trim() || '',
+          slug: next.slug || (formData.get('slug') as string | null)?.trim() || '',
+          status: savedStatus,
+          title: (formData.get('title') as string | null)?.trim() || '',
+        })
+        if (next.slug) {
+          setSlug(next.slug)
+          setSlugManuallyEdited(true)
+        }
+        notifyArticlesChanged(next.slug)
+        router.refresh()
+      }
+      return next
+    },
+    initialArticleActionState,
+  )
+  const isEditing = Boolean(article || state.articleId)
+  const isPublishedLive = savedBaseline.status === 'published'
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false)
   const [alertDismissed, setAlertDismissed] = useState(false)
@@ -506,30 +606,17 @@ export function ArticleEditorForm({
     }
   }, [article?.markdownContent])
 
-  // Track Unsaved Changes (Dirty State)
-  const [initialData] = useState(() => ({
-    authorName: article?.author_name || 'Outsourced Pro Global',
-    categoryId: article?.category_id || categories[0]?.id || 1,
-    coverImageUrl: article?.cover_image_url || '',
-    excerpt: article?.excerpt || '',
-    isFeatured: Boolean(article?.is_featured),
-    markdownContent: article?.markdownContent || '',
-    slug: article?.slug || '',
-    status: article?.status || 'draft',
-    title: article?.title || '',
-  }))
-
   const isDirty = useMemo(() => {
     return (
-      title !== initialData.title ||
-      slug !== initialData.slug ||
-      excerpt !== initialData.excerpt ||
-      markdownContent !== initialData.markdownContent ||
-      coverImageUrl !== initialData.coverImageUrl ||
-      selectedStatus !== initialData.status ||
-      isFeatured !== initialData.isFeatured ||
-      authorName !== initialData.authorName ||
-      selectedCategoryId !== initialData.categoryId
+      title !== savedBaseline.title ||
+      slug !== savedBaseline.slug ||
+      excerpt !== savedBaseline.excerpt ||
+      markdownContent !== savedBaseline.markdownContent ||
+      coverImageUrl !== savedBaseline.coverImageUrl ||
+      selectedStatus !== savedBaseline.status ||
+      isFeatured !== savedBaseline.isFeatured ||
+      selectedAuthorId !== savedBaseline.authorId ||
+      selectedCategoryId !== savedBaseline.categoryId
     )
   }, [
     title,
@@ -539,9 +626,9 @@ export function ArticleEditorForm({
     coverImageUrl,
     selectedStatus,
     isFeatured,
-    authorName,
+    selectedAuthorId,
     selectedCategoryId,
-    initialData,
+    savedBaseline,
   ])
 
   // Context Menu Global Dismiss
@@ -580,12 +667,33 @@ export function ArticleEditorForm({
           sel.addRange(savedRangeRef.current)
         }
       }
+      try {
+        document.execCommand('defaultParagraphSeparator', false, 'p')
+      } catch {
+        // Fallback for browsers ignoring defaultParagraphSeparator
+      }
       document.execCommand(command, false, value)
       if (editorRef.current) {
         const updatedMd = editorHtmlToMarkdown(editorRef.current.innerHTML)
         setMarkdownContent(updatedMd)
       }
       setContextMenu(null)
+    },
+    [],
+  )
+
+  const handleEditorPaste = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      const plainText = e.clipboardData?.getData('text/plain')
+      if (!plainText) return
+      e.preventDefault()
+      // Convert pasted multi-paragraph or markdown text cleanly to semantic editor HTML
+      const cleanHtml = markdownToEditorHtml(plainText)
+      document.execCommand('insertHTML', false, cleanHtml)
+      if (editorRef.current) {
+        const updatedMd = editorHtmlToMarkdown(editorRef.current.innerHTML)
+        setMarkdownContent(updatedMd)
+      }
     },
     [],
   )
@@ -657,22 +765,22 @@ export function ArticleEditorForm({
 
   // Revert all edits (Discard) with Confirmation Modal
   const handleConfirmDiscard = useCallback(() => {
-    setTitle(initialData.title)
-    setSlug(initialData.slug)
-    setExcerpt(initialData.excerpt)
-    setMarkdownContent(initialData.markdownContent)
-    setCoverImageUrl(initialData.coverImageUrl)
-    setSelectedStatus(initialData.status)
-    setIsFeatured(initialData.isFeatured)
-    setAuthorName(initialData.authorName)
-    setSelectedCategoryId(initialData.categoryId)
+    setTitle(savedBaseline.title)
+    setSlug(savedBaseline.slug)
+    setExcerpt(savedBaseline.excerpt)
+    setMarkdownContent(savedBaseline.markdownContent)
+    setCoverImageUrl(savedBaseline.coverImageUrl)
+    setSelectedStatus(savedBaseline.status)
+    setIsFeatured(savedBaseline.isFeatured)
+    setSelectedAuthorId(savedBaseline.authorId)
+    setSelectedCategoryId(savedBaseline.categoryId)
     if (editorRef.current) {
       editorRef.current.innerHTML = markdownToEditorHtml(
-        initialData.markdownContent,
+        savedBaseline.markdownContent,
       )
     }
     setIsDiscardDialogOpen(false)
-  }, [initialData])
+  }, [savedBaseline])
 
   // Synchronously set status input before requestSubmit so FormData never submits stale state
   const triggerSaveWithStatus = (
@@ -1071,8 +1179,16 @@ export function ArticleEditorForm({
               className={styles.wysiwygCanvas}
               contentEditable
               onContextMenu={handleContextMenu}
+              onFocus={() => {
+                try {
+                  document.execCommand('defaultParagraphSeparator', false, 'p')
+                } catch {
+                  // Ignore unsupported browsers
+                }
+              }}
               onInput={handleEditorInput}
               onKeyDown={handleEditorKeyDown}
+              onPaste={handleEditorPaste}
               ref={editorRef}
               role="textbox"
               suppressContentEditableWarning
@@ -1364,27 +1480,23 @@ export function ArticleEditorForm({
               />
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.fieldLabel} htmlFor="article-author-input">
-                Author
-              </label>
+            <div>
               <input
-                className={styles.input}
-                id="article-author-input"
-                list="article-author-suggestions"
                 name="author_name"
-                onChange={(e) => setAuthorName(e.target.value)}
-                placeholder="e.g. Outsourced Pro Global"
-                type="text"
-                value={authorName}
+                type="hidden"
+                value={selectedAuthor?.full_name || ''}
               />
-              {authors.length > 0 && (
-                <datalist id="article-author-suggestions">
-                  {authors.map((author) => (
-                    <option key={author.id} value={author.full_name} />
-                  ))}
-                </datalist>
-              )}
+              <FormPillDropdown
+                label="Author"
+                name="author_id"
+                onChange={(val) => setSelectedAuthorId(val)}
+                options={authorOptions.map((author) => ({
+                  value: author.id,
+                  label: author.full_name,
+                  hint: author.role_title || undefined,
+                }))}
+                value={selectedAuthorId}
+              />
             </div>
           </div>
 
@@ -1507,6 +1619,7 @@ export function ArticleEditorForm({
             formData.set('articleId', article.id)
             formData.set('slug', article.slug)
             await deleteArticleAction(formData)
+            notifyArticlesChanged(article.slug)
             startTransition(() => {
               router.push('/admin/articles')
               router.refresh()

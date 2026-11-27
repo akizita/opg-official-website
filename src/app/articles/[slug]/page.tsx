@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { ArticleEngagement } from '@/components/ui/article-engagement'
+import { ArticlesRealtimeSync } from '@/components/ui/articles-realtime-sync'
 import { RichText } from '@/components/ui/rich-text'
 import {
   formatSafeArticleDate,
@@ -15,7 +16,7 @@ import { featuredArticles } from '@/lib/content/featured-articles'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 import { createStaticClient } from '@/lib/supabase/server'
 
-export const revalidate = 3600 // 1 hour ISR
+export const dynamic = 'force-dynamic'
 
 type ArticleDetailPageProps = {
   params: Promise<{ slug: string }>
@@ -143,6 +144,7 @@ export default async function ArticleDetailPage({
 
   return (
     <article className="article-detail-page">
+      <ArticlesRealtimeSync slugFilter={slug} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
