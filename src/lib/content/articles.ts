@@ -408,13 +408,81 @@ export async function getAuthors(
   client?: SupabaseClient,
 ): Promise<Author[]> {
   const supabase = client ?? (await createClient())
-  const { data } = await supabase
-    .from('authors')
-    .select('*')
-    .eq('is_active', true)
-    .order('full_name', { ascending: true })
+  const [authorsRes, teamRes] = await Promise.all([
+    supabase
+      .from('authors')
+      .select('*')
+      .eq('is_active', true)
+      .order('full_name', { ascending: true }),
+    supabase
+      .from('team_members')
+      .select('id, full_name, position, bio, photo_url, is_active, created_at')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true }),
+  ])
 
-  if (data && data.length > 0) return data
+  const teamByKey = new Map<
+    string,
+    {
+      id: string
+      full_name: string
+      position: string
+      bio: string | null
+      photo_url: string | null
+      created_at: string
+    }
+  >()
+  for (const member of teamRes?.data || []) {
+    const key = member.full_name.trim().toLowerCase()
+    if (key) teamByKey.set(key, member)
+  }
+
+  const merged: Author[] = []
+  const seenNames = new Set<string>()
+
+  for (const author of (authorsRes?.data as Author[] | null) || []) {
+    const key = author.full_name.trim().toLowerCase()
+    const teamMatch = teamByKey.get(key)
+    seenNames.add(key)
+    merged.push({
+      ...author,
+      role_title: teamMatch?.position || author.role_title || 'Editorial Team',
+      avatar_url: teamMatch?.photo_url || author.avatar_url || null,
+      bio: teamMatch?.bio || author.bio || null,
+    })
+  }
+
+  for (const member of teamRes?.data || []) {
+    const key = member.full_name.trim().toLowerCase()
+    if (!key || seenNames.has(key)) continue
+    seenNames.add(key)
+    merged.push({
+      id: `team:${member.id}`,
+      slug: key.replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-'),
+      full_name: member.full_name,
+      role_title: member.position,
+      bio: member.bio,
+      avatar_url: member.photo_url,
+      is_active: true,
+      created_at: member.created_at || new Date().toISOString(),
+    })
+  }
+
+  if (merged.length > 0) {
+    if (!seenNames.has('outsourced pro global')) {
+      merged.unshift({
+        id: '00000000-0000-0000-0000-000000000001',
+        slug: 'outsourced-pro-global',
+        full_name: 'Outsourced Pro Global',
+        role_title: 'Editorial Team',
+        bio: 'Empowering businesses and connecting exceptional global talent.',
+        avatar_url: null,
+        is_active: true,
+        created_at: new Date().toISOString(),
+      })
+    }
+    return merged
+  }
 
   return [
     {

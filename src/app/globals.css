@@ -4521,6 +4521,8 @@ h3 {
   height: 2.75rem;
   justify-content: center;
   letter-spacing: -0.03em;
+  overflow: hidden;
+  position: relative;
   width: 2.75rem;
 }
 

@@ -189,10 +189,8 @@ export function OpgIconSubscribers({
       width={size}
       {...props}
     >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
   )
 }
@@ -908,6 +906,36 @@ export function OpgIconFaqGlobe({
       <path d="M3.2 12h17.6" />
       <path d="M5.2 7.2c2 .9 4.3 1.4 6.8 1.4s4.8-.5 6.8-1.4" />
       <path d="M5.2 16.8c2-.9 4.3-1.4 6.8-1.4s4.8.5 6.8 1.4" />
+    </svg>
+  )
+}
+
+/**
+ * 33. OPG Team / Specialists Management Icon (24x24)
+ */
+export function OpgIconTeam({
+  className,
+  size = 24,
+  ...props
+}: OpgIconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      height={size}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.75}
+      viewBox="0 0 24 24"
+      width={size}
+      {...props}
+    >
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   )
 }

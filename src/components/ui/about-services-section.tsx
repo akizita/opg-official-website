@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 
 import { ButtonLink } from '@/components/ui/button-link'
+import { resolveSafeArticleImage } from '@/lib/content/article-image'
 import { getTeamPhotoUrl } from '@/lib/content/team-media'
 
 import tabStyles from './about-services-tabs.module.css'
@@ -110,9 +111,17 @@ const STEP_COUNT = SERVICE_FEATURES.length
 
 export function AboutServicesSection({
   copy,
+  leadMember,
 }: {
   copy: Record<string, string>
+  leadMember?: { image?: string | null; name?: string | null; role?: string | null }
 }) {
+  const cutoutPhoto = resolveSafeArticleImage(
+    leadMember?.image || TEAM_LEAD_IMAGE_URL,
+  )
+  const cutoutAlt = leadMember?.name
+    ? `${leadMember.name}${leadMember.role ? ` - ${leadMember.role}` : ''} at Outsourced Pro Global`
+    : 'Armi Escamilla - Talent Acquisition Team Leader at Outsourced Pro Global'
   const [activeStep, setActiveStep] = useState(0)
   const trackRef = useRef<HTMLDivElement>(null)
 
@@ -313,12 +322,13 @@ export function AboutServicesSection({
             <div className="about-services-hero__visual about-services-anim-item">
               <div className="about-services-cutout-frame">
                 <Image
-                  alt="Armi Escamilla - Talent Acquisition Team Leader at Outsourced Pro Global"
+                  alt={cutoutAlt}
                   className="about-services-cutout-image"
                   height={800}
                   priority
                   sizes="(max-width: 62rem) 100vw, 42vw"
-                  src={TEAM_LEAD_IMAGE_URL}
+                  src={cutoutPhoto.src}
+                  unoptimized={cutoutPhoto.unoptimized}
                   width={800}
                 />
               </div>

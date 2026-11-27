@@ -12,6 +12,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 
+import { resolveSafeArticleImage } from '@/lib/content/article-image'
+import type { PublicTeamMember } from '@/lib/content/team'
 import { OPG_TEAM_MEMBERS } from '@/lib/content/team-media'
 
 import styles from './about-team-showcase.module.css'
@@ -50,30 +52,48 @@ export interface AboutTeamShowcaseProps {
   autoplay?: boolean
   autoplayDelay?: number
   copy: Record<string, string>
+  members?: PublicTeamMember[]
 }
 
 export function AboutTeamShowcase({
   autoplay = false,
   autoplayDelay = 6000,
   copy,
+  members: incomingMembers,
 }: AboutTeamShowcaseProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const shouldReduceMotion = useReducedMotion()
 
-  const members = TEAM_MEMBERS
+  const members: TeamMemberData[] =
+    incomingMembers !== undefined
+      ? incomingMembers.map((member) => ({
+          id: member.id,
+          name: member.name,
+          position: member.role,
+          department: member.department,
+          headline: member.headline,
+          bio: member.bio,
+          image: resolveSafeArticleImage(member.image).src,
+          linkedin: member.linkedin,
+          alt: member.alt,
+        }))
+      : TEAM_MEMBERS
   const count = members.length
-  const activeMember = members[activeIndex] || members[0]
+  const safeIndex = count > 0 ? activeIndex % count : 0
+  const activeMember = members[safeIndex] || members[0]
 
   // Two stacked preview cards behind the front card
-  const backMember1 = members[(activeIndex + 1) % count]
-  const backMember2 = members[(activeIndex + 2) % count]
+  const backMember1 = count > 0 ? members[(safeIndex + 1) % count] : activeMember
+  const backMember2 = count > 0 ? members[(safeIndex + 2) % count] : activeMember
 
   const handleNext = useCallback(() => {
+    if (count === 0) return
     setActiveIndex((prev) => (prev + 1) % count)
   }, [count])
 
   const handlePrev = useCallback(() => {
+    if (count === 0) return
     setActiveIndex((prev) => (prev - 1 + count) % count)
   }, [count])
 
@@ -118,6 +138,10 @@ export function AboutTeamShowcase({
   const springTransition = shouldReduceMotion
     ? { duration: 0.01 }
     : { type: 'spring' as const, stiffness: 260, damping: 26 }
+
+  if (!activeMember || count === 0) {
+    return null
+  }
 
   return (
     <section
@@ -206,7 +230,7 @@ export function AboutTeamShowcase({
                     <span className="about-team-card__counter-curr-box">
                       <AnimatePresence mode="popLayout" initial={false}>
                         <motion.span
-                          key={activeIndex}
+                          key={safeIndex}
                           initial={
                             shouldReduceMotion ? false : { y: -14, opacity: 0 }
                           }
@@ -219,7 +243,7 @@ export function AboutTeamShowcase({
                           transition={{ duration: 0.2 }}
                           className="about-team-card__counter-curr"
                         >
-                          {String(activeIndex + 1).padStart(2, '0')}
+                          {String(safeIndex + 1).padStart(2, '0')}
                         </motion.span>
                       </AnimatePresence>
                     </span>
@@ -325,7 +349,7 @@ export function AboutTeamShowcase({
                   aria-label="Team member slides"
                 >
                   {members.map((member, idx) => {
-                    const isActive = idx === activeIndex
+                    const isActive = idx === safeIndex
                     return (
                       <button
                         key={member.id}

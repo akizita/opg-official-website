@@ -123,7 +123,6 @@ export default async function ArticleDetailPage({
   }
 
   const authorName = article.author?.full_name || siteConfig.name
-  const authorRole = article.author?.role_title || 'Editorial Team'
   const formattedDate = formatSafeArticleDate(article.published_at, 'long')
   const publishedLabel = formattedDate || 'Publication date pending'
   const coverImage = article.cover_image_url
@@ -131,11 +130,32 @@ export default async function ArticleDetailPage({
     : null
 
   const supabase = createStaticClient()
-  const { data: engagementData } = await supabase
-    .from('article_engagement')
-    .select('view_count, like_count')
-    .eq('article_slug', slug)
-    .maybeSingle()
+  const [{ data: engagementData }, { data: matchedTeamAuthor }] =
+    await Promise.all([
+      supabase
+        .from('article_engagement')
+        .select('view_count, like_count')
+        .eq('article_slug', slug)
+        .maybeSingle(),
+      article.author?.full_name
+        ? supabase
+            .from('team_members')
+            .select('position, photo_url')
+            .eq('is_active', true)
+            .ilike('full_name', article.author.full_name)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ])
+
+  const authorRole =
+    matchedTeamAuthor?.position ||
+    article.author?.role_title ||
+    'Editorial Team'
+  const authorAvatarRaw =
+    matchedTeamAuthor?.photo_url || article.author?.avatar_url || null
+  const authorAvatar = authorAvatarRaw
+    ? resolveSafeArticleImage(authorAvatarRaw)
+    : null
 
   const initialCounts = {
     view_count: Number(engagementData?.view_count ?? article.view_count ?? 0),
@@ -198,7 +218,18 @@ export default async function ArticleDetailPage({
             aria-label="Publication details"
           >
             <span className="article-detail__author-mark" aria-hidden="true">
-              OPG
+              {authorAvatar ? (
+                <Image
+                  alt=""
+                  fill
+                  sizes="44px"
+                  src={authorAvatar.src}
+                  style={{ objectFit: 'cover', objectPosition: 'center top' }}
+                  unoptimized={authorAvatar.unoptimized}
+                />
+              ) : (
+                'OPG'
+              )}
             </span>
             <div className="article-detail__publication-author">
               <span>Written by</span>

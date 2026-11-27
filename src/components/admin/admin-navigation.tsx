@@ -19,6 +19,7 @@ import {
   OpgIconContacts,
   OpgIconDashboard,
   OpgIconSubscribers,
+  OpgIconTeam,
   OpgIconTestimonials,
 } from '@/components/icons/opg-icons'
 import {
@@ -32,6 +33,7 @@ type NavigationIcon =
   | 'dashboard'
   | 'inquiries'
   | 'subscribers'
+  | 'team'
   | 'testimonials'
 
 type NavigationItem = {
@@ -64,6 +66,8 @@ function NavigationGlyph({ name }: { name: NavigationIcon }) {
       return <OpgIconContacts />
     case 'subscribers':
       return <OpgIconSubscribers />
+    case 'team':
+      return <OpgIconTeam />
     case 'testimonials':
       return <OpgIconTestimonials />
     default:
@@ -181,6 +185,11 @@ export function AdminNavigation({ roleKey }: { roleKey: string }) {
   const managementItems: NavigationItem[] = canViewContent(roleKey)
     ? [
         { href: '/admin/articles', icon: 'articles', label: 'Articles' },
+        {
+          href: '/admin/team',
+          icon: 'team',
+          label: 'Team',
+        },
         {
           href: '/admin/testimonials',
           icon: 'testimonials',

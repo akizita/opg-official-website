@@ -4,6 +4,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { motion, useReducedMotion, type Variants } from 'framer-motion'
 
+import { resolveSafeArticleImage } from '@/lib/content/article-image'
+import type { PublicTeamMember } from '@/lib/content/team'
 import { getTeamPhotoUrl } from '@/lib/content/team-media'
 
 import styles from './about-hero-section.module.css'
@@ -12,6 +14,7 @@ export interface AboutHeroSectionProps {
   heroTitle?: string
   heroSummary?: string
   copy: Record<string, string>
+  featuredMembers?: PublicTeamMember[]
 }
 
 const COLLAGE_AVATARS = [
@@ -44,7 +47,26 @@ export function AboutHeroSection({
   heroTitle,
   heroSummary,
   copy,
+  featuredMembers,
 }: AboutHeroSectionProps) {
+  const activeWithPhotos = (featuredMembers || []).filter((m) =>
+    Boolean(m.image),
+  )
+  const collageAvatars =
+    activeWithPhotos.length > 0
+      ? activeWithPhotos.slice(0, 3).map((m) => ({
+          name: m.name,
+          role: m.role,
+          img: resolveSafeArticleImage(m.image).src,
+        }))
+      : COLLAGE_AVATARS
+  const leadHeroMember = activeWithPhotos[0]
+  const heroPortraitSrc = leadHeroMember
+    ? resolveSafeArticleImage(leadHeroMember.image).src
+    : getTeamPhotoUrl('Armi.png')
+  const heroPortraitAlt = leadHeroMember
+    ? `${leadHeroMember.name}, ${leadHeroMember.role} at Outsourced Pro Global`
+    : 'Armi Escamilla, Talent Acquisition Team Leader at Outsourced Pro Global'
   const shouldReduceMotion = useReducedMotion()
 
   // Format title gracefully with gradient accent
@@ -201,7 +223,7 @@ export function AboutHeroSection({
                   <div>
                     {/* Overlapping candidate avatars */}
                     <div className={styles.avatarStack} aria-label="Selected OPG candidate specialists">
-                      {COLLAGE_AVATARS.map((avatar) => (
+                      {collageAvatars.map((avatar) => (
                         <div key={avatar.name} className={styles.avatarItem} title={`${avatar.name} (${avatar.role})`}>
                           <Image
                             src={avatar.img}
@@ -247,8 +269,8 @@ export function AboutHeroSection({
                 <div className={styles.portraitWrapper}>
                   <div className={styles.portraitCard}>
                     <Image
-                      src={getTeamPhotoUrl('Armi.png')}
-                      alt="Armi Escamilla, Talent Acquisition Team Leader at Outsourced Pro Global"
+                      src={heroPortraitSrc}
+                      alt={heroPortraitAlt}
                       fill
                       priority
                       unoptimized

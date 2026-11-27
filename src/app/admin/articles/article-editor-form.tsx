@@ -21,6 +21,7 @@ import {
 import { initialArticleActionState } from '@/app/admin/articles/types'
 import { AdminConfirmDialog } from '@/components/admin/admin-confirm-dialog'
 import { notifyArticlesChanged } from '@/components/ui/articles-realtime-sync'
+import { TeamRealtimeSync } from '@/components/ui/team-realtime-sync'
 import {
   OpgIconCheck,
   OpgIconChevron,
@@ -835,6 +836,7 @@ export function ArticleEditorForm({
 
   return (
     <div className={styles.editorWorkspace}>
+      <TeamRealtimeSync />
       {/* 1. Top Breadcrumb Navigation */}
       <div className={styles.headerTopNav}>
         <Link className={styles.headerBackBtn} href="/admin/articles">

@@ -13,18 +13,23 @@ import { DotField } from '@/components/ui/dot-field'
 import { MissionVisionSection } from '@/components/ui/mission-vision-section'
 import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { ResponsiveImage } from '@/components/ui/responsive-image'
+import { TeamRealtimeSync } from '@/components/ui/team-realtime-sync'
 import { TextLoop } from '@/components/ui/text-loop'
+import { resolveSafeArticleImage } from '@/lib/content/article-image'
 import type { PageDocument } from '@/lib/content/page-documents'
 import { getAboutPageCopy } from '@/lib/content/page-copy'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
 import { ABOUT_PAGE_DEFAULTS } from '@/lib/content/site-page-defaults'
-import { getActiveDepartmentsWithMembers } from '@/lib/content/team'
+import {
+  getActiveDepartmentsWithMembers,
+  getPublicTeamMembers,
+} from '@/lib/content/team'
 import { getSiteUrl, isSiteIndexable, siteConfig } from '@/lib/site-config'
 import { createClient } from '@/lib/supabase/server'
 
 import styles from './about.module.css'
 
-export const revalidate = 3600 // 1 hour ISR
+export const dynamic = 'force-dynamic'
 
 const ABOUT_IMAGE_URL =
   'https://ursafbeufgmlxhxnflvh.supabase.co/storage/v1/object/public/public-media/hero/rs-1789740267024.png'
@@ -86,7 +91,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AboutPage() {
   const supabase = await createClient()
 
-  const [{ data: doc }, { data: legacyMission }, departments] =
+  const [{ data: doc }, { data: legacyMission }, departments, teamMembers] =
     await Promise.all([
       supabase
         .from('page_documents')
@@ -101,6 +106,7 @@ export default async function AboutPage() {
         .eq('status', 'published')
         .maybeSingle<PageDocument>(),
       getActiveDepartmentsWithMembers(),
+      getPublicTeamMembers(supabase),
     ])
 
   const heroTitle = doc?.title || ABOUT_PAGE_DEFAULTS.title
@@ -179,10 +185,12 @@ export default async function AboutPage() {
 
   return (
     <main className="about-page">
+      <TeamRealtimeSync />
       <PageVisualRuntime page="about" config={getPageVisualConfig(doc?.content)} />
       {/* 1. Hero Section - Bento Showcase */}
       <AboutHeroSection
         copy={copy}
+        featuredMembers={teamMembers}
         heroTitle={heroTitle}
         heroSummary={heroSummary}
       />
@@ -263,7 +271,7 @@ export default async function AboutPage() {
       </div>
 
       {/* 2.5 What We Offer (Talent Acquisition Services) Section */}
-      <AboutServicesSection copy={copy} />
+      <AboutServicesSection copy={copy} leadMember={teamMembers[0]} />
 
       {/* Unified Showcase Band: Mission/Vision & Map */}
       <div className="about-showcase-band about-showcase-band--purpose-map">
@@ -299,7 +307,7 @@ export default async function AboutPage() {
       </div>
 
       {/* 5. Team Showcase Section: 2-Column with 3D Depth Carousel (Our People) */}
-      <AboutTeamShowcase copy={copy} />
+      <AboutTeamShowcase copy={copy} members={teamMembers} />
 
       {/* 5.1 Leadership & Departments Directory (if available) */}
       {departments.length > 0 && (
@@ -332,14 +340,22 @@ export default async function AboutPage() {
                             title={member.full_name}
                           >
                             {member.photo_url && (
-                              <div className="team-card__avatar">
-                                <ResponsiveImage
-                                  alt={`${member.full_name}, ${member.position}`}
-                                  height={120}
-                                  src={member.photo_url}
-                                  width={120}
-                                />
-                              </div>
+                              (() => {
+                                const safePhoto = resolveSafeArticleImage(
+                                  member.photo_url,
+                                )
+                                return (
+                                  <div className="team-card__avatar">
+                                    <ResponsiveImage
+                                      alt={`${member.full_name}, ${member.position}`}
+                                      height={120}
+                                      src={safePhoto.src}
+                                      unoptimized={safePhoto.unoptimized}
+                                      width={120}
+                                    />
+                                  </div>
+                                )
+                              })()
                             )}
                             {member.bio && (
                               <p className="team-card__bio">{member.bio}</p>

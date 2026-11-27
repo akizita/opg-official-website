@@ -13,10 +13,12 @@ import { HomeTeamMasonrySection } from '@/components/home/home-team-masonry-sect
 import { HomeTestimonialsSection } from '@/components/home/home-testimonials-section'
 import { OffshoreMapSection } from '@/components/ui/offshore-map'
 import { SpotlightCard } from '@/components/ui/spotlight-card'
+import { TeamRealtimeSync } from '@/components/ui/team-realtime-sync'
 import type { PageDocument } from '@/lib/content/page-documents'
 import { getHomeCandidateTestimonials } from '@/lib/content/home-candidate-testimonials'
 import { getPageCopy, HOME_COPY_SECTIONS } from '@/lib/content/page-copy'
 import { getPageVisualConfig } from '@/lib/content/page-visual'
+import { getPublicTeamMembers } from '@/lib/content/team'
 import { getVisiblePageDocument } from '@/lib/content/visible-page-document'
 import { getCareersFeed } from '@/lib/jazzhr/client'
 import { createClient } from '@/lib/supabase/server'
@@ -40,7 +42,7 @@ const TRUSTED_CLIENT_LOGOS = [
   },
 ] as const
 
-export const revalidate = 3600 // 1 hour ISR
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
@@ -87,15 +89,17 @@ export default async function HomePage({
   const { opgPreview } = await searchParams
   const supabase = await createClient()
 
-  const [homeDoc, careersFeed, candidateTestimonials] = await Promise.all([
-    getVisiblePageDocument(supabase, 'home', opgPreview === '1'),
-    getCareersFeed().catch(() => ({
-      configured: false,
-      fetchedAt: null,
-      jobs: [],
-    })),
-    getHomeCandidateTestimonials(4).catch(() => []),
-  ])
+  const [homeDoc, careersFeed, candidateTestimonials, teamMembers] =
+    await Promise.all([
+      getVisiblePageDocument(supabase, 'home', opgPreview === '1'),
+      getCareersFeed().catch(() => ({
+        configured: false,
+        fetchedAt: null,
+        jobs: [],
+      })),
+      getHomeCandidateTestimonials(4).catch(() => []),
+      getPublicTeamMembers(supabase).catch(() => []),
+    ])
 
   const heroTitle =
     homeDoc?.title || 'The right people can move every business forward.'
@@ -106,6 +110,7 @@ export default async function HomePage({
 
   return (
     <div className="home-snap-flow">
+      <TeamRealtimeSync />
       <HomeInitialScrollGuard />
       <PageVisualRuntime page="home" config={getPageVisualConfig(homeDoc?.content)} />
       {/* Hero + Highlight Cards Viewport Frame */}
@@ -294,7 +299,7 @@ export default async function HomePage({
         aria-label="Our Specialists and Leadership"
         className="about-team-band"
       >
-        <HomeTeamMasonrySection />
+        <HomeTeamMasonrySection members={teamMembers} />
       </section>
 
       {/* Global Showcase Band: Unified Background extending across Offshore Map */}

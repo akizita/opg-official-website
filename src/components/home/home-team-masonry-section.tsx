@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
 
 import { Masonry, type MasonryItem } from '@/components/ui/masonry'
+import { resolveSafeArticleImage } from '@/lib/content/article-image'
+import type { PublicTeamMember } from '@/lib/content/team'
 import { OPG_TEAM_MEMBERS } from '@/lib/content/team-media'
 
 import styles from './home-team-masonry-section.module.css'
@@ -24,8 +26,29 @@ export const TEAM_MEMBERS_11: MasonryItem[] = OPG_TEAM_MEMBERS.map(
   }),
 )
 
-export function HomeTeamMasonrySection() {
+export function HomeTeamMasonrySection({
+  members,
+}: {
+  members?: PublicTeamMember[]
+}) {
   const shouldReduceMotion = useReducedMotion()
+  const masonryItems: MasonryItem[] =
+    members !== undefined
+      ? members.map((member, index) => ({
+          id: member.id,
+          name: member.name,
+          role: member.role,
+          department: member.department,
+          img: resolveSafeArticleImage(member.image).src,
+          height:
+            member.masonryHeight ||
+            MASONRY_TILE_HEIGHTS[index % MASONRY_TILE_HEIGHTS.length] ||
+            162,
+          bio: member.bio,
+          alt: member.alt,
+        }))
+      : TEAM_MEMBERS_11
+  const specialistCount = masonryItems.length
 
   return (
     <div className={`container ${styles.teamSection}`}>
@@ -48,9 +71,9 @@ export function HomeTeamMasonrySection() {
             <p className={styles.description}>
               Behind every high-performing offshore pod is an elite,
               multidisciplinary team. From technical recruitment to automation,
-              verification, and branding support, our 11 core team members
-              ensure your team operates as a frictionless extension of your
-              in-house workforce.
+              verification, and branding support, our {specialistCount || 11}{' '}
+              core team members ensure your team operates as a frictionless
+              extension of your in-house workforce.
             </p>
 
             <div className={styles.highlightsList}>
@@ -75,7 +98,7 @@ export function HomeTeamMasonrySection() {
                 </div>
                 <div className={styles.highlightText}>
                   <h4 className={styles.highlightTitle}>
-                    11 Dedicated Team Specialists
+                    {specialistCount || 11} Dedicated Team Specialists
                   </h4>
                   <p className={styles.highlightDesc}>
                     Specialists across technical recruitment, HR operations,
@@ -162,7 +185,7 @@ export function HomeTeamMasonrySection() {
           <Masonry
             columns={4}
             gap={12}
-            items={TEAM_MEMBERS_11}
+            items={masonryItems}
             lightbox={true}
             showLabels={false}
           />

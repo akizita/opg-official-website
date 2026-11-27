@@ -27,6 +27,7 @@ import {
   OpgIconSidebarToggle,
   OpgIconSignOut,
   OpgIconSubscribers,
+  OpgIconTeam,
   OpgIconTemplate,
   OpgIconTestimonials,
   OpgIconTrash,
@@ -62,6 +63,10 @@ describe('OPG Bespoke Icon Suite', () => {
 
     const subHtml = renderToStaticMarkup(createElement(OpgIconSubscribers))
     expect(subHtml).toContain('<svg')
+
+    const teamHtml = renderToStaticMarkup(createElement(OpgIconTeam))
+    expect(teamHtml).toContain('<svg')
+    expect(subHtml).not.toEqual(teamHtml)
 
     const visitHtml = renderToStaticMarkup(createElement(OpgIconVisits))
     expect(visitHtml).toContain('<svg')
